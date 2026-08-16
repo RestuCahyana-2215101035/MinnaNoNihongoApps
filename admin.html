@@ -337,6 +337,8 @@
 
   <!-- SCRIPT ADMIN -->
   <script>
+    let alpineAppInstance = null;
+
     function adminApp() {
       return {
         sidebarOpen: false,
@@ -379,6 +381,7 @@
         },
 
         initApp() {
+          alpineAppInstance = this;
           this.initTheme();
 
           if (sessionStorage.getItem('minna_admin_logged') === 'true') {
@@ -407,10 +410,10 @@
               `<span class="font-bold text-slate-900 dark:text-white">${item.hiragana}</span>`,
               `<span class="text-blue-600 font-medium">${item.katakana}</span>`,
               `<div class="text-center space-x-1">
-                <button onclick="window.dispatchEvent(new CustomEvent('edit-vocab', {detail: ${index}}))" class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 dark:bg-amber-950/50 transition inline-flex items-center justify-center cursor-pointer" title="Edit">
+                <button onclick="alpineAppInstance.editItem(${index})" class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 dark:bg-amber-950/50 transition inline-flex items-center justify-center cursor-pointer" title="Edit">
                   <i class="fa-solid fa-pen text-[9px]"></i>
                 </button>
-                <button onclick="window.dispatchEvent(new CustomEvent('delete-vocab', {detail: ${index}}))" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/50 transition inline-flex items-center justify-center cursor-pointer" title="Hapus">
+                <button onclick="alpineAppInstance.deleteItem(${index})" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/50 transition inline-flex items-center justify-center cursor-pointer" title="Hapus">
                   <i class="fa-solid fa-trash text-[9px]"></i>
                 </button>
               </div>`
@@ -452,10 +455,10 @@
                 <span class="text-[10px] text-slate-400 font-mono">ID: ${cat.id}</span>
               </div>`,
               `<div class="text-right py-1 space-x-1.5">
-                <button onclick="window.dispatchEvent(new CustomEvent('edit-category', {detail: ${index}}))" class="py-1.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-600 dark:bg-amber-950/50 transition cursor-pointer text-xs font-bold inline-flex items-center gap-1" title="Edit">
+                <button onclick="alpineAppInstance.editCategory(${index})" class="py-1.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-600 dark:bg-amber-950/50 transition cursor-pointer text-xs font-bold inline-flex items-center gap-1" title="Edit">
                   <i class="fa-solid fa-pen"></i> Edit
                 </button>
-                <button onclick="window.dispatchEvent(new CustomEvent('delete-category', {detail: ${index}}))" class="py-1.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/50 transition cursor-pointer text-xs font-bold inline-flex items-center gap-1" title="Hapus">
+                <button onclick="alpineAppInstance.deleteCategory(${index})" class="py-1.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/50 transition cursor-pointer text-xs font-bold inline-flex items-center gap-1" title="Hapus">
                   <i class="fa-solid fa-trash"></i> Hapus
                 </button>
               </div>`
@@ -604,7 +607,7 @@
             'ma':'ま', 'mi':'み', 'mu':'む', 'me':'め', 'mo':'も',
             'ya':'や', 'yu':'ゆ', 'yo':'よ',
             'ra':'ら', 'ri':'り', 'ru':'る', 're':'れ', 'ro':'ろ',
-            'wa':'わ', 'wo':'를', 'n':'ん',
+            'wa':'わ', 'wo':'を', 'n':'ん',
             'ga':'が', 'gi':'ぎ', 'gu':'ぐ', 'ge':'げ', 'go':'ご',
             'za':'ざ', 'ji':'じ', 'zu':'ず', 'ze':'ぜ', 'zo':'ぞ',
             'da':'だ', 'de':'で', 'do':'ど',
@@ -814,11 +817,12 @@
             this.vocabData[this.selectedCategory] = [];
           }
 
+          // Perbaikan fungsi simpan/edit kosakata agar membaca kategori yang aktif di dropdown form
           if (this.editIndex === null) {
             this.vocabData[this.selectedCategory].push({ ...this.newItem });
             alert('Kosakata berhasil ditambahkan!');
           } else {
-            this.vocabData[this.viewCategory][this.editIndex] = { ...this.newItem };
+            this.vocabData[this.selectedCategory][this.editIndex] = { ...this.newItem };
             alert('Kosakata berhasil diperbarui!');
             this.editIndex = null;
           }
@@ -829,6 +833,7 @@
         },
 
         editItem(index) {
+          // Ambil item berdasarkan kategori yang sedang aktif dilihat pada tabel (viewCategory)
           let items = this.getCurrentCategoryItems();
           this.newItem = { ...items[index] };
           this.selectedCategory = this.viewCategory;
@@ -847,7 +852,9 @@
 
         deleteItem(itemIndex) {
           if (confirm('Hapus kosakata ini?')) {
-            this.vocabData[this.viewCategory].splice(itemIndex, 1);
+            let items = this.getCurrentCategoryItems();
+            items.splice(itemIndex, 1);
+            this.vocabData[this.viewCategory] = items;
             localStorage.setItem('minna_vocab_data', JSON.stringify(this.vocabData));
             this.initOrUpdateDataTable();
           }
@@ -876,28 +883,7 @@
         }
       }
     }
-
-    // Listener global untuk event tombol edit & delete dari DataTables Kosakata
-    window.addEventListener('edit-vocab', (e) => {
-      const alpineComponent = document.querySelector('[x-data]').__x.$data;
-      alpineComponent.editItem(e.detail);
-    });
-
-    window.addEventListener('delete-vocab', (e) => {
-      const alpineComponent = document.querySelector('[x-data]').__x.$data;
-      alpineComponent.deleteItem(e.detail);
-    });
-
-    // Listener global untuk event tombol edit & delete dari DataTables Kategori
-    window.addEventListener('edit-category', (e) => {
-      const alpineComponent = document.querySelector('[x-data]').__x.$data;
-      alpineComponent.editCategory(e.detail);
-    });
-
-    window.addEventListener('delete-category', (e) => {
-      const alpineComponent = document.querySelector('[x-data]').__x.$data;
-      alpineComponent.deleteCategory(e.detail);
-    });
   </script>
+
 </body>
 </html>
