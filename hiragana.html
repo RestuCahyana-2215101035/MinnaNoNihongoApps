@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minna no Nihongo - Hiragana</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', }
+  </script>
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+  </style>
+</head>
+<body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="hiraganaApp()" x-init="initApp()">
+
+  <div class="flex h-screen overflow-hidden">
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+
+    <!-- SIDEBAR CONTAINER -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <!-- HEADER CONTAINER -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY CONTENT (Isi Halaman Hiragana) -->
+      <main class="flex-1 overflow-y-auto p-8 space-y-6">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Tabel Lengkap Hiragana</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Mencakup vokal dasar, konsonan baris, dakuon, handakuon, hingga gabungan bunyi (yoon).</p>
+          </div>
+          <span class="text-xs bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold px-4 py-2 rounded-xl border border-blue-100 dark:border-blue-900/50" x-text="hiraganaList.length + ' Karakter'"></span>
+        </div>
+
+        <!-- TABEL HIRAGANA -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[400px]">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th class="py-4 px-6">Kategori Bunyi</th>
+                  <th class="py-4 px-6">Romaji</th>
+                  <th class="py-4 px-6 text-center">Huruf Hiragana</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+                <template x-for="(item, index) in hiraganaList" :key="index">
+                  <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+                    <td class="py-4 px-6 font-medium text-slate-800 dark:text-slate-200" x-text="item.kategori"></td>
+                    <td class="py-4 px-6 italic font-mono text-slate-500 dark:text-slate-400" x-text="item.romaji"></td>
+                    <td class="py-4 px-6 font-bold text-slate-900 dark:text-white text-3xl text-center font-serif" x-text="item.hiragana"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function hiraganaApp() {
+      return {
+        sidebarOpen: false,
+        materiAwalDropdown: true,
+        kotobaDropdown: false,
+        darkMode: false,
+
+        async initApp() {
+          this.initTheme();
+          try {
+            const sidebarRes = await fetch('./sidebar.html');
+            if (sidebarRes.ok) {
+              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+            }
+            const headerRes = await fetch('./header.html');
+            if (headerRes.ok) {
+              document.getElementById('header-container').innerHTML = await headerRes.text();
+              // Inisialisasi ulang event listener untuk tombol dark mode di header eksternal jika ada
+              this.bindHeaderThemeToggle();
+            }
+          } catch (e) {
+            console.error('Gagal memuat template modular:', e);
+          }
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+          // Jika belum ada settingan sama sekali, default ke 'light'
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        },
+        
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        },
+
+        bindHeaderThemeToggle() {
+          // Menangkap tombol pemicu dark mode dari header.html yang dimuat secara dinamis
+          setTimeout(() => {
+            const themeBtn = document.querySelector('#header-container [data-theme-toggle], header button');
+            if (themeBtn) {
+              themeBtn.addEventListener('click', () => {
+                this.toggleDarkMode();
+              });
+            }
+          }, 100);
+        },
+
+        // Data Hiragana Lengkap
+        hiraganaList: [
+          { kategori: "Vokal Dasar", romaji: "a", hiragana: "あ" },
+          { kategori: "Vokal Dasar", romaji: "i", hiragana: "い" },
+          { kategori: "Vokal Dasar", romaji: "u", hiragana: "う" },
+          { kategori: "Vokal Dasar", romaji: "e", hiragana: "え" },
+          { kategori: "Vokal Dasar", romaji: "o", hiragana: "お" },
+          { kategori: "Baris K", romaji: "ka", hiragana: "か" },
+          { kategori: "Baris K", romaji: "ki", hiragana: "き" },
+          { kategori: "Baris K", romaji: "ku", hiragana: "く" },
+          { kategori: "Baris K", romaji: "ke", hiragana: "け" },
+          { kategori: "Baris K", romaji: "ko", hiragana: "こ" },
+          { kategori: "Baris S", romaji: "sa", hiragana: "さ" },
+          { kategori: "Baris S", romaji: "shi", hiragana: "し" },
+          { kategori: "Baris S", romaji: "su", hiragana: "す" },
+          { kategori: "Baris S", romaji: "se", hiragana: "せ" },
+          { kategori: "Baris S", romaji: "so", hiragana: "そ" },
+          { kategori: "Baris T", romaji: "ta", hiragana: "た" },
+          { kategori: "Baris T", romaji: "chi", hiragana: "ち" },
+          { kategori: "Baris T", romaji: "tsu", hiragana: "つ" },
+          { kategori: "Baris T", romaji: "te", hiragana: "て" },
+          { kategori: "Baris T", romaji: "to", hiragana: "と" },
+          { kategori: "Baris N", romaji: "na", hiragana: "な" },
+          { kategori: "Baris N", romaji: "ni", hiragana: "に" },
+          { kategori: "Baris N", romaji: "nu", hiragana: "ぬ" },
+          { kategori: "Baris N", romaji: "ne", hiragana: "ね" },
+          { kategori: "Baris N", romaji: "no", hiragana: "の" },
+          { kategori: "Baris H", romaji: "ha", hiragana: "は" },
+          { kategori: "Baris H", romaji: "hi", hiragana: "ひ" },
+          { kategori: "Baris H", romaji: "fu", hiragana: "ふ" },
+          { kategori: "Baris H", romaji: "he", hiragana: "へ" },
+          { kategori: "Baris H", romaji: "ho", hiragana: "ほ" },
+          { kategori: "Baris M", romaji: "ma", hiragana: "ま" },
+          { kategori: "Baris M", romaji: "mi", hiragana: "み" },
+          { kategori: "Baris M", romaji: "mu", hiragana: "む" },
+          { kategori: "Baris M", romaji: "me", hiragana: "め" },
+          { kategori: "Baris M", romaji: "mo", hiragana: "も" },
+          { kategori: "Baris Y", romaji: "ya", hiragana: "や" },
+          { kategori: "Baris Y", romaji: "yu", hiragana: "ゆ" },
+          { kategori: "Baris Y", romaji: "yo", hiragana: "よ" },
+          { kategori: "Baris R", romaji: "ra", hiragana: "ら" },
+          { kategori: "Baris R", romaji: "ri", hiragana: "り" },
+          { kategori: "Baris R", romaji: "ru", hiragana: "る" },
+          { kategori: "Baris R", romaji: "re", hiragana: "れ" },
+          { kategori: "Baris R", romaji: "ro", hiragana: "ろ" },
+          { kategori: "Baris W", romaji: "wa", hiragana: "わ" },
+          { kategori: "Baris W", romaji: "wo", hiragana: "を" },
+          { kategori: "Konsonan N", romaji: "n", hiragana: "ん" },
+          { kategori: "Dakuon G", romaji: "ga", hiragana: "が" },
+          { kategori: "Dakuon G", romaji: "gi", hiragana: "ぎ" },
+          { kategori: "Dakuon G", romaji: "gu", hiragana: "ぐ" },
+          { kategori: "Dakuon G", romaji: "ge", hiragana: "げ" },
+          { kategori: "Dakuon G", romaji: "go", hiragana: "ご" },
+          { kategori: "Dakuon Z", romaji: "za", hiragana: "ざ" },
+          { kategori: "Dakuon Z", romaji: "ji", hiragana: "じ" },
+          { kategori: "Dakuon Z", romaji: "zu", hiragana: "ず" },
+          { kategori: "Dakuon Z", romaji: "ze", hiragana: "ぜ" },
+          { kategori: "Dakuon Z", romaji: "zo", hiragana: "ぞ" },
+          { kategori: "Dakuon D", romaji: "da", hiragana: "だ" },
+          { kategori: "Dakuon D", romaji: "ji", hiragana: "ぢ" },
+          { kategori: "Dakuon D", romaji: "zu", hiragana: "づ" },
+          { kategori: "Dakuon D", romaji: "de", hiragana: "で" },
+          { kategori: "Dakuon D", romaji: "do", hiragana: "ど" },
+          { kategori: "Dakuon B", romaji: "ba", hiragana: "ば" },
+          { kategori: "Dakuon B", romaji: "bi", hiragana: "び" },
+          { kategori: "Dakuon B", romaji: "bu", hiragana: "ぶ" },
+          { kategori: "Dakuon B", romaji: "be", hiragana: "べ" },
+          { kategori: "Dakuon B", romaji: "bo", hiragana: "ぼ" },
+          { kategori: "Handakuon P", romaji: "pa", hiragana: "ぱ" },
+          { kategori: "Handakuon P", romaji: "pi", hiragana: "ぴ" },
+          { kategori: "Handakuon P", romaji: "pu", hiragana: "ぷ" },
+          { kategori: "Handakuon P", romaji: "pe", hiragana: "ぺ" },
+          { kategori: "Handakuon P", romaji: "po", hiragana: "ぽ" },
+          { kategori: "Yoon K", romaji: "kya", hiragana: "きゃ" },
+          { kategori: "Yoon K", romaji: "kyu", hiragana: "きゅ" },
+          { kategori: "Yoon K", romaji: "kyo", hiragana: "きょ" },
+          { kategori: "Yoon S", romaji: "sha", hiragana: "しゃ" },
+          { kategori: "Yoon S", romaji: "shu", hiragana: "しゅ" },
+          { kategori: "Yoon S", romaji: "sho", hiragana: "しょ" },
+          { kategori: "Yoon T", romaji: "cha", hiragana: "ちゃ" },
+          { kategori: "Yoon T", romaji: "chu", hiragana: "ちゅ" },
+          { kategori: "Yoon T", romaji: "cho", hiragana: "ちょ" },
+          { kategori: "Yoon N", romaji: "nya", hiragana: "にゃ" },
+          { kategori: "Yoon N", romaji: "nyu", hiragana: "にゅ" },
+          { kategori: "Yoon N", romaji: "nyo", hiragana: "にょ" },
+          { kategori: "Yoon H", romaji: "hya", hiragana: "ひゃ" },
+          { kategori: "Yoon H", romaji: "hyu", hiragana: "ひゅ" },
+          { kategori: "Yoon H", romaji: "hyo", hiragana: "ひょ" },
+          { kategori: "Yoon M", romaji: "mya", hiragana: "みゃ" },
+          { kategori: "Yoon M", romaji: "myu", hiragana: "みゅ" },
+          { kategori: "Yoon M", romaji: "myo", hiragana: "みょ" },
+          { kategori: "Yoon R", romaji: "rya", hiragana: "りゃ" },
+          { kategori: "Yoon R", romaji: "ryu", hiragana: "りゅ" },
+          { kategori: "Yoon R", romaji: "ryo", hiragana: "りょ" },
+          { kategori: "Yoon G", romaji: "gya", hiragana: "ぎゃ" },
+          { kategori: "Yoon G", romaji: "gyu", hiragana: "ぎゅ" },
+          { kategori: "Yoon G", romaji: "gyo", hiragana: "ぎょ" },
+          { kategori: "Yoon J", romaji: "ja", hiragana: "じゃ" },
+          { kategori: "Yoon J", romaji: "ju", hiragana: "じゅ" },
+          { kategori: "Yoon J", romaji: "jo", hiragana: "じょ" },
+          { kategori: "Yoon B", romaji: "bya", hiragana: "びゃ" },
+          { kategori: "Yoon B", romaji: "byu", hiragana: "びゅ" },
+          { kategori: "Yoon B", romaji: "byo", hiragana: "びょ" },
+          { kategori: "Yoon P", romaji: "pya", hiragana: "ぴゃ" },
+          { kategori: "Yoon P", romaji: "pyu", hiragana: "ぴゅ" },
+          { kategori: "Yoon P", romaji: "pyo", hiragana: "ぴょ" }
+        ]
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minna no Nihongo - Panel Admin Kotoba</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', }
+  </script>
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- SheetJS untuk Excel & JSZip untuk ZIP -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <!-- DataTables CSS & jQuery (Dibutuhkan untuk DataTables) -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    #categoryTable { width: 100% !important; }
+    /* Custom styling agar DataTables menyatu dengan Tailwind & Dark Mode */
+    .dataTables_wrapper .dataTables_length select,
+    .dataTables_wrapper .dataTables_filter input {
+      border: 1px solid #cbd5e1;
+      border-radius: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      outline: none;
+      background-color: transparent;
+    }
+    .dark .dataTables_wrapper .dataTables_length select,
+    .dark .dataTables_wrapper .dataTables_filter input {
+      border-color: #334155;
+      color: #f1f5f9;
+      background-color: #020617;
+    }
+    .dataTables_wrapper .dataTables_info, 
+    .dataTables_wrapper .dataTables_paginate {
+      font-size: 0.75rem;
+      margin-top: 1rem;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+      border-radius: 0.5rem !important;
+      border: 1px solid transparent !important;
+      background: transparent !important;
+      color: inherit !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+      background: #2563eb !important;
+      color: white !important;
+      border-color: #2563eb !important;
+    }
+  </style>
+</head>
+<body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="adminApp()" x-init="initApp()">
+
+  <div class="flex h-screen overflow-hidden relative">
+
+    <!-- ========================================================== -->
+    <!-- MODAL PROTEKSI PASSWORD & BLUR KONTEN DI BELAKANGNYA -->
+    <!-- ========================================================== -->
+    <div x-show="!isAuthenticated" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4" x-transition.opacity>
+      <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl max-w-sm w-full space-y-5 text-center">
+        <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-black text-slate-900 dark:text-white">Panel Terproteksi</h3>
+          <p class="text-xs text-slate-400 mt-1">Masukkan password admin untuk membuka akses halaman ini.</p>
+        </div>
+
+        <div class="space-y-3">
+          <input type="password" x-model="inputPassword" @keyup.enter="verifyPassword()" :disabled="isCooldown" placeholder="Password..." class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
+
+          <button @click="verifyPassword()" :disabled="isCooldown" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-indigo-500/20 cursor-pointer disabled:opacity-50" x-text="isCooldown ? 'Terkunci (' + cooldownTimer + 's)' : 'Buka Akses'"></button>
+        </div>
+
+        <div class="text-xs">
+          <a href="index.html" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition">← Kembali ke Beranda</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+
+    <!-- SIDEBAR CONTAINER -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+      <!-- HEADER CONTAINER -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY CONTENT -->
+      <main class="flex-1 overflow-y-auto p-8 space-y-8 transition duration-300" :class="!isAuthenticated ? 'blur-md pointer-events-none select-none' : ''">
+
+        <!-- Header Halaman & Navigasi Tab Modern -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
+          <div>
+            <div class="flex items-center gap-3 mb-2 flex-wrap">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-900/50 inline-block">Control Center</span>
+              <!-- TOMBOL KELUAR SESI ADMIN -->
+              <button @click="logoutAdmin()" class="text-[10px] font-bold uppercase tracking-widest text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 dark:bg-rose-950/50 px-3 py-1 rounded-full border border-rose-100 dark:border-rose-900/50 transition cursor-pointer flex items-center gap-1.5">
+                <i class="fa-solid fa-right-from-bracket"></i> Keluar Sesi
+              </button>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Panel Admin Kotoba</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Pusat kontrol pengelolaan kosakata, kategori, serta backup data.</p>
+          </div>
+
+          <!-- Tab Navigasi Admin -->
+          <div class="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full lg:w-auto overflow-x-auto">
+            <button @click="activeTab = 'kosakata'" 
+                    :class="activeTab === 'kosakata' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-white shadow-sm font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 font-medium'"
+                    class="flex-1 lg:flex-none py-2.5 px-5 rounded-xl text-xs transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+              <i class="fa-solid fa-book"></i> Kelola Kosakata
+            </button>
+            <button @click="activeTab = 'kategori'" 
+                    :class="activeTab === 'kategori' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-white shadow-sm font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 font-medium'"
+                    class="flex-1 lg:flex-none py-2.5 px-5 rounded-xl text-xs transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+              <i class="fa-solid fa-folder-tree"></i> Kategori Sidebar
+            </button>
+            <button @click="activeTab = 'import_export'" 
+                    :class="activeTab === 'import_export' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-white shadow-sm font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 font-medium'"
+                    class="flex-1 lg:flex-none py-2.5 px-5 rounded-xl text-xs transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+              <i class="fa-solid fa-file-arrow-down"></i> Import & Export
+            </button>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 1: KELOLA KOSAKATA (FORM & TABEL) -->
+        <!-- ============================================== -->
+        <div x-show="activeTab === 'kosakata'" class="grid grid-cols-1 lg:grid-cols-12 gap-8" x-transition>
+
+          <!-- Kiri: Form Input/Edit Kosakata -->
+          <div class="lg:col-span-5 space-y-6">
+            <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
+              <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3" x-text="editIndex === null ? '➕ Tambah Kosakata Baru' : '✏️ Edit Kosakata'"></h4>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Pilih Kategori Tujuan</label>
+                  <select x-model="selectedCategory" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <template x-for="cat in submenus" :key="cat.id">
+                      <option :value="cat.id" x-text="cat.title"></option>
+                    </template>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Bahasa Indonesia</label>
+                  <input type="text" x-model="newItem.indonesia" placeholder="cth: Kopi" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Romaji (Auto-fill Kana)</label>
+                  <input type="text" x-model="newItem.romaji" @input="autoFillKana(newItem.romaji)" placeholder="cth: kohii" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Hiragana (Otomatis)</label>
+                  <input type="text" x-model="newItem.hiragana" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Katakana (Otomatis)</label>
+                  <input type="text" x-model="newItem.katakana" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-blue-600 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 pt-2">
+                <button @click="saveItem()" class="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-blue-500/20 cursor-pointer" x-text="getVocabBtnText()"></button>
+                <button x-show="editIndex !== null" @click="resetForm()" class="py-3.5 px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs transition cursor-pointer">Batal</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kanan: Tabel Data Kosakata dengan DataTables -->
+          <div class="lg:col-span-7">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-6 md:p-8 space-y-6">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">Daftar Kosakata dalam Kategori</h4>
+                <select x-model="viewCategory" @change="initOrUpdateDataTable()" class="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold focus:outline-none">
+                  <template x-for="cat in submenus" :key="cat.id">
+                    <option :value="cat.id" x-text="cat.title"></option>
+                  </template>
+                </select>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table id="vocabTable" class="w-full text-left border-collapse min-w-[450px]">
+                  <thead>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                      <th class="py-3 px-3">Indonesia</th>
+                      <th class="py-3 px-3">Romaji</th>
+                      <th class="py-3 px-3">Hiragana</th>
+                      <th class="py-3 px-3">Katakana</th>
+                      <th class="py-3 px-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                    <!-- Data dirender otomatis via DataTables -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 2: KELOLA KATEGORI SIDEBAR -->
+        <!-- ============================================== -->
+        <div x-show="activeTab === 'kategori'" class="grid grid-cols-1 md:grid-cols-2 gap-8" x-transition>
+
+          <!-- Form Buat/Edit Kategori -->
+          <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center text-xs">
+                <i :class="editCatIndex === null ? 'fa-solid fa-folder-plus' : 'fa-solid fa-pen-to-square'"></i>
+              </div>
+              <span x-text="editCatIndex === null ? 'Buat Kategori Kotoba Baru' : 'Edit Kategori Sidebar'"></span>
+            </h4>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">ID Kategori (Unik, Tanpa Spasi)</label>
+                <input type="text" x-model="editCatId" autocomplete="chrome-off" name="category_identifier_unique" :disabled="editCatIndex !== null" placeholder="cth: makanan" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Judul Kategori (Tampil di Sidebar)</label>
+                <input type="text" x-model="editCatTitle" autocomplete="chrome-off" name="category_title_display" placeholder="cth: Makanan & Minuman" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              <div class="flex items-center gap-3">
+                <button @click="saveCategory()" class="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-indigo-500/20 cursor-pointer" x-text="getCatBtnText()"></button>
+                <button x-show="editCatIndex !== null" @click="resetCategoryForm()" class="py-3.5 px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs transition cursor-pointer">Batal</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- List Kategori & Aksi Edit/Hapus dengan DataTables -->
+          <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-list"></i>
+              </div>
+              Daftar Kategori Sidebar Aktif
+            </h4>
+            <div class="overflow-x-auto w-full">
+              <table id="categoryTable" class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-100 dark:border-slate-800 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    <th class="py-3 px-4 text-left">Kategori</th>
+                    <th class="py-3 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                  <!-- Data dirender otomatis via DataTables -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 3: IMPORT & EXPORT -->
+        <!-- ============================================== -->
+        <div x-show="activeTab === 'import_export'" class="grid grid-cols-1 md:grid-cols-2 gap-8" x-transition>
+
+          <!-- Card Import Excel -->
+          <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-file-excel"></i>
+              </div>
+              Import Kotoba dari Excel (.xlsx)
+            </h4>
+            <div class="space-y-4">
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Unggah file Excel yang memiliki kolom <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200 font-bold">Bahasa Indonesia</code> dan <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200 font-bold">Romaji</code>. Sistem akan otomatis mengisi Hiragana & Katakana.
+              </p>
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Pilih Kategori Tujuan</label>
+                <select x-model="importTargetCategory" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                  <template x-for="cat in submenus" :key="cat.id">
+                    <option :value="cat.id" x-text="cat.title"></option>
+                  </template>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Pilih File Excel</label>
+                <input type="file" id="excelFileinput" accept=".xlsx, .xls" class="w-full text-xs text-slate-500 file:mr-4 file:py-3 file:px-5 file:rounded-2xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-slate-200 dark:border-slate-800 rounded-2xl p-2 bg-slate-50 dark:bg-slate-950">
+              </div>
+              <button @click="processExcelImport()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-emerald-500/20 cursor-pointer">
+                Mulai Import & Auto-Fill Kana
+              </button>
+            </div>
+          </div>
+
+          <!-- Card Export ZIP -->
+          <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-file-zipper"></i>
+              </div>
+              Export Seluruh Kotoba (ZIP)
+            </h4>
+            <div class="space-y-4">
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Unduh seluruh data kosakata yang tersimpan di sistem dalam bentuk file kompresi <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200 font-bold">.zip</code>. Di dalamnya terdapat file Excel terpisah untuk masing-masing kategori.
+              </p>
+              <div class="pt-6">
+                <button @click="exportAllToZip()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-indigo-500/20 cursor-pointer flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-cloud-arrow-down text-base"></i> Download Semua Data (.zip)
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- SCRIPT ADMIN -->
+  <script>
+    function adminApp() {
+      return {
+        sidebarOpen: false,
+        materiAwalDropdown: false,
+        kotobaDropdown: true,
+        darkMode: false,
+        activeTab: 'kosakata',
+
+        // --- SISTEM KEAMANAN & COOLDOWN ---
+        isAuthenticated: false,
+        inputPassword: '',
+        failedAttempts: parseInt(localStorage.getItem('admin_failed_attempts') || '0'),
+        isCooldown: false,
+        cooldownTimer: 0,
+
+        // --- DATA STATE ---
+        submenus: [],
+        vocabData: {},
+        selectedCategory: '',
+        viewCategory: '',
+        importTargetCategory: '',
+        dataTableInstance: null,
+        categoryTableInstance: null,
+
+        // Form Kosakata
+        newItem: { indonesia: '', romaji: '', hiragana: '', katakana: '' },
+        editIndex: null,
+
+        // Form Kategori
+        editCatIndex: null,
+        editCatId: '',
+        editCatTitle: '',
+
+        getVocabBtnText() {
+          return this.editIndex === null ? 'Simpan Kosakata' : 'Update Kosakata';
+        },
+
+        getCatBtnText() {
+          return this.editCatIndex === null ? 'Simpan Kategori Baru' : 'Update Kategori';
+        },
+
+        initApp() {
+          this.initTheme();
+
+          if (sessionStorage.getItem('minna_admin_logged') === 'true') {
+            this.isAuthenticated = true;
+          }
+
+          let cooldownUntil = localStorage.getItem('admin_cooldown_until');
+          if (cooldownUntil && Date.now() < parseInt(cooldownUntil)) {
+            this.startCooldownTimer(Math.ceil((parseInt(cooldownUntil) - Date.now()) / 1000));
+          }
+
+          this.loadStorageData();
+          
+          this.$nextTick(() => {
+            this.initOrUpdateDataTable();
+            this.initOrUpdateCategoryTable();
+          });
+        },
+
+        initOrUpdateDataTable() {
+          let items = this.getCurrentCategoryItems();
+          let tableData = items.map((item, index) => {
+            return [
+              item.indonesia,
+              `<span class="italic font-mono text-slate-500">${item.romaji}</span>`,
+              `<span class="font-bold text-slate-900 dark:text-white">${item.hiragana}</span>`,
+              `<span class="text-blue-600 font-medium">${item.katakana}</span>`,
+              `<div class="text-center space-x-1">
+                <button onclick="window.dispatchEvent(new CustomEvent('edit-vocab', {detail: ${index}}))" class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 dark:bg-amber-950/50 transition inline-flex items-center justify-center cursor-pointer" title="Edit">
+                  <i class="fa-solid fa-pen text-[9px]"></i>
+                </button>
+                <button onclick="window.dispatchEvent(new CustomEvent('delete-vocab', {detail: ${index}}))" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/50 transition inline-flex items-center justify-center cursor-pointer" title="Hapus">
+                  <i class="fa-solid fa-trash text-[9px]"></i>
+                </button>
+              </div>`
+            ];
+          });
+
+          if ($.fn.DataTable.isDataTable('#vocabTable')) {
+            this.dataTableInstance.clear();
+            this.dataTableInstance.rows.add(tableData);
+            this.dataTableInstance.draw();
+          } else {
+            this.dataTableInstance = $('#vocabTable').DataTable({
+              data: tableData,
+              pageLength: 5,
+              lengthMenu: [5, 10, 25, 50],
+              language: {
+                search: "Cari:",
+                lengthMenu: "Tampilkan _MENU_ data",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                paginate: {
+                  first: "Pertama",
+                  last: "Terakhir",
+                  next: "Selanjutnya",
+                  previous: "Sebelumnya"
+                },
+                zeroRecords: "Tidak ada data ditemukan",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ total data)"
+              }
+            });
+          }
+        },
+
+        initOrUpdateCategoryTable() {
+          let catData = this.submenus.map((cat, index) => {
+            return [
+              `<div class="text-left py-1">
+                <span class="font-bold text-slate-900 dark:text-white block">${cat.title}</span>
+                <span class="text-[10px] text-slate-400 font-mono">ID: ${cat.id}</span>
+              </div>`,
+              `<div class="text-right py-1 space-x-1.5">
+                <button onclick="window.dispatchEvent(new CustomEvent('edit-category', {detail: ${index}}))" class="py-1.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-600 dark:bg-amber-950/50 transition cursor-pointer text-xs font-bold inline-flex items-center gap-1" title="Edit">
+                  <i class="fa-solid fa-pen"></i> Edit
+                </button>
+                <button onclick="window.dispatchEvent(new CustomEvent('delete-category', {detail: ${index}}))" class="py-1.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/50 transition cursor-pointer text-xs font-bold inline-flex items-center gap-1" title="Hapus">
+                  <i class="fa-solid fa-trash"></i> Hapus
+                </button>
+              </div>`
+            ];
+          });
+
+          if ($.fn.DataTable.isDataTable('#categoryTable')) {
+            this.categoryTableInstance.clear();
+            this.categoryTableInstance.rows.add(catData);
+            this.categoryTableInstance.draw();
+          } else {
+            this.categoryTableInstance = $('#categoryTable').DataTable({
+              data: catData,
+              pageLength: 5,
+              lengthMenu: [5, 10, 25],
+              columnDefs: [
+                { targets: 0, className: 'text-left w-3/5' },
+                { targets: 1, className: 'text-right w-2/5' }
+              ],
+              language: {
+                search: "Cari:",
+                lengthMenu: "Tampilkan _MENU_ data",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                paginate: {
+                  first: "Pertama",
+                  last: "Terakhir",
+                  next: "Selanjutnya",
+                  previous: "Sebelumnya"
+                },
+                zeroRecords: "Tidak ada kategori ditemukan",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ total data)"
+              }
+            });
+          }
+        },
+
+        verifyPassword() {
+          if (this.isCooldown) return;
+          let cleanInput = String(this.inputPassword).trim();
+          if (cleanInput === 'benkyoushimasu') {
+            this.isAuthenticated = true;
+            sessionStorage.setItem('minna_admin_logged', 'true');
+            localStorage.setItem('admin_failed_attempts', '0');
+            this.inputPassword = '';
+          } else {
+            this.failedAttempts++;
+            localStorage.setItem('admin_failed_attempts', this.failedAttempts);
+            if (this.failedAttempts >= 3) {
+              let cooldownTime = 60;
+              localStorage.setItem('admin_cooldown_until', Date.now() + (cooldownTime * 1000));
+              this.startCooldownTimer(cooldownTime);
+              alert('Terlalu banyak percobaan salah! Akses dikunci selama 1 menit.');
+            } else {
+              alert(`Password Salah! Sisa percobaan: ${3 - this.failedAttempts}`);
+            }
+            this.inputPassword = '';
+          }
+        },
+
+        logoutAdmin() {
+          sessionStorage.removeItem('minna_admin_logged');
+          this.isAuthenticated = false;
+          this.inputPassword = '';
+        },
+
+        startCooldownTimer(seconds) {
+          this.isCooldown = true;
+          this.cooldownTimer = seconds;
+          let interval = setInterval(() => {
+            this.cooldownTimer--;
+            if (this.cooldownTimer <= 0) {
+              clearInterval(interval);
+              this.isCooldown = false;
+              this.failedAttempts = 0;
+              localStorage.setItem('admin_failed_attempts', '0');
+              localStorage.removeItem('admin_cooldown_until');
+            }
+          }, 1000);
+        },
+
+        loadStorageData() {
+          let savedSubs = localStorage.getItem('minna_submenus');
+          if (!savedSubs) {
+            this.submenus = [
+              { id: 'aisatsu', title: 'Aisatsu' },
+              { id: 'kazoku', title: 'Kazoku' }
+            ];
+            localStorage.setItem('minna_submenus', JSON.stringify(this.submenus));
+          } else {
+            this.submenus = JSON.parse(savedSubs);
+          }
+
+          let savedVocab = localStorage.getItem('minna_vocab_data');
+          if (!savedVocab) {
+            this.vocabData = {
+              'aisatsu': [
+                { indonesia: "hallo", romaji: "moshi", hiragana: "もし", katakana: "モシ" }
+              ]
+            };
+            localStorage.setItem('minna_vocab_data', JSON.stringify(this.vocabData));
+          } else {
+            this.vocabData = JSON.parse(savedVocab);
+          }
+
+          if (this.submenus.length > 0) {
+            if (!this.selectedCategory || !this.submenus.some(s => s.id === this.selectedCategory)) {
+              this.selectedCategory = this.submenus[0].id;
+            }
+            if (!this.viewCategory || !this.submenus.some(s => s.id === this.viewCategory)) {
+              this.viewCategory = this.submenus[0].id;
+            }
+            if (!this.importTargetCategory || !this.submenus.some(s => s.id === this.importTargetCategory)) {
+              this.importTargetCategory = this.submenus[0].id;
+            }
+          }
+        },
+
+        convertRomajiToKana(romajiStr) {
+          if (!romajiStr) return { hiragana: '', katakana: '' };
+          let str = String(romajiStr).toLowerCase().trim();
+
+          const map = {
+            'wi':'うぃ', 'we':'うぇ', 'wo':'うぉ',
+            'va':'ゔぁ', 'vi':'ゔぃ', 've':'ゔぇ', 'vo':'ゔぉ',
+            'fa':'ふぁ', 'fi':'ふぃ', 'fe':'ふぇ', 'fo':'ふぉ',
+            'che':'ちぇ', 'she':'しぇ', 'je':'じぇ',
+            'tsa':'つぁ', 'tse':'つぇ', 'tso':'つぉ',
+            'ti':'てぃ', 'tu':'とぅ', 'di':'でぃ', 'du':'でぅ', 'dyu':'でゅ',
+            'kya':'きゃ', 'kyu':'きゅ', 'kyo':'きょ',
+            'sha':'しゃ', 'shu':'しゅ', 'sho':'しょ',
+            'cha':'ちゃ', 'chu':'ちゅ', 'cho':'ちょ',
+            'nya':'にゃ', 'nyu':'にゅ', 'nyo':'にょ',
+            'hya':'ひゃ', 'hyu':'ひゅ', 'hyo':'ひょ',
+            'mya':'みゃ', 'myu':'みゅ', 'myo':'みょ',
+            'rya':'りゃ', 'ryu':'りゅ', 'ryo':'りょ',
+            'gya':'ぎゃ', 'gyu':'ぎゅ', 'gyo':'ぎょ',
+            'ja':'じゃ', 'ju':'じゅ', 'jo':'じょ',
+            'bya':'びゃ', 'byu':'びゅ', 'byo':'びょ',
+            'pya':'ぴゃ', 'pyu':'ぴゅ', 'pyo':'ぴょ',
+            'ka':'か', 'ki':'き', 'ku':'く', 'ke':'け', 'ko':'こ',
+            'sa':'さ', 'shi':'し', 'su':'す', 'se':'せ', 'so':'そ',
+            'ta':'た', 'chi':'ち', 'tsu':'つ', 'te':'て', 'to':'と',
+            'na':'な', 'ni':'に', 'nu':'ぬ', 'ne':'ね', 'no':'の',
+            'ha':'は', 'hi':'ひ', 'fu':'ふ', 'he':'へ', 'ho':'ほ',
+            'ma':'ま', 'mi':'み', 'mu':'む', 'me':'め', 'mo':'も',
+            'ya':'や', 'yu':'ゆ', 'yo':'よ',
+            'ra':'ら', 'ri':'り', 'ru':'る', 're':'れ', 'ro':'ろ',
+            'wa':'わ', 'wo':'를', 'n':'ん',
+            'ga':'が', 'gi':'ぎ', 'gu':'ぐ', 'ge':'げ', 'go':'ご',
+            'za':'ざ', 'ji':'じ', 'zu':'ず', 'ze':'ぜ', 'zo':'ぞ',
+            'da':'だ', 'de':'で', 'do':'ど',
+            'ba':'ば', 'bi':'び', 'bu':'ぶ', 'be':'べ', 'bo':'ぼ',
+            'pa':'ぱ', 'pi':'ぴ', 'pu':'ぷ', 'pe':'ぺ', 'po':'ぽ',
+            'a':'あ', 'i':'い', 'u':'う', 'e':'え', 'o':'お'
+          };
+
+          const keys = Object.keys(map).sort((a, b) => b.length - a.length);
+
+          let res = '';
+          let i = 0;
+          while (i < str.length) {
+            if (i + 1 < str.length && str[i] === str[i+1] && ['p','t','k','s','c','h','b','g','z','d'].includes(str[i])) {
+              res += 'っ';
+              i++;
+              continue;
+            }
+
+            let matched = false;
+            let k;
+            for (k of keys) {
+              if (str.substr(i, k.length) === k) {
+                res += map[k];
+                i += k.length;
+                matched = true;
+                break;
+              }
+            }
+            if (!matched) {
+              res += str[i];
+              i++;
+            }
+          }
+
+          let hira = res;
+          let kata = res.replace(/[\u3041-\u3096]/g, m => String.fromCharCode(m.charCodeAt(0) + 0x60));
+          return { hiragana: hira, katakana: kata };
+        },
+
+        autoFillKana(romajiStr) {
+          let kana = this.convertRomajiToKana(romajiStr);
+          this.newItem.hiragana = kana.hiragana;
+          this.newItem.katakana = kana.katakana;
+        },
+
+        processExcelImport() {
+          let fileInput = document.getElementById('excelFileinput');
+          if (!fileInput.files || fileInput.files.length === 0) {
+            alert('Silakan pilih file Excel terlebih dahulu!');
+            return;
+          }
+
+          let file = fileInput.files[0];
+          let reader = new FileReader();
+
+          reader.onload = (e) => {
+            try {
+              let data = new Uint8Array(e.target.result);
+              let workbook = XLSX.read(data, { type: 'array' });
+              let firstSheetName = workbook.SheetNames[0];
+              let worksheet = workbook.Sheets[firstSheetName];
+              
+              let jsonRows = XLSX.utils.sheet_to_json(worksheet);
+
+              if (jsonRows.length === 0) {
+                alert('File Excel kosong atau format tidak sesuai!');
+                return;
+              }
+
+              if (!this.vocabData[this.importTargetCategory]) {
+                this.vocabData[this.importTargetCategory] = [];
+              }
+
+              let count = 0;
+              jsonRows.forEach(row => {
+                let indo = row["Bahasa Indonesia"] || row["indonesia"] || row["Indonesia"] || "";
+                let rom = row["Romaji"] || row["romaji"] || "";
+
+                if (indo && rom) {
+                  let generated = this.convertRomajiToKana(rom);
+                  this.vocabData[this.importTargetCategory].push({
+                    indonesia: String(indo),
+                    romaji: String(rom),
+                    hiragana: generated.hiragana,
+                    katakana: generated.katakana
+                  });
+                  count++;
+                }
+              });
+
+              localStorage.setItem('minna_vocab_data', JSON.stringify(this.vocabData));
+              fileInput.value = '';
+              alert(`Berhasil mengimport ${count} kosakata ke kategori ${this.importTargetCategory}!`);
+              this.initOrUpdateDataTable();
+            } catch (err) {
+              console.error(err);
+              alert('Gagal membaca file Excel. Pastikan kolom bernama "Bahasa Indonesia" dan "Romaji".');
+            }
+          };
+
+          reader.readAsArrayBuffer(file);
+        },
+
+        async exportAllToZip() {
+          const zip = new JSZip();
+          let hasData = false;
+
+          this.submenus.forEach(cat => {
+            let items = this.vocabData[cat.id] || [];
+            if (items.length > 0) {
+              hasData = true;
+              let excelRows = items.map(it => ({
+                "Bahasa Indonesia": it.indonesia,
+                "Romaji": it.romaji,
+                "Hiragana": it.hiragana,
+                "Katakana": it.katakana
+              }));
+
+              let worksheet = XLSX.utils.json_to_sheet(excelRows);
+              let workbook = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(workbook, worksheet, cat.title);
+
+              let excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+              zip.file(`${cat.id}_kotoba.xlsx`, excelBuffer);
+            }
+          });
+
+          if (!hasData) {
+            alert('Tidak ada data kosakata untuk diexport!');
+            return;
+          }
+
+          let content = await zip.generateAsync({ type: 'blob' });
+          let url = window.URL.createObjectURL(content);
+          let a = document.createElement('a');
+          a.href = url;
+          a.download = 'Semua_Kotoba_Minna_Nihongo.zip';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        },
+
+        saveCategory() {
+          if (!this.editCatId.trim() || !this.editCatTitle.trim()) {
+            alert('ID dan Judul Kategori wajib diisi!');
+            return;
+          }
+          let cleanId = this.editCatId.trim().toLowerCase().replace(/\s+/g, '_');
+
+          if (this.editCatIndex === null) {
+            if (this.submenus.some(s => s.id === cleanId)) {
+              alert('ID Kategori sudah ada!');
+              return;
+            }
+            this.submenus.push({ id: cleanId, title: this.editCatTitle.trim() });
+            alert('Kategori berhasil ditambahkan!');
+          } else {
+            this.submenus[this.editCatIndex].title = this.editCatTitle.trim();
+            alert('Kategori berhasil diperbarui!');
+          }
+
+          localStorage.setItem('minna_submenus', JSON.stringify(this.submenus));
+          this.resetCategoryForm();
+          this.loadStorageData();
+          this.initOrUpdateCategoryTable();
+        },
+
+        editCategory(index) {
+          let cat = this.submenus[index];
+          this.editCatIndex = index;
+          this.editCatId = cat.id;
+          this.editCatTitle = cat.title;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        resetCategoryForm() {
+          this.editCatIndex = null;
+          this.editCatId = '';
+          this.editCatTitle = '';
+        },
+
+        deleteCategory(index) {
+          if (confirm('Hapus kategori ini beserta seluruh kosakatanya?')) {
+            let catId = this.submenus[index].id;
+            this.submenus.splice(index, 1);
+            localStorage.setItem('minna_submenus', JSON.stringify(this.submenus));
+
+            if (this.vocabData[catId]) {
+              delete this.vocabData[catId];
+              localStorage.setItem('minna_vocab_data', JSON.stringify(this.vocabData));
+            }
+            alert('Kategori berhasil dihapus!');
+            this.loadStorageData();
+            this.initOrUpdateDataTable();
+            this.initOrUpdateCategoryTable();
+          }
+        },
+
+        saveItem() {
+          if (!this.newItem.indonesia.trim() || !this.newItem.romaji.trim()) {
+            alert('Minimal isi Bahasa Indonesia dan Romaji!');
+            return;
+          }
+          if (!this.vocabData[this.selectedCategory]) {
+            this.vocabData[this.selectedCategory] = [];
+          }
+
+          if (this.editIndex === null) {
+            this.vocabData[this.selectedCategory].push({ ...this.newItem });
+            alert('Kosakata berhasil ditambahkan!');
+          } else {
+            this.vocabData[this.viewCategory][this.editIndex] = { ...this.newItem };
+            alert('Kosakata berhasil diperbarui!');
+            this.editIndex = null;
+          }
+
+          localStorage.setItem('minna_vocab_data', JSON.stringify(this.vocabData));
+          this.resetForm();
+          this.initOrUpdateDataTable();
+        },
+
+        editItem(index) {
+          let items = this.getCurrentCategoryItems();
+          this.newItem = { ...items[index] };
+          this.selectedCategory = this.viewCategory;
+          this.editIndex = index;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        resetForm() {
+          this.newItem = { indonesia: '', romaji: '', hiragana: '', katakana: '' };
+          this.editIndex = null;
+        },
+
+        getCurrentCategoryItems() {
+          return this.vocabData[this.viewCategory] || [];
+        },
+
+        deleteItem(itemIndex) {
+          if (confirm('Hapus kosakata ini?')) {
+            this.vocabData[this.viewCategory].splice(itemIndex, 1);
+            localStorage.setItem('minna_vocab_data', JSON.stringify(this.vocabData));
+            this.initOrUpdateDataTable();
+          }
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+        },
+        
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        }
+      }
+    }
+
+    // Listener global untuk event tombol edit & delete dari DataTables Kosakata
+    window.addEventListener('edit-vocab', (e) => {
+      const alpineComponent = document.querySelector('[x-data]').__x.$data;
+      alpineComponent.editItem(e.detail);
+    });
+
+    window.addEventListener('delete-vocab', (e) => {
+      const alpineComponent = document.querySelector('[x-data]').__x.$data;
+      alpineComponent.deleteItem(e.detail);
+    });
+
+    // Listener global untuk event tombol edit & delete dari DataTables Kategori
+    window.addEventListener('edit-category', (e) => {
+      const alpineComponent = document.querySelector('[x-data]').__x.$data;
+      alpineComponent.editCategory(e.detail);
+    });
+
+    window.addEventListener('delete-category', (e) => {
+      const alpineComponent = document.querySelector('[x-data]').__x.$data;
+      alpineComponent.deleteCategory(e.detail);
+    });
+  </script>
+</body>
+</html>

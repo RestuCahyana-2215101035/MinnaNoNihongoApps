@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minna no Nihongo - Katakana</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', }
+  </script>
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+  </style>
+</head>
+<body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="katakanaApp()" x-init="initApp()">
+
+  <div class="flex h-screen overflow-hidden">
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+
+    <!-- SIDEBAR CONTAINER (Dimuat otomatis dari sidebar.html) -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <!-- HEADER CONTAINER (Dimuat otomatis dari header.html) -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY CONTENT (Isi Halaman Katakana) -->
+      <main class="flex-1 overflow-y-auto p-8 space-y-6">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Tabel Lengkap Katakana (カタカナ)</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Digunakan untuk menuliskan kata serapan bahasa asing, nama negara, atau kata penegas.</p>
+          </div>
+          <span class="text-xs bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold px-4 py-2 rounded-xl border border-blue-100 dark:border-blue-900/50" x-text="katakanaList.length + ' Karakter'"></span>
+        </div>
+
+        <!-- TABEL KATAKANA -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[400px]">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th class="py-4 px-6">Kategori Bunyi</th>
+                  <th class="py-4 px-6">Romaji</th>
+                  <th class="py-4 px-6 text-center">Huruf Katakana</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+                <template x-for="(item, index) in katakanaList" :key="index">
+                  <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition" :class="item.kategori.includes('Khusus') ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''">
+                    <td class="py-4 px-6 font-medium text-slate-800 dark:text-slate-200" x-text="item.kategori"></td>
+                    <td class="py-4 px-6 italic font-mono text-slate-500 dark:text-slate-400" x-text="item.romaji"></td>
+                    <td class="py-4 px-6 font-bold text-blue-600 dark:text-blue-400 text-3xl text-center font-serif" x-text="item.katakana"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function katakanaApp() {
+      return {
+        sidebarOpen: false,
+        materiAwalDropdown: true, // Membuka dropdown materi awal secara otomatis di sidebar
+        kotobaDropdown: false,
+        darkMode: false,
+
+        async initApp() {
+          this.initTheme();
+          try {
+            const sidebarRes = await fetch('./sidebar.html');
+            if (sidebarRes.ok) {
+              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+              this.renderDynamicKotobaSubmenus();
+            }
+            const headerRes = await fetch('./header.html');
+            if (headerRes.ok) {
+              document.getElementById('header-container').innerHTML = await headerRes.text();
+            }
+          } catch (e) {
+            console.error('Gagal memuat template modular:', e);
+          }
+        },
+
+        renderDynamicKotobaSubmenus() {
+          const container = document.getElementById('dynamic-kotoba-links');
+          if (!container) return;
+
+          let submenus = JSON.parse(localStorage.getItem('minna_submenus'));
+          if (!submenus) {
+            submenus = [
+              { id: 'ungkapan_waktu', title: 'Ungkapan Waktu' },
+              { id: 'penanda_waktu', title: 'Penanda Waktu' },
+              { id: 'kata_keterangan', title: 'Kata Keterangan' },
+              { id: 'kata_benda', title: 'Kata Benda' },
+              { id: 'kk_gol1', title: 'Kata Kerja Golongan I' },
+              { id: 'kk_gol2', title: 'Kata Kerja Golongan II' },
+              { id: 'kk_gol3', title: 'Kata Kerja Golongan III' },
+              { id: 'salam', title: 'Salam (Aisatsu)' },
+              { id: 'kazoku', title: 'Kazoku (Keluarga)' }
+            ];
+            localStorage.setItem('minna_submenus', JSON.stringify(submenus));
+          }
+
+          submenus.forEach(sub => {
+            const link = document.createElement('a');
+            link.href = `kotoba.html?cat=${sub.id}`;
+            link.className = 'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+            link.innerHTML = `<i class="fa-solid fa-angle-right text-[10px]"></i> ${sub.title}`;
+            container.appendChild(link);
+          });
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+        },
+        
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        },
+
+        // Data Katakana Lengkap 100%
+        katakanaList: [
+          { kategori: "Vokal Dasar", romaji: "a", katakana: "ア" },
+          { kategori: "Vokal Dasar", romaji: "i", katakana: "イ" },
+          { kategori: "Vokal Dasar", romaji: "u", katakana: "ウ" },
+          { kategori: "Vokal Dasar", romaji: "e", katakana: "エ" },
+          { kategori: "Vokal Dasar", romaji: "o", katakana: "オ" },
+          { kategori: "Baris K", romaji: "ka", katakana: "カ" },
+          { kategori: "Baris K", romaji: "ki", katakana: "キ" },
+          { kategori: "Baris K", romaji: "ku", katakana: "ク" },
+          { kategori: "Baris K", romaji: "ke", katakana: "ケ" },
+          { kategori: "Baris K", romaji: "ko", katakana: "コ" },
+          { kategori: "Baris S", romaji: "sa", katakana: "サ" },
+          { kategori: "Baris S", romaji: "shi", katakana: "シ" },
+          { kategori: "Baris S", romaji: "su", katakana: "ス" },
+          { kategori: "Baris S", romaji: "se", katakana: "セ" },
+          { kategori: "Baris S", romaji: "so", katakana: "ソ" },
+          { kategori: "Baris T", romaji: "ta", katakana: "タ" },
+          { kategori: "Baris T", romaji: "chi", katakana: "チ" },
+          { kategori: "Baris T", romaji: "tsu", katakana: "ツ" },
+          { kategori: "Baris T", romaji: "te", katakana: "テ" },
+          { kategori: "Baris T", romaji: "to", katakana: "ト" },
+          { kategori: "Baris N", romaji: "na", katakana: "ナ" },
+          { kategori: "Baris N", romaji: "ni", katakana: "ニ" },
+          { kategori: "Baris N", romaji: "nu", katakana: "ヌ" },
+          { kategori: "Baris N", romaji: "ne", katakana: "ネ" },
+          { kategori: "Baris N", romaji: "no", katakana: "ノ" },
+          { kategori: "Baris H", romaji: "ha", katakana: "ハ" },
+          { kategori: "Baris H", romaji: "hi", katakana: "ヒ" },
+          { kategori: "Baris H", romaji: "fu", katakana: "フ" },
+          { kategori: "Baris H", romaji: "he", katakana: "ヘ" },
+          { kategori: "Baris H", romaji: "ho", katakana: "ホ" },
+          { kategori: "Baris M", romaji: "ma", katakana: "マ" },
+          { kategori: "Baris M", romaji: "mi", katakana: "ミ" },
+          { kategori: "Baris M", romaji: "mu", katakana: "ム" },
+          { kategori: "Baris M", romaji: "me", katakana: "メ" },
+          { kategori: "Baris M", romaji: "mo", katakana: "モ" },
+          { kategori: "Baris Y", romaji: "ya", katakana: "ヤ" },
+          { kategori: "Baris Y", romaji: "yu", katakana: "ユ" },
+          { kategori: "Baris Y", romaji: "yo", katakana: "ヨ" },
+          { kategori: "Baris R", romaji: "ra", katakana: "ラ" },
+          { kategori: "Baris R", romaji: "ri", katakana: "リ" },
+          { kategori: "Baris R", romaji: "ru", katakana: "ル" },
+          { kategori: "Baris R", romaji: "re", katakana: "レ" },
+          { kategori: "Baris R", romaji: "ro", katakana: "ロ" },
+          { kategori: "Baris W", romaji: "wa", katakana: "ワ" },
+          { kategori: "Baris W", romaji: "wo", katakana: "ヲ" },
+          { kategori: "Konsonan N", romaji: "n", katakana: "ン" },
+          { kategori: "Dakuon G", romaji: "ga", katakana: "ガ" },
+          { kategori: "Dakuon G", romaji: "gi", katakana: "ギ" },
+          { kategori: "Dakuon G", romaji: "gu", katakana: "グ" },
+          { kategori: "Dakuon G", romaji: "ge", katakana: "ゲ" },
+          { kategori: "Dakuon G", romaji: "go", katakana: "ゴ" },
+          { kategori: "Dakuon Z", romaji: "za", katakana: "ザ" },
+          { kategori: "Dakuon Z", romaji: "ji", katakana: "ジ" },
+          { kategori: "Dakuon Z", romaji: "zu", katakana: "ズ" },
+          { kategori: "Dakuon Z", romaji: "ze", katakana: "ゼ" },
+          { kategori: "Dakuon Z", romaji: "zo", katakana: "ゾ" },
+          { kategori: "Dakuon D", romaji: "da", katakana: "ダ" },
+          { kategori: "Dakuon D", romaji: "ji", katakana: "ヂ" },
+          { kategori: "Dakuon D", romaji: "zu", katakana: "ヅ" },
+          { kategori: "Dakuon D", romaji: "de", katakana: "デ" },
+          { kategori: "Dakuon D", romaji: "do", katakana: "ド" },
+          { kategori: "Dakuon B", romaji: "ba", katakana: "バ" },
+          { kategori: "Dakuon B", romaji: "bi", katakana: "ビ" },
+          { kategori: "Dakuon B", romaji: "bu", katakana: "ブ" },
+          { kategori: "Dakuon B", romaji: "be", katakana: "ベ" },
+          { kategori: "Dakuon B", romaji: "bo", katakana: "ボ" },
+          { kategori: "Handakuon P", romaji: "pa", katakana: "パ" },
+          { kategori: "Handakuon P", romaji: "pi", katakana: "ピ" },
+          { kategori: "Handakuon P", romaji: "pu", katakana: "プ" },
+          { kategori: "Handakuon P", romaji: "pe", katakana: "ペ" },
+          { kategori: "Handakuon P", romaji: "po", katakana: "ポ" },
+          { kategori: "Yoon K", romaji: "kya", katakana: "キャ" },
+          { kategori: "Yoon K", romaji: "kyu", katakana: "キュ" },
+          { kategori: "Yoon K", romaji: "kyo", katakana: "キョ" },
+          { kategori: "Yoon S", romaji: "sha", katakana: "シャ" },
+          { kategori: "Yoon S", romaji: "shu", katakana: "シュ" },
+          { kategori: "Yoon S", romaji: "sho", katakana: "ショ" },
+          { kategori: "Yoon T", romaji: "cha", katakana: "チャ" },
+          { kategori: "Yoon T", romaji: "chu", katakana: "チュ" },
+          { kategori: "Yoon T", romaji: "cho", katakana: "チョ" },
+          { kategori: "Yoon N", romaji: "nya", katakana: "ニャ" },
+          { kategori: "Yoon N", romaji: "nyu", katakana: "ニュ" },
+          { kategori: "Yoon N", romaji: "nyo", katakana: "ニョ" },
+          { kategori: "Yoon H", romaji: "hya", katakana: "ヒャ" },
+          { kategori: "Yoon H", romaji: "hyu", katakana: "ヒュ" },
+          { kategori: "Yoon H", romaji: "hyo", katakana: "ヒョ" },
+          { kategori: "Yoon M", romaji: "mya", katakana: "ミャ" },
+          { kategori: "Yoon M", romaji: "myu", katakana: "ミュ" },
+          { kategori: "Yoon M", romaji: "myo", katakana: "ミョ" },
+          { kategori: "Yoon R", romaji: "rya", katakana: "リャ" },
+          { kategori: "Yoon R", romaji: "ryu", katakana: "リュ" },
+          { kategori: "Yoon R", romaji: "ryo", katakana: "リョ" },
+          { kategori: "Yoon G", romaji: "gya", katakana: "ギャ" },
+          { kategori: "Yoon G", romaji: "gyu", katakana: "ギュ" },
+          { kategori: "Yoon G", romaji: "gyo", katakana: "ギョ" },
+          { kategori: "Yoon J", romaji: "ja", katakana: "ジャ" },
+          { kategori: "Yoon J", romaji: "ju", katakana: "ジュ" },
+          { kategori: "Yoon J", romaji: "jo", katakana: "ジョ" },
+          { kategori: "Yoon B", romaji: "bya", katakana: "ビャ" },
+          { kategori: "Yoon B", romaji: "byu", katakana: "ビュ" },
+          { kategori: "Yoon B", romaji: "byo", katakana: "ビョ" },
+          { kategori: "Yoon P", romaji: "pya", katakana: "ピャ" },
+          { kategori: "Yoon P", romaji: "pyu", katakana: "ピュ" },
+          { kategori: "Yoon P", romaji: "pyo", katakana: "ピョ" },
+          { kategori: "Katakana Khusus", romaji: "wi", katakana: "ウィ" },
+          { kategori: "Katakana Khusus", romaji: "we", katakana: "ウェ" },
+          { kategori: "Katakana Khusus", romaji: "wo", katakana: "ウォ" },
+          { kategori: "Katakana Khusus", romaji: "va", katakana: "ヴァ" },
+          { kategori: "Katakana Khusus", romaji: "vi", katakana: "ヴィ" },
+          { kategori: "Katakana Khusus", romaji: "ve", katakana: "ヴェ" },
+          { kategori: "Katakana Khusus", romaji: "vo", katakana: "ヴォ" },
+          { kategori: "Katakana Khusus", romaji: "fa", katakana: "ファ" },
+          { kategori: "Katakana Khusus", romaji: "fi", katakana: "フィ" },
+          { kategori: "Katakana Khusus", romaji: "fe", katakana: "フェ" },
+          { kategori: "Katakana Khusus", romaji: "fo", katakana: "フォ" },
+          { kategori: "Katakana Khusus", romaji: "che", katakana: "チェ" },
+          { kategori: "Katakana Khusus", romaji: "she", katakana: "シェ" },
+          { kategori: "Katakana Khusus", romaji: "je", katakana: "ジェ" },
+          { kategori: "Katakana Khusus", romaji: "tsa", katakana: "ツァ" },
+          { kategori: "Katakana Khusus", romaji: "tse", katakana: "ツェ" },
+          { kategori: "Katakana Khusus", romaji: "tso", katakana: "ツォ" },
+          { kategori: "Katakana Khusus", romaji: "ti", katakana: "ティ" },
+          { kategori: "Katakana Khusus", romaji: "tu", katakana: "トゥ" },
+          { kategori: "Katakana Khusus", romaji: "di", katakana: "ディ" },
+          { kategori: "Katakana Khusus", romaji: "du", katakana: "ドゥ" },
+          { kategori: "Katakana Khusus", romaji: "dyu", katakana: "デュ" }
+        ]
+      }
+    }
+  </script>
+</body>
+</html>

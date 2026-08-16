@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minna no Nihongo - Kanji Dasar</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', }
+  </script>
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+  </style>
+</head>
+<body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="kanjiApp()" x-init="initApp()">
+
+  <div class="flex h-screen overflow-hidden">
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+
+    <!-- SIDEBAR CONTAINER (Dimuat otomatis dari sidebar.html) -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <!-- HEADER CONTAINER (Dimuat otomatis dari header.html) -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY CONTENT -->
+      <main class="flex-1 overflow-y-auto p-8 space-y-8">
+        
+        <!-- Header Halaman -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Daftar Kanji Dasar (漢字)</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Kartu belajar Kanji lengkap dengan cara baca Kun'yomi/On'yomi serta contoh kata tingkat dasar (N5).</p>
+          </div>
+          <span class="text-xs bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold px-4 py-2 rounded-xl border border-blue-100 dark:border-blue-900/50" x-text="kanjiList.length + ' Karakter Kanji'"></span>
+        </div>
+
+        <!-- GRID KARTU KANJI -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <template x-for="item in kanjiList" :key="item.id">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
+              
+              <!-- Card Header -->
+              <div class="bg-slate-900 dark:bg-slate-800 text-white p-4 px-6 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="text-xs bg-blue-600 text-white font-mono px-2.5 py-0.5 rounded-lg" x-text="'#' + item.id"></span>
+                  <h3 class="text-3xl font-extrabold font-serif text-blue-400" x-text="item.kanji"></h3>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Arti Dasar</span>
+                  <span class="text-sm font-bold text-emerald-400" x-text="item.arti"></span>
+                </div>
+              </div>
+
+              <!-- Card Body -->
+              <div class="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                <div class="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs space-y-1">
+                  <div class="text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Cara Baca:</div>
+                  <div class="text-slate-800 dark:text-slate-200 font-medium leading-relaxed" x-text="item.caraBaca"></div>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800 pb-1.5 uppercase tracking-wider text-[10px]">Contoh Kata:</div>
+                  <ul class="space-y-1.5 text-xs">
+                    <template x-for="(ex, idx) in item.contoh" :key="idx">
+                      <li class="flex items-center justify-between py-1 border-b border-slate-50 dark:border-slate-800/60 last:border-0">
+                        <span class="font-serif text-sm font-bold text-slate-900 dark:text-white" x-text="ex.k"></span>
+                        <span class="text-slate-500 italic font-mono" x-text="ex.b"></span>
+                        <span class="font-medium text-slate-600 dark:text-slate-300" x-text="ex.a"></span>
+                      </li>
+                    </template>
+                  </ul>
+                </div>
+              </div>
+
+            </div>
+          </template>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function kanjiApp() {
+      return {
+        sidebarOpen: false,
+        materiAwalDropdown: true, // Membuka dropdown materi awal secara otomatis di sidebar
+        kotobaDropdown: false,
+        darkMode: false,
+
+        async initApp() {
+          this.initTheme();
+          try {
+            const sidebarRes = await fetch('./sidebar.html');
+            if (sidebarRes.ok) {
+              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+              this.renderDynamicKotobaSubmenus();
+            }
+            const headerRes = await fetch('./header.html');
+            if (headerRes.ok) {
+              document.getElementById('header-container').innerHTML = await headerRes.text();
+            }
+          } catch (e) {
+            console.error('Gagal memuat template modular:', e);
+          }
+        },
+
+        renderDynamicKotobaSubmenus() {
+          const container = document.getElementById('dynamic-kotoba-links');
+          if (!container) return;
+
+          let submenus = JSON.parse(localStorage.getItem('minna_submenus'));
+          if (!submenus) {
+            submenus = [
+              { id: 'ungkapan_waktu', title: 'Ungkapan Waktu' },
+              { id: 'penanda_waktu', title: 'Penanda Waktu' },
+              { id: 'kata_keterangan', title: 'Kata Keterangan' },
+              { id: 'kata_benda', title: 'Kata Benda' },
+              { id: 'kk_gol1', title: 'Kata Kerja Golongan I' },
+              { id: 'kk_gol2', title: 'Kata Kerja Golongan II' },
+              { id: 'kk_gol3', title: 'Kata Kerja Golongan III' },
+              { id: 'salam', title: 'Salam (Aisatsu)' },
+              { id: 'kazoku', title: 'Kazoku (Keluarga)' }
+            ];
+            localStorage.setItem('minna_submenus', JSON.stringify(submenus));
+          }
+
+          submenus.forEach(sub => {
+            const link = document.createElement('a');
+            link.href = `kotoba.html?cat=${sub.id}`;
+            link.className = 'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+            link.innerHTML = `<i class="fa-solid fa-angle-right text-[10px]"></i> ${sub.title}`;
+            container.appendChild(link);
+          });
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+        },
+        
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        },
+
+        // Data 110 Kanji Dasar Lengkap
+        kanjiList: [
+          { id: 1, kanji: "山", arti: "Gunung", caraBaca: "やま / サン", contoh: [{ k: "やま", b: "yama", a: "Gunung" }, { k: "ふじ山", b: "fujisan", a: "Gunung Fuji" }] },
+          { id: 2, kanji: "川", arti: "Sungai", caraBaca: "かわ", contoh: [{ k: "川のなか", b: "kawa no naka", a: "di dalam Sungai" }, { k: "山川さん", b: "yamakawa-san", a: "Saudara Yamakawa" }] },
+          { id: 3, kanji: "田", arti: "Sawah", caraBaca: "た / だ", contoh: [{ k: "田んぼ", b: "tanbo", a: "Sawah padi" }, { k: "山田さん", b: "yamada-san", a: "Saudara Yamada" }] },
+          { id: 4, kanji: "日", arti: "Matahari", caraBaca: "ひ、び / ニチ、ニ", contoh: [{ k: "日よう日", b: "nichiyoubi", a: "Hari minggu" }, { k: "日本", b: "nihon", a: "Jepang" }] },
+          { id: 5, kanji: "月", arti: "Bulan", caraBaca: "つき / ゲツ、ガツ", contoh: [{ k: "月よう日", b: "getsuyoubi", a: "Hari senin" }, { k: "一月", b: "ichigatsu", a: "Januari" }] },
+          { id: 6, kanji: "火", arti: "Api", caraBaca: "ひ / カ", contoh: [{ k: "火ようび", b: "kayoubi", a: "Hari selasa" }, { k: "火山", b: "kazan", a: "Gunung berapi" }] },
+          { id: 7, kanji: "水", arti: "Air", caraBaca: "みず / スイ", contoh: [{ k: "水", b: "mizu", a: "Air" }, { k: "水ようび", b: "suiyoubi", a: "Hari rabu" }] },
+          { id: 8, kanji: "木", arti: "Pohon", caraBaca: "き / モク", contoh: [{ k: "木", b: "ki", a: "Pohon" }, { k: "木ようび", b: "mokuyoubi", a: "Hari kamis" }] },
+          { id: 9, kanji: "金", arti: "Emas / Uang", caraBaca: "かね / キン", contoh: [{ k: "お金", b: "okane", a: "Uang" }, { k: "金ようび", b: "kinyoubi", a: "Hari jumat" }] },
+          { id: 10, kanji: "土", arti: "Tanah", caraBaca: "つち / ド、ト", contoh: [{ k: "土", b: "tsuchi", a: "Tanah" }, { k: "土ようび", b: "doyoubi", a: "Hari sabtu" }] },
+          { id: 11, kanji: "一", arti: "Satu", caraBaca: "ひと / イチ", contoh: [{ k: "一つ", b: "hitotsu", a: "Satu buah" }, { k: "一月", b: "ichigatsu", a: "Januari" }] },
+          { id: 12, kanji: "二", arti: "Dua", caraBaca: "ふた / ニ", contoh: [{ k: "二つ", b: "futatsu", a: "Dua buah" }, { k: "二月", b: "nigatsu", a: "Februari" }] },
+          { id: 13, kanji: "三", arti: "Tiga", caraBaca: "みっ / サン", contoh: [{ k: "三つ", b: "mittsu", a: "Tiga buah" }, { k: "三人", b: "sannin", a: "Tiga orang" }] },
+          { id: 14, kanji: "四", arti: "Empat", caraBaca: "よっ、よん、よ / シ", contoh: [{ k: "四つ", b: "yottsu", a: "Empat buah" }, { k: "四月", b: "shigatsu", a: "April" }] },
+          { id: 15, kanji: "五", arti: "Lima", caraBaca: "いつ / ゴ", contoh: [{ k: "五つ", b: "itsutsu", a: "Lima buah" }, { k: "五月", b: "gogatsu", a: "Mei" }] },
+          { id: 16, kanji: "六", arti: "Enam", caraBaca: "むっ、むい / ロク", contoh: [{ k: "六つ", b: "muttsu", a: "Enam buah" }, { k: "六月", b: "rokugatsu", a: "Juni" }] },
+          { id: 17, kanji: "七", arti: "Tujuh", caraBaca: "なな / シチ", contoh: [{ k: "七つ", b: "nanatsu", a: "Tujuh buah" }, { k: "七月", b: "shichigatsu", a: "Juli" }] },
+          { id: 18, kanji: "八", arti: "Delapan", caraBaca: "やっ / ハチ", contoh: [{ k: "八つ", b: "yattsu", a: "Delapan buah" }, { k: "八月", b: "hachigatsu", a: "Agustus" }] },
+          { id: 19, kanji: "九", arti: "Sembilan", caraBaca: "ここの / キュウ、ク", contoh: [{ k: "九つ", b: "kokonotsu", a: "Sembilan buah" }, { k: "九月", b: "kugatsu", a: "September" }] },
+          { id: 20, kanji: "十", arti: "Sepuluh", caraBaca: "とお / ジュウ", contoh: [{ k: "十", b: "too", a: "Sepuluh buah" }, { k: "十月", b: "juugatsu", a: "Oktober" }] },
+          { id: 21, kanji: "百", arti: "Ratus", caraBaca: "ヒャク、ビャク、ピャク", contoh: [{ k: "百", b: "hyaku", a: "100" }, { k: "三百", b: "sanbyaku", a: "300" }] },
+          { id: 22, kanji: "千", arti: "Ribu", caraBaca: "セン、ゼン", contoh: [{ k: "千", b: "sen", a: "1000" }, { k: "三千", b: "sanzen", a: "3000" }] },
+          { id: 23, kanji: "万", arti: "Puluhan Ribu", caraBaca: "マン", contoh: [{ k: "一万", b: "ichiman", a: "10000" }, { k: "二万", b: "niman", a: "20000" }] },
+          { id: 24, kanji: "円", arti: "Yen", caraBaca: "エン", contoh: [{ k: "一万円", b: "ichimanen", a: "10000 yen" }, { k: "二万円", b: "nimanen", a: "20000 yen" }] },
+          { id: 25, kanji: "年", arti: "Tahun", caraBaca: "とし / ネン", contoh: [{ k: "1年", b: "ichinen", a: "1 tahun" }, { k: "今年", b: "kotoshi", a: "Tahun ini" }] },
+          { id: 26, kanji: "上", arti: "Atas", caraBaca: "うえ / ジョウ", contoh: [{ k: "上", b: "ue", a: "Atas" }, { k: "いすの上", b: "isu no ue", a: "Atas kursi" }] },
+          { id: 27, kanji: "下", arti: "Bawah", caraBaca: "した / ゲ、ケ", contoh: [{ k: "下", b: "shita", a: "Bawah" }, { k: "上下", b: "jouge", a: "Atas bawah" }] },
+          { id: 28, kanji: "中", arti: "Dalam", caraBaca: "なか / チュウ、ジュウ", contoh: [{ k: "中", b: "naka", a: "Dalam" }, { k: "中学", b: "chuugaku", a: "SMP" }] },
+          { id: 29, kanji: "半", arti: "Setengah", caraBaca: "ハン", contoh: [{ k: "半年", b: "hantoshi", a: "Setengah tahun" }, { k: "一時半", b: "ichijihan", a: "Jam satu setengah" }] },
+          { id: 30, kanji: "分", arti: "Menit / Bagian", caraBaca: "わ / プン、フン、ブン", contoh: [{ k: "二分", b: "nifun", a: "2 menit" }, { k: "分ける", b: "wakeru", a: "Membagi" }] },
+          { id: 31, kanji: "人", arti: "Orang", caraBaca: "ひと / ジン、ニン", contoh: [{ k: "人", b: "hito", a: "Orang" }, { k: "日本人", b: "nihonjin", a: "Orang Jepang" }] },
+          { id: 32, kanji: "子", arti: "Anak", caraBaca: "こ / シ", contoh: [{ k: "子ども", b: "kodomo", a: "Anak" }, { k: "女子", b: "joshi", a: "Anak Perempuan" }] },
+          { id: 33, kanji: "女", arti: "Perempuan", caraBaca: "おんな / ジョ", contoh: [{ k: "女の人", b: "onna no hito", a: "Orang perempuan" }, { k: "女性", b: "josei", a: "Perempuan" }] },
+          { id: 34, kanji: "男", arti: "Laki-Laki", caraBaca: "おとこ / ダン、ナン", contoh: [{ k: "男の人", b: "otoko no hito", a: "Orang laki-laki" }, { k: "男性", b: "dansei", a: "Laki-laki" }] },
+          { id: 35, kanji: "目", arti: "Mata", caraBaca: "め / モク", contoh: [{ k: "目", b: "me", a: "Mata" }, { k: "目薬", b: "megusuri", a: "Obat mata" }] },
+          { id: 36, kanji: "口", arti: "Mulut", caraBaca: "くち、ぐち / コウ", contoh: [{ k: "口", b: "kuchi", a: "Mulut" }, { k: "入口", b: "iriguchi", a: "Pintu masuk" }] },
+          { id: 37, kanji: "手", arti: "Tangan", caraBaca: "て / シュ", contoh: [{ k: "手", b: "te", a: "Tangan" }, { k: "手紙", b: "tegami", a: "Surat" }] },
+          { id: 38, kanji: "足", arti: "Kaki", caraBaca: "あし、た / ソク", contoh: [{ k: "足", b: "ashi", a: "Kaki" }, { k: "足りる", b: "tariru", a: "Cukup" }] },
+          { id: 39, kanji: "力", arti: "Kekuatan / Tenaga", caraBaca: "ちから / リョク", contoh: [{ k: "力", b: "chikara", a: "Kekuatan" }, { k: "体力", b: "tairyoku", a: "Kekuatan tubuh" }] },
+          { id: 40, kanji: "父", arti: "Ayah", caraBaca: "ちち", contoh: [{ k: "父", b: "chichi", a: "Ayah" }, { k: "お父さん", b: "otousan", a: "Ayah" }] },
+          { id: 41, kanji: "母", arti: "Ibu", caraBaca: "はは / ボ", contoh: [{ k: "母", b: "haha", a: "Ibu" }, { k: "お母さん", b: "okaasan", a: "Ibu" }] },
+          { id: 42, kanji: "先", arti: "Depan / Lalu", caraBaca: "さき / セン", contoh: [{ k: "先", b: "saki", a: "Depan" }, { k: "先月", b: "sengetsu", a: "Bulan lalu" }] },
+          { id: 43, kanji: "生", arti: "Lahir / Hidup", caraBaca: "うまーれる / セイ", contoh: [{ k: "生まれる", b: "umareru", a: "Lahir" }, { k: "先生", b: "sensei", a: "Guru" }] },
+          { id: 44, kanji: "学", arti: "Belajar", caraBaca: "まなーぶ / ガク、ガッ", contoh: [{ k: "学生", b: "gakusei", a: "Siswa" }, { k: "大学", b: "daigaku", a: "Universitas" }] },
+          { id: 45, kanji: "校", arti: "Sekolah / Tempat", caraBaca: "コウ", contoh: [{ k: "学校", b: "gakkou", a: "Sekolah" }, { k: "校長", b: "kouchou", a: "Kepala sekolah" }] },
+          { id: 46, kanji: "友", arti: "Teman", caraBaca: "とも / ユウ", contoh: [{ k: "友だち", b: "tomodachi", a: "Teman" }, { k: "友人", b: "yuujin", a: "Teman" }] },
+          { id: 47, kanji: "本", arti: "Buku / Dasar", caraBaca: "もと / ホン、ボン、ポン", contoh: [{ k: "本", b: "hon", a: "Buku" }, { k: "日本", b: "nihon", a: "Jepang" }] },
+          { id: 48, kanji: "毎", arti: "Setiap", caraBaca: "マイ", contoh: [{ k: "毎日", b: "mainichi", a: "Setiap hari" }, { k: "毎月", b: "maitsuki", a: "Setiap bulan" }] },
+          { id: 49, kanji: "何", arti: "Apa", caraBaca: "なに、なん", contoh: [{ k: "何", b: "nani", a: "Apa?" }, { k: "何月", b: "nangatsu", a: "Bulan berapa?" }] },
+          { id: 50, kanji: "前", arti: "Depan", caraBaca: "まえ / ゼン", contoh: [{ k: "前", b: "mae", a: "Depan" }, { k: "三日前", b: "mikkamae", a: "3 hari lalu" }] },
+          { id: 51, kanji: "後", arti: "Belakang / Nanti", caraBaca: "うしろ、あと / ゴ、コウ", contoh: [{ k: "後ろ", b: "ushiro", a: "Belakang" }, { k: "あと", b: "ato", a: "Nanti" }] },
+          { id: 52, kanji: "外", arti: "Luar", caraBaca: "そと / ガイ", contoh: [{ k: "外", b: "soto", a: "Luar" }, { k: "外国", b: "gaikoku", a: "Luar negeri" }] },
+          { id: 53, kanji: "左", arti: "Kiri", caraBaca: "ひだり / サ", contoh: [{ k: "左", b: "hidari", a: "Kiri" }, { k: "左手", b: "hidarite", a: "Tangan kiri" }] },
+          { id: 54, kanji: "右", arti: "Kanan", caraBaca: "みぎ / ユウ", contoh: [{ k: "右", b: "migi", a: "Kanan" }, { k: "右手", b: "migite", a: "Tangan kanan" }] },
+          { id: 55, kanji: "東", arti: "Timur", caraBaca: "ひがし / トウ", contoh: [{ k: "東", b: "higashi", a: "Timur" }, { k: "東京", b: "toukyou", a: "Tokyo" }] },
+          { id: 56, kanji: "西", arti: "Barat", caraBaca: "にし", contoh: [{ k: "西", b: "nishi", a: "Barat" }, { k: "西口", b: "nishiguchi", a: "Pintu barat" }] },
+          { id: 57, kanji: "南", arti: "Selatan", caraBaca: "みなみ / ナン", contoh: [{ k: "南", b: "minami", a: "Selatan" }, { k: "東南アジア", b: "tounan ajia", a: "Asia tenggara" }] },
+          { id: 58, kanji: "北", arti: "Utara", caraBaca: "きた / ホク", contoh: [{ k: "北", b: "kita", a: "Utara" }, { k: "北口", b: "kitaguchi", a: "Pintu utara" }] },
+          { id: 59, kanji: "名", arti: "Nama", caraBaca: "な / メイ", contoh: [{ k: "名前", b: "namae", a: "Nama" }, { k: "有名", b: "yuumei", a: "Terkenal" }] },
+          { id: 60, kanji: "雨", arti: "Hujan", caraBaca: "あめ / ウ", contoh: [{ k: "雨", b: "ame", a: "Hujan" }, { k: "大雨", b: "ooame", a: "Hujan lebat" }] },
+          { id: 61, kanji: "牛", arti: "Sapi", caraBaca: "うし / ギュウ", contoh: [{ k: "牛", b: "ushi", a: "Sapi" }, { k: "牛肉", b: "gyuuniku", a: "Daging sapi" }] },
+          { id: 62, kanji: "馬", arti: "Kuda", caraBaca: "うま / バ", contoh: [{ k: "馬", b: "uma", a: "Kuda" }, { k: "馬車", b: "basha", a: "Kereta kuda" }] },
+          { id: 63, kanji: "魚", arti: "Ikan", caraBaca: "さかな / ギョ", contoh: [{ k: "魚", b: "sakana", a: "Ikan" }, { k: "金魚", b: "kingyo", a: "Ikan mas" }] },
+          { id: 64, kanji: "貝", arti: "Kerang", caraBaca: "かい", contoh: [{ k: "貝", b: "kai", a: "Kerang" }, { k: "貝がら", b: "kaigara", a: "Cangkang" }] },
+          { id: 65, kanji: "天", arti: "Langit", caraBaca: "テン", contoh: [{ k: "天気", b: "tenki", a: "Cuaca" }, { k: "天国", b: "tengoku", a: "Surga" }] },
+          { id: 66, kanji: "気", arti: "Jiwa / Semangat", caraBaca: "キ", contoh: [{ k: "天気", b: "tenki", a: "Cuaca" }, { k: "気持ち", b: "kimochi", a: "Perasaan" }] },
+          { id: 67, kanji: "車", arti: "Mobil / Gerobak", caraBaca: "くるま / シャ", contoh: [{ k: "車", b: "kuruma", a: "Mobil" }, { k: "電車", b: "densha", a: "Kereta api" }] },
+          { id: 68, kanji: "門", arti: "Gerbang", caraBaca: "モン", contoh: [{ k: "門", b: "mon", a: "Gerbang" }, { k: "専門", b: "senmon", a: "Jurusan" }] },
+          { id: 69, kanji: "午", arti: "Tengah Hari", caraBaca: "ゴ", contoh: [{ k: "午前", b: "gozen", a: "Pagi (a.m)" }, { k: "午後", b: "gogo", a: "Siang (p.m)" }] },
+          { id: 70, kanji: "大", arti: "Besar", caraBaca: "おおーきい / ダイ、タイ", contoh: [{ k: "大きい", b: "ookii", a: "Besar" }, { k: "大学", b: "daigaku", a: "Universitas" }] },
+          { id: 71, kanji: "小", arti: "Kecil", caraBaca: "ちいーさい / ショウ", contoh: [{ k: "小さい", b: "chiisai", a: "Kecil" }, { k: "小学校", b: "shougaakkou", a: "Sekolah Dasar" }] },
+          { id: 72, kanji: "高", arti: "Tinggi / Mahal", caraBaca: "たかーい / コウ", contoh: [{ k: "高い", b: "takai", a: "Tinggi/Mahal" }, { k: "高校生", b: "koukousei", a: "Siswa SMA" }] },
+          { id: 73, kanji: "安", arti: "Murah", caraBaca: "やすーい / アン", contoh: [{ k: "安い", b: "yasui", a: "Murah" }, { k: "安心", b: "anshin", a: "Lega" }] },
+          { id: 74, kanji: "新", arti: "Baru", caraBaca: "あたらしい / シン", contoh: [{ k: "新しい", b: "atarashii", a: "Baru" }, { k: "新聞", b: "shinbun", a: "Koran" }] },
+          { id: 75, kanji: "古", arti: "Lama / Bekas", caraBaca: "ふるーい / コ", contoh: [{ k: "古い", b: "furui", a: "Lama" }, { k: "中古", b: "chuuko", a: "Bekas" }] },
+          { id: 76, kanji: "長", arti: "Panjang", caraBaca: "ながーい / チョウ", contoh: [{ k: "長い", b: "nagai", a: "Panjang" }, { k: "社長", b: "shachou", a: "Direktur" }] },
+          { id: 77, kanji: "多", arti: "Banyak", caraBaca: "おおーい / タ", contoh: [{ k: "多い", b: "ooi", a: "Banyak" }, { k: "多国", b: "takoku", a: "Banyak negara" }] },
+          { id: 78, kanji: "少", arti: "Sedikit", caraBaca: "すくーない、すこーし / ショウ", contoh: [{ k: "少ない", b: "sukunai", a: "Sedikit" }, { k: "少し", b: "sukoshi", a: "Sedikit" }] },
+          { id: 79, kanji: "早", arti: "Cepat", caraBaca: "はやーい / ソウ", contoh: [{ k: "早い", b: "hayai", a: "Cepat" }, { k: "早朝", b: "souchou", a: "Pagi-pagi sekali" }] },
+          { id: 80, kanji: "行", arti: "Pergi", caraBaca: "いーく / コウ", contoh: [{ k: "行く", b: "iku", a: "Pergi" }, { k: "銀行", b: "ginkou", a: "Bank" }] },
+          { id: 81, kanji: "来", arti: "Datang", caraBaca: "くーる / ライ", contoh: [{ k: "来る", b: "kuru", a: "Datang" }, { k: "来年", b: "rainen", a: "Tahun depan" }] },
+          { id: 82, kanji: "食", arti: "Makan", caraBaca: "たーべる / ショク", contoh: [{ k: "食べる", b: "taberu", a: "Makan" }, { k: "食堂", b: "shokudou", a: "Tempat makan" }] },
+          { id: 83, kanji: "見", arti: "Melihat", caraBaca: "みーる / ケン", contoh: [{ k: "見る", b: "miru", a: "Melihat" }, { k: "見せる", b: "miseru", a: "Memperlihatkan" }] },
+          { id: 84, kanji: "入", arti: "Masuk", caraBaca: "はいーる、いーれる / ニュウ", contoh: [{ k: "入る", b: "hairu", a: "Masuk" }, { k: "入れる", b: "ireru", a: "Memasukkan" }] },
+          { id: 85, kanji: "出", arti: "Keluar", caraBaca: "でーる、だーす / シュツ", contoh: [{ k: "出る", b: "deru", a: "Keluar" }, { k: "出す", b: "dasu", a: "Mengeluarkan" }] },
+          { id: 86, kanji: "立", arti: "Berdiri", caraBaca: "たーつ / リツ", contoh: [{ k: "立つ", b: "tatsu", a: "Berdiri" }, { k: "国立", b: "kokuritsu", a: "Negeri" }] },
+          { id: 87, kanji: "書", arti: "Menulis", caraBaca: "かーく / ショ", contoh: [{ k: "書く", b: "kaku", a: "Menulis" }, { k: "辞書", b: "jisho", a: "Kamus" }] },
+          { id: 88, kanji: "言", arti: "Mengatakan", caraBaca: "いーう / ゲン", contoh: [{ k: "言う", b: "iu", a: "Mengatakan" }, { k: "言語", b: "gengo", a: "Bahasa" }] },
+          { id: 89, kanji: "飲", arti: "Minum", caraBaca: "のーむ / イン", contoh: [{ k: "飲む", b: "nomu", a: "Minum" }, { k: "飲み物", b: "nomimono", a: "Minuman" }] },
+          { id: 90, kanji: "話", arti: "Berbicara", caraBaca: "はなーす / ワ", contoh: [{ k: "話す", b: "hanasu", a: "Berbicara" }, { k: "会話", b: "kaiwa", a: "Percakapan" }] },
+          { id: 91, kanji: "読", arti: "Membaca", caraBaca: "よーむ / ドク", contoh: [{ k: "読む", b: "yomu", a: "Membaca" }, { k: "読書", b: "dokusho", a: "Membaca buku" }] },
+          { id: 92, kanji: "語", arti: "Kata / Bahasa", caraBaca: "かたーる / ゴ", contoh: [{ k: "日本語", b: "nihongo", a: "Bahasa Jepang" }, { k: "外国語", b: "gaikokugo", a: "Bahasa asing" }] },
+          { id: 93, kanji: "間", arti: "Antara", caraBaca: "あいだ / カン", contoh: [{ k: "間", b: "aida", a: "Antara" }, { k: "時間", b: "jikan", a: "Waktu" }] },
+          { id: 94, kanji: "聞", arti: "Mendengarkan", caraBaca: "きーく / ブン", contoh: [{ k: "聞く", b: "kiku", a: "Mendengarkan" }, { k: "新聞", b: "shinbun", a: "Koran" }] },
+          { id: 95, kanji: "買", arti: "Membeli", caraBaca: "かーう / バイ", contoh: [{ k: "買う", b: "kau", a: "Membeli" }, { k: "買い物", b: "kaimono", a: "Belanja" }] },
+          { id: 96, kanji: "休", arti: "Istirahat", caraBaca: "やすーむ / キュウ", contoh: [{ k: "休む", b: "yasumu", a: "Istirahat" }, { k: "休日", b: "kyuujitsu", a: "Hari libur" }] },
+          { id: 97, kanji: "時", arti: "Waktu / Jam", caraBaca: "とき / ジ", contoh: [{ k: "時", b: "toki", a: "Waktu" }, { k: "時計", b: "tokei", a: "Jam" }] },
+          { id: 98, kanji: "週", arti: "Minggu", caraBaca: "シュウ", contoh: [{ k: "来週", b: "raishuu", a: "Minggu depan" }, { k: "今週", b: "konshuu", a: "Minggu ini" }] },
+          { id: 99, kanji: "道", arti: "Jalan", caraBaca: "みち / ドウ", contoh: [{ k: "道", b: "michi", a: "Jalan" }, { k: "水道", b: "suidou", a: "Air PAM" }] },
+          { id: 100, kanji: "今", arti: "Sekarang", caraBaca: "ima / コン、コ", contoh: [{ k: "今", b: "ima", a: "Sekarang" }, { k: "今日", b: "kyou", a: "Hari ini" }] },
+          { id: 101, kanji: "会", arti: "Bertemu", caraBaca: "あーう / カイ", contoh: [{ k: "会う", b: "au", a: "Bertemu" }, { k: "会議", b: "kaigi", a: "Rapat" }] },
+          { id: 102, kanji: "社", arti: "Perusahaan", caraBaca: "シャ、ジャ", contoh: [{ k: "会社", b: "kaisha", a: "Perusahaan" }, { k: "社長", b: "shachou", a: "Direktur" }] },
+          { id: 103, kanji: "店", arti: "Toko", caraBaca: "みせ / テン", contoh: [{ k: "店", b: "mise", a: "Toko" }, { k: "店員", b: "ten-in", a: "Pegawai toko" }] },
+          { id: 104, kanji: "駅", arti: "Stasiun", caraBaca: "えき", contoh: [{ k: "駅", b: "eki", a: "Stasiun" }, { k: "駅前", b: "ekimae", a: "Depan stasiun" }] },
+          { id: 105, kanji: "花", arti: "Bunga", caraBaca: "はな / カ", contoh: [{ k: "花", b: "hana", a: "Bunga" }, { k: "花火", b: "hanabi", a: "Kembang api" }] },
+          { id: 106, kanji: "国", arti: "Negara", caraBaca: "くに / コク、ゴク", contoh: [{ k: "国", b: "kuni", a: "Negara" }, { k: "外国", b: "gaikoku", a: "Luar negeri" }] },
+          { id: 107, kanji: "白", arti: "Putih", caraBaca: "しろーい / ハク", contoh: [{ k: "白い", b: "shiroi", a: "Putih" }, { k: "白菜", b: "hakusai", a: "Sawi" }] },
+          { id: 108, kanji: "空", arti: "Langit", caraBaca: "そら / クウ", contoh: [{ k: "空", b: "sora", a: "Langit" }, { k: "空気", b: "kuuki", a: "Udara" }] },
+          { id: 109, kanji: "電", arti: "Listrik", caraBaca: "デン", contoh: [{ k: "電気", b: "denki", a: "Lampu/Listrik" }, { k: "電車", b: "densha", a: "Kereta api" }] },
+          { id: 110, kanji: "耳", arti: "Telinga", caraBaca: "みみ", contoh: [{ k: "耳", b: "mimi", a: "Telinga" }] }
+        ]
+      }
+    }
+  </script>
+</body>
+</html>

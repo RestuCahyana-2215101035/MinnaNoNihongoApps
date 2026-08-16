@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minna no Nihongo - Uji Pemahaman Modern</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', }
+  </script>
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+  </style>
+</head>
+<body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="quizApp()" x-init="initApp()">
+
+  <div class="flex h-screen overflow-hidden">
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+
+    <!-- SIDEBAR CONTAINER -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <!-- HEADER CONTAINER -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY CONTENT -->
+      <main class="flex-1 overflow-y-auto p-6 md:p-10 space-y-6">
+        
+        <!-- Header Halaman Modern (Desain Proporsional & Warna Biru Elegan) -->
+        <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 p-6 md:p-7 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+          <div class="space-y-1.5 flex-1">
+            <span class="bg-white/20 backdrop-blur-md px-3.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-white/20 inline-block shadow-xs">
+              <i class="fa-solid fa-graduation-cap mr-1"></i> Ujian Interaktif Premium
+            </span>
+            <h2 class="text-xl md:text-2xl font-black tracking-tight">Uji Pemahaman Bahasa Jepang</h2>
+            <p class="text-xs text-blue-100 max-w-xl">Uji kemampuan dari materi Kanji, Hiragana, Katakana, Penanda Waktu, Ungkapan Waktu, Kata Bilangan (Suuji), hingga kategori Kotoba dengan sistem cerdas.</p>
+          </div>
+          
+          <div class="bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 rounded-2xl flex items-center gap-3 shrink-0 shadow-inner">
+            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-bold">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+              <div class="text-[9px] text-blue-200 font-bold uppercase tracking-wider">Total Bank Soal</div>
+              <div class="text-base font-black" x-text="maxAvailableQuestions + ' Soal'"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAHAP 1: SETUP PENGATURAN KUIS -->
+        <!-- ============================================== -->
+        <template x-if="quizStage === 'setup'">
+          <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl space-y-8 max-w-3xl mx-auto w-full transition-all duration-300">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h4 class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2.5 uppercase tracking-wider">
+                <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center text-xs shadow-xs">
+                  <i class="fa-solid fa-sliders"></i>
+                </div> 
+                Konfigurasi Soal Ujian
+              </h4>
+              <div class="flex items-center gap-2">
+                <button @click="selectAllCategories()" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Pilih Semua</button>
+                <span class="text-slate-300 dark:text-slate-700">|</span>
+                <button @click="deselectAllCategories()" class="text-[11px] font-bold text-slate-400 hover:underline cursor-pointer">Batal Semua</button>
+              </div>
+            </div>
+
+            <!-- Pilih Kategori -->
+            <div class="space-y-3">
+              <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pilih Kategori Materi (Centang Minimal 1):</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2">
+                <template x-for="cat in availableCategories" :key="cat.key">
+                  <label :class="selectedCategories.includes(cat.key) ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 shadow-xs' : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'" class="flex items-center p-3.5 rounded-2xl border-2 cursor-pointer transition text-xs font-semibold">
+                    <input type="checkbox" :value="cat.key" x-model="selectedCategories" @change="updateMaxQuestions()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                    <span class="ml-3 text-slate-700 dark:text-slate-300 font-bold" x-text="cat.title"></span>
+                  </label>
+                </template>
+              </div>
+            </div>
+
+            <!-- Mode Soal -->
+            <div class="space-y-3">
+              <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Format Pertanyaan:</label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-semibold">
+                <label :class="quizQuestionMode === 'indonesia' ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25' : 'border-slate-200 dark:border-slate-800'" class="flex items-center p-4 rounded-2xl border-2 cursor-pointer transition">
+                  <input type="radio" value="indonesia" x-model="quizQuestionMode" class="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                  <span class="ml-2.5 text-slate-700 dark:text-slate-300 font-bold">Bahasa Indonesia</span>
+                </label>
+                <label :class="quizQuestionMode === 'romaji' ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25' : 'border-slate-200 dark:border-slate-800'" class="flex items-center p-4 rounded-2xl border-2 cursor-pointer transition">
+                  <input type="radio" value="romaji" x-model="quizQuestionMode" class="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                  <span class="ml-2.5 text-slate-700 dark:text-slate-300 font-bold">Romaji</span>
+                </label>
+                <label :class="quizQuestionMode === 'both' ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25' : 'border-slate-200 dark:border-slate-800'" class="flex items-center p-4 rounded-2xl border-2 cursor-pointer transition">
+                  <input type="radio" value="both" x-model="quizQuestionMode" class="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                  <span class="ml-2.5 text-slate-700 dark:text-slate-300 font-bold">Acak Keduanya</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Waktu & Input Jumlah Soal Bebas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div class="space-y-2">
+                <label class="block font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Batas Waktu:</label>
+                <select x-model="quizTimeOption" class="w-full p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-bold focus:outline-none focus:border-blue-500 transition">
+                  <option value="0">Tanpa Batas Waktu</option>
+                  <option value="1">1 Menit</option>
+                  <option value="3">3 Menit</option>
+                  <option value="5">5 Menit</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <label class="block font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jumlah Soal:</label>
+                  <span class="text-[11px] text-blue-600 dark:text-blue-400 font-black" x-text="'Maks: ' + maxAvailableQuestions + ' soal'"></span>
+                </div>
+                <input type="number" min="1" :max="maxAvailableQuestions" x-model.number="quizLength" class="w-full p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-bold focus:outline-none focus:border-blue-500 transition">
+              </div>
+            </div>
+
+            <button @click="startQuiz()" :disabled="selectedCategories.length === 0" :class="selectedCategories.length === 0 ? 'bg-slate-300 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xl shadow-blue-500/25 cursor-pointer hover:scale-[1.01]'" class="w-full py-4 rounded-2xl font-black text-sm transition-all duration-200 flex items-center justify-center gap-2">
+              <span>Mulai Ujian Sekarang</span> <i class="fa-solid fa-rocket"></i>
+            </button>
+          </div>
+        </template>
+
+        <!-- ============================================== -->
+        <!-- TAHAP 2: KUIS AKTIF (Desain Modern, Bersih, Nuansa Biru) -->
+        <!-- ============================================== -->
+        <template x-if="quizStage === 'active'">
+          <div class="bg-white dark:bg-slate-900 p-8 md:p-10 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl space-y-8 max-w-2xl mx-auto w-full transition-all duration-300">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 text-xs font-bold">
+              <span class="text-slate-400 uppercase tracking-widest text-[11px] font-black">Soal <span class="text-blue-600 text-base" x-text="currentQuestionIndex + 1"></span> dari <span x-text="quizQuestions.length"></span></span>
+              
+              <div class="flex items-center gap-3">
+                <button @click="finishQuiz()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-flag-checkered"></i> Selesai Ujian
+                </button>
+                <div class="flex items-center gap-2 font-mono text-sm px-3.5 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs" :class="timeLeft <= 10 && quizTimeOption > 0 ? 'text-blue-600 animate-pulse font-bold' : 'text-slate-700 dark:text-slate-300'">
+                  <i class="fa-regular fa-clock"></i>
+                  <span x-text="quizTimeOption > 0 ? formatTime(timeLeft) : 'Bebas'"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress Bar Elegan -->
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden shadow-inner">
+              <div class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full transition-all duration-300 rounded-full" :style="`width: ${((currentQuestionIndex + 1) / quizQuestions.length) * 100}%`"></div>
+            </div>
+
+            <!-- Kartu Pertanyaan -->
+            <div class="text-center py-12 px-6 bg-gradient-to-br from-blue-50/50 via-slate-50 to-indigo-50/30 dark:from-slate-800/40 dark:to-slate-900/40 rounded-3xl border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-sm">
+              <span class="text-[11px] uppercase tracking-widest font-black text-blue-600 dark:text-blue-400 bg-blue-100/80 dark:bg-blue-950/60 px-4 py-1.5 rounded-full border border-blue-200 dark:border-blue-900/50 inline-block shadow-2xs" x-text="currentQuestion.modeLabel"></span>
+              <h3 class="text-4xl md:text-6xl font-black text-slate-900 dark:text-white font-serif tracking-tight" x-text="currentQuestion.question"></h3>
+            </div>
+
+            <!-- Pilihan Jawaban -->
+            <div class="grid grid-cols-1 gap-4">
+              <template x-for="(opt, idx) in currentQuestion.options" :key="idx">
+                <button @click="selectAnswer(opt)" :disabled="selectedAnswer !== null" 
+                        :class="{
+                          'border-slate-200 dark:border-slate-800 hover:bg-blue-50/60 hover:border-blue-300 dark:hover:bg-slate-800/60 shadow-2xs': selectedAnswer === null, 
+                          'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-sm': selectedAnswer !== null && opt.isCorrect, 
+                          'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200 font-bold shadow-sm': selectedAnswer !== null && selectedAnswer === opt && !opt.isCorrect, 
+                          'opacity-40 border-slate-200 dark:border-slate-800 shadow-none': selectedAnswer !== null && selectedAnswer !== opt && !opt.isCorrect
+                        }" 
+                        class="w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 text-sm md:text-base font-bold flex items-center justify-between cursor-pointer">
+                  <span x-text="opt.text"></span>
+                  <template x-if="selectedAnswer !== null && opt.isCorrect"><i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-xl"></i></template>
+                  <template x-if="selectedAnswer !== null && selectedAnswer === opt && !opt.isCorrect"><i class="fa-solid fa-circle-xmark text-rose-600 dark:text-rose-400 text-xl"></i></template>
+                </button>
+              </template>
+            </div>
+
+            <div class="flex justify-end pt-3">
+              <button x-show="selectedAnswer !== null" @click="nextQuestion()" class="px-8 py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-black rounded-2xl text-xs uppercase tracking-wider hover:opacity-90 transition shadow-xl flex items-center gap-2.5 cursor-pointer">
+                <span>Lanjut Soal</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </button>
+            </div>
+
+          </div>
+        </template>
+
+        <!-- ============================================== -->
+        <!-- TAHAP 3: HASIL UJIAN (Desain Estetik, Nuansa Biru) -->
+        <!-- ============================================== -->
+        <template x-if="quizStage === 'result'">
+          <div class="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl text-center space-y-6 max-w-md mx-auto w-full transition-all duration-300">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto text-3xl font-bold shadow-lg shadow-blue-500/30">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-black text-slate-900 dark:text-white mb-1">Uji Pemahaman Selesai!</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Kerja bagus! Berikut adalah rekapitulasi nilai ujian kamu.</p>
+            </div>
+            
+            <div class="bg-slate-900 dark:bg-slate-950 text-white rounded-3xl p-7 shadow-xl space-y-1 relative overflow-hidden">
+              <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-blue-500/20 rounded-full blur-xl pointer-events-none"></div>
+              <div class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Nilai Akhir</div>
+              <div class="text-6xl font-black text-blue-400" x-text="quizScore"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 text-xs">
+              <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 shadow-xs">
+                <div class="text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] uppercase">Benar</div>
+                <div class="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1" x-text="correctCount"></div>
+              </div>
+              <div class="p-4 bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-100 dark:border-rose-900/50 shadow-xs">
+                <div class="text-rose-600 dark:text-rose-400 font-extrabold text-[10px] uppercase">Salah</div>
+                <div class="text-xl font-black text-rose-700 dark:text-rose-300 mt-1" x-text="wrongCount"></div>
+              </div>
+              <div class="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-100 dark:border-blue-900/50 shadow-xs">
+                <div class="text-blue-600 dark:text-blue-400 font-extrabold text-[10px] uppercase">Waktu</div>
+                <div class="text-xs font-black text-blue-700 dark:text-blue-300 mt-1.5" x-text="formatTime(timeSpent)"></div>
+              </div>
+            </div>
+
+            <button @click="resetQuiz()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-2xl text-xs uppercase tracking-wider transition shadow-lg shadow-blue-500/25 cursor-pointer flex items-center justify-center gap-2">
+              <span>Ulangi Ujian</span> <i class="fa-solid fa-rotate-right"></i>
+            </button>
+          </div>
+        </template>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- SCRIPT KUIS LENGKAP & MODERN -->
+  <script>
+    function quizApp() {
+      return {
+        sidebarOpen: false,
+        materiAwalDropdown: false,
+        kotobaDropdown: false,
+        darkMode: false,
+
+        availableCategories: [],
+        selectedCategories: [],
+        quizQuestionMode: 'indonesia',
+        quizTimeOption: '0',
+        quizLength: 10,
+        maxAvailableQuestions: 0,
+
+        quizStage: 'setup',
+        quizQuestions: [],
+        currentQuestionIndex: 0,
+        currentQuestion: {},
+        selectedAnswer: null,
+        correctCount: 0,
+        wrongCount: 0,
+        quizScore: 0,
+        timerInterval: null,
+        timeLeft: 0,
+        timeSpent: 0,
+
+        async initApp() {
+          this.initTheme();
+          try {
+            const sidebarRes = await fetch('./sidebar.html');
+            if (sidebarRes.ok) {
+              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+              this.renderDynamicKotobaSubmenus();
+            }
+            const headerRes = await fetch('./header.html');
+            if (headerRes.ok) {
+              document.getElementById('header-container').innerHTML = await headerRes.text();
+            }
+          } catch (e) {
+            console.error('Gagal memuat template modular:', e);
+          }
+
+          this.loadCategories();
+        },
+
+        loadCategories() {
+          let baseCategories = [
+            { key: 'kanji_list', title: 'Kanji Dasar (N5)' },
+            { key: 'hiragana_list', title: 'Huruf Hiragana' },
+            { key: 'katakana_list', title: 'Huruf Katakana' },
+            { key: 'penanda_waktu_list', title: 'Penanda Waktu' },
+            { key: 'ungkapan_waktu_list', title: 'Ungkapan Waktu' },
+            { key: 'suuji_list', title: 'Kata Bilangan (Suuji)' }
+          ];
+
+          let customSubmenus = JSON.parse(localStorage.getItem('minna_submenus')) || [];
+          let customKeys = customSubmenus.map(s => ({ key: s.id, title: s.title }));
+
+          let merged = [...baseCategories, ...customKeys];
+          let unique = Array.from(new Set(merged.map(a => a.key)))
+            .map(key => merged.find(a => a.key === key));
+
+          this.availableCategories = unique;
+          // DEFAULT TIDAK ADA YANG DICENTANG KETIKA MASUK HALAMAN
+          this.selectedCategories = [];
+          this.updateMaxQuestions();
+        },
+
+        selectAllCategories() {
+          this.selectedCategories = this.availableCategories.map(c => c.key);
+          this.updateMaxQuestions();
+        },
+
+        deselectAllCategories() {
+          this.selectedCategories = [];
+          this.updateMaxQuestions();
+        },
+
+        updateMaxQuestions() {
+          let vocabData = JSON.parse(localStorage.getItem('minna_vocab_data')) || {};
+          let total = 0;
+          this.selectedCategories.forEach(catKey => {
+            let raw = this.getStaticMateri(catKey);
+            if (raw.length > 0) {
+              if (raw[0].items) {
+                raw.forEach(sub => { total += sub.items.length; });
+              } else {
+                total += raw.length;
+              }
+            } else {
+              let items = vocabData[catKey] || [];
+              total += items.length;
+            }
+          });
+          this.maxAvailableQuestions = total;
+          if (this.quizLength > total && total > 0) {
+            this.quizLength = total;
+          } else if (total === 0) {
+            this.quizLength = 0;
+          }
+        },
+
+        startQuiz() {
+          this.updateMaxQuestions();
+          if (this.selectedCategories.length === 0) {
+            alert('Silakan pilih minimal satu kategori materi terlebih dahulu!');
+            return;
+          }
+          if (this.maxAvailableQuestions < 4) {
+            alert('Total kosakata dari kategori yang dipilih kurang dari 4 item. Minimal butuh 4 item untuk kuis!');
+            return;
+          }
+
+          let desiredLength = parseInt(this.quizLength);
+          if (isNaN(desiredLength) || desiredLength <= 0) {
+            alert('Jumlah soal tidak valid!');
+            return;
+          }
+
+          let vocabData = JSON.parse(localStorage.getItem('minna_vocab_data')) || {};
+          let categoryMap = {};
+
+          this.selectedCategories.forEach(catKey => {
+            let items = [];
+            let raw = this.getStaticMateri(catKey);
+            if (raw.length > 0) {
+              if (raw[0].items) {
+                raw.forEach(sub => { items = items.concat(sub.items); });
+              } else {
+                items = raw;
+              }
+            } else {
+              items = vocabData[catKey] || [];
+            }
+            categoryMap[catKey] = items;
+          });
+
+          let masterPool = [];
+          Object.keys(categoryMap).forEach(catKey => {
+            categoryMap[catKey].forEach(it => {
+              masterPool.push({ ...it, sourceCategory: catKey });
+            });
+          });
+
+          const shuffled = [...masterPool].sort(() => 0.5 - Math.random());
+          const limit = Math.min(desiredLength, shuffled.length);
+          const selected = shuffled.slice(0, limit);
+
+          this.quizQuestions = selected.map(item => {
+            let mode = this.quizQuestionMode;
+            if (mode === 'both') {
+              mode = Math.random() < 0.5 ? 'indonesia' : 'romaji';
+            }
+
+            let isKanji = item.sourceCategory === 'kanji_list';
+            let isHiragana = item.sourceCategory === 'hiragana_list';
+            let isKatakana = item.sourceCategory === 'katakana_list';
+            let isWaktu = item.sourceCategory === 'penanda_waktu_list' || item.sourceCategory === 'ungkapan_waktu_list';
+            let isSuuji = item.sourceCategory === 'suuji_list';
+            let questionText = '';
+            let correctAnswerText = '';
+            let modeLabel = '';
+
+            if (isKanji) {
+              questionText = item.kanji;
+              correctAnswerText = `${item.arti} (${item.caraBaca})`;
+              modeLabel = 'TEBAK ARTI & CARA BACA KANJI';
+            } else if (isHiragana) {
+              questionText = item.hiragana;
+              correctAnswerText = item.romaji;
+              modeLabel = 'TEBAK CARA BACA HIRAGANA (ROMAJI)';
+            } else if (isKatakana) {
+              questionText = item.katakana;
+              correctAnswerText = item.romaji;
+              modeLabel = 'TEBAK CARA BACA KATAKANA (ROMAJI)';
+            } else if (isSuuji) {
+              questionText = mode === 'indonesia' ? item.indonesia : item.romaji;
+              correctAnswerText = mode === 'indonesia' ? `${item.romaji} (${item.hiragana})` : item.indonesia;
+              modeLabel = mode === 'indonesia' ? 'Bahasa Indonesia (Suuji)' : 'Romaji (Suuji)';
+            } else if (isWaktu) {
+              questionText = mode === 'indonesia' ? item.indonesia : item.romaji;
+              correctAnswerText = mode === 'indonesia' ? `${item.romaji} (${item.hiragana})` : item.indonesia;
+              modeLabel = mode === 'indonesia' ? 'Bahasa Indonesia' : 'Romaji';
+            } else {
+              questionText = mode === 'indonesia' ? item.indonesia : item.romaji;
+              correctAnswerText = mode === 'indonesia' ? `${item.romaji} (${item.hiragana || ''})` : item.indonesia;
+              modeLabel = mode === 'indonesia' ? 'Bahasa Indonesia' : 'Romaji';
+            }
+
+            let sameCategoryItems = categoryMap[item.sourceCategory] || [];
+            let distractors = sameCategoryItems
+              .filter(p => p.kanji ? p.kanji !== item.kanji : (p.hiragana ? p.hiragana !== item.hiragana : (p.katakana ? p.katakana !== item.katakana : p.romaji !== item.romaji)))
+              .sort(() => 0.5 - Math.random())
+              .slice(0, 3)
+              .map(d => isKanji ? `${d.arti} (${d.caraBaca})` : (isHiragana || isKatakana ? d.romaji : (isSuuji ? (mode === 'indonesia' ? `${d.romaji} (${d.hiragana})` : d.indonesia) : (isWaktu ? (mode === 'indonesia' ? `${d.romaji} (${d.hiragana})` : d.indonesia) : (mode === 'indonesia' ? `${d.romaji} (${d.hiragana || ''})` : d.indonesia)))));
+
+            if (distractors.length < 3) {
+              let extra = masterPool
+                .filter(p => p.kanji ? p.kanji !== item.kanji : (p.hiragana ? p.hiragana !== item.hiragana : (p.katakana ? p.katakana !== item.katakana : p.romaji !== item.romaji)))
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 3 - distractors.length)
+                .map(d => isKanji ? `${d.arti} (${d.caraBaca})` : (isHiragana || isKatakana ? d.romaji : (isSuuji ? (mode === 'indonesia' ? `${d.romaji} (${d.hiragana})` : d.indonesia) : (isWaktu ? (mode === 'indonesia' ? `${d.romaji} (${d.hiragana})` : d.indonesia) : (mode === 'indonesia' ? `${d.romaji} (${d.hiragana || ''})` : d.indonesia)))));
+              distractors = distractors.concat(extra);
+            }
+
+            let options = [
+              { text: correctAnswerText, isCorrect: true },
+              ...distractors.map(dText => ({ text: dText, isCorrect: false }))
+            ].sort(() => 0.5 - Math.random());
+
+            return { question: questionText, correctAnswer: correctAnswerText, options: options, modeLabel: modeLabel };
+          });
+
+          this.currentQuestionIndex = 0;
+          this.currentQuestion = this.quizQuestions[0];
+          this.selectedAnswer = null;
+          this.correctCount = 0;
+          this.wrongCount = 0;
+          this.timeSpent = 0;
+
+          let mins = parseInt(this.quizTimeOption);
+          this.timeLeft = mins > 0 ? mins * 60 : 0;
+          this.quizStage = 'active';
+
+          clearInterval(this.timerInterval);
+          if (mins > 0) {
+            this.timerInterval = setInterval(() => {
+              this.timeSpent++;
+              this.timeLeft--;
+              if (this.timeLeft <= 0) { this.finishQuiz(); }
+            }, 1000);
+          } else {
+            this.timerInterval = setInterval(() => { this.timeSpent++; }, 1000);
+          }
+        },
+
+        // Data Master Hardcode Lengkap (Kanji, Hiragana, Katakana, Penanda Waktu, Ungkapan Waktu, & Suuji)
+        getStaticMateri(key) {
+          if (key === 'suuji_list') {
+            return [
+              { indonesia: "0 (Nol)", romaji: "zero / rei", hiragana: "ゼロ / れい", katakana: "ゼロ / レイ" },
+              { indonesia: "1 (Satu)", romaji: "ichi", hiragana: "いち", katakana: "イチ" },
+              { indonesia: "2 (Dua)", romaji: "ni", hiragana: "に", katakana: "ニ" },
+              { indonesia: "3 (Tiga)", romaji: "san", hiragana: "さん", katakana: "サン" },
+              { indonesia: "4 (Empat)", romaji: "yon / shi", hiragana: "よん / し", katakana: "ヨン / シ" },
+              { indonesia: "5 (Lima)", romaji: "go", hiragana: "ご", katakana: "ゴ" },
+              { indonesia: "6 (Enam)", romaji: "roku", hiragana: "ろく", katakana: "ロク" },
+              { indonesia: "7 (Tujuh)", romaji: "nana / shichi", hiragana: "なな / しち", katakana: "ナナ / シチ" },
+              { indonesia: "8 (Delapan)", romaji: "hachi", hiragana: "はち", katakana: "ハチ" },
+              { indonesia: "9 (Sembilan)", romaji: "kyuu / ku", hiragana: "きゅう / く", katakana: "キュウ / ク" },
+              { indonesia: "10 (Sepuluh)", romaji: "juu", hiragana: "じゅう", katakana: "ジュウ" },
+              { indonesia: "11 (Sebelas)", romaji: "juu ichi", hiragana: "じゅういち", katakana: "ジュウイチ" },
+              { indonesia: "12 (Dua belas)", romaji: "juu ni", hiragana: "じゅうに", katakana: "ジュウニ" },
+              { indonesia: "13 (Tiga belas)", romaji: "juu san", hiragana: "じゅうさん", katakana: "ジュウサン" },
+              { indonesia: "14 (Empat belas)", romaji: "juu yon / juu shi", hiragana: "じゅうよん", katakana: "ジュウヨン" },
+              { indonesia: "15 (Lima belas)", romaji: "juu go", hiragana: "じゅうご", katakana: "ジュウゴ" },
+              { indonesia: "20 (Dua puluh)", romaji: "ni juu", hiragana: "にじゅう", katakana: "ニジュウ" },
+              { indonesia: "30 (Tiga puluh)", romaji: "san juu", hiragana: "さんじゅう", katakana: "サンジュウ" },
+              { indonesia: "100 (Seratus)", romaji: "hyaku", hiragana: "ひゃく", katakana: "ヒャク" },
+              { indonesia: "300 (Tiga ratus)", romaji: "sanbyaku", hiragana: "さんびゃく", katakana: "サンビャク" },
+              { indonesia: "600 (Enam ratus)", romaji: "roppyaku", hiragana: "ろっぴゃく", katakana: "ロッピャク" },
+              { indonesia: "800 (Delapan ratus)", romaji: "happyaku", hiragana: "はっぴゃく", katakana: "ハッピャク" },
+              { indonesia: "1.000 (Seribu)", romaji: "sen", hiragana: "せん", katakana: "セン" },
+              { indonesia: "3.000 (Tiga ribu)", romaji: "sanzen", hiragana: "さんぜん", katakana: "サンゼン" },
+              { indonesia: "8.000 (Delapan ribu)", romaji: "hassen", hiragana: "はっせん", katakana: "ハッセン" },
+              { indonesia: "10.000 (Puluh ribu / 1 Man)", romaji: "ichiman", hiragana: "いちまん", katakana: "イチマン" },
+              { indonesia: "50.000 (Lima puluh ribu / 5 Man)", romaji: "goman", hiragana: "ごまん", katakana: "ゴマン" },
+              { indonesia: "100.000 (Seratus ribu / 10 Man)", romaji: "juuman", hiragana: "じゅうまん", katakana: "ジュウマン" },
+              { indonesia: "1.000.000 (Satu juta / 100 Man)", romaji: "hyakuman", hiragana: "ひゃくまん", katakana: "ヒャクマン" },
+              { indonesia: "100.000.000 (Ratus juta / 1 Oku)", romaji: "ichioku", hiragana: "いちおく", katakana: "イチオク" },
+              { indonesia: "17.5 (Tujuh belas koma lima)", romaji: "juunana ten go", hiragana: "じゅうなな てん ご", katakana: "ジュウナナ テン ゴ" },
+              { indonesia: "1/2 (Setengah)", romaji: "ni bun no ichi", hiragana: "に ぶん の いち", katakana: "ニ ブン ノ イチ" },
+              { indonesia: "3/4 (Tiga per empat)", romaji: "yon bun no san", hiragana: "よん ぶん の さん", katakana: "ヨン ブン ノ サン" },
+              { indonesia: "76.543 (Tujuh puluh enam ribu lima ratus empat puluh tiga)", romaji: "nanajū-rokusen gohyaku yonjū-san", hiragana: "ななじゅうろくせん ごひゃく よんじゅうさん", katakana: "ナナジュウロクセン ゴヒャク ヨンジュウサン" },
+              { indonesia: "9.876.543 (Sembilan juta delapan ratus tujuh puluh enam ribu lima ratus empat puluh tiga)", romaji: "kyū-sen happyaku nanajū-roku man gohyaku yonjū-san", hiragana: "きゅうせん はっぴゃく ななじゅうろくまん ごひゃく よんじゅうさん", katakana: "キュウセン ハッピャク ナナジュウロクマン ゴヒャク ヨンジュウサン" },
+              { indonesia: "45.678 (Empat puluh lima ribu enam ratus tujuh puluh delapan)", romaji: "yonjū-gosen roppyaku nanajū-hachi", hiragana: "よんじゅうごせん ろっぴゃく ななじゅうはち", katakana: "ヨンジュウゴセン ロッピャク ナナジュウハチ" },
+              { indonesia: "123.456 (Seratus dua puluh tiga ribu empat ratus lima puluh enam)", romaji: "hyaku-nijū-san-sen yonhyaku gojū-roku", hiragana: "ひゃくにじゅうさんせん よんひゃく ごじゅうろく", katakana: "ヒャクニジュウサンセン ヨンヒャク ゴジュウロク" }
+            ];
+          } else if (key === 'kanji_list') {
+            return [
+              { id: 1, kanji: "山", arti: "Gunung", caraBaca: "やま / サン" },
+              { id: 2, kanji: "川", arti: "Sungai", caraBaca: "かわ" },
+              { id: 3, kanji: "田", arti: "Sawah", caraBaca: "た / だ" },
+              { id: 4, kanji: "日", arti: "Matahari", caraBaca: "ひ、び / ニチ、ニ" },
+              { id: 5, kanji: "月", arti: "Bulan", caraBaca: "つき / ゲツ、ガツ" },
+              { id: 6, kanji: "火", arti: "Api", caraBaca: "ひ / カ" },
+              { id: 7, kanji: "水", arti: "Air", caraBaca: "みず / スイ" },
+              { id: 8, kanji: "木", arti: "Pohon", caraBaca: "き / モク" },
+              { id: 9, kanji: "金", arti: "Emas / Uang", caraBaca: "かね / キン" },
+              { id: 10, kanji: "土", arti: "Tanah", caraBaca: "つち / ド、ト" },
+              { id: 11, kanji: "一", arti: "Satu", caraBaca: "ひと / イチ" },
+              { id: 12, kanji: "二", arti: "Dua", caraBaca: "ふた / ニ" },
+              { id: 13, kanji: "三", arti: "Tiga", caraBaca: "みっ / サン" },
+              { id: 14, kanji: "四", arti: "Empat", caraBaca: "よっ、よん、よ / シ" },
+              { id: 15, kanji: "五", arti: "Lima", caraBaca: "いつ / ゴ" },
+              { id: 16, kanji: "六", arti: "Enam", caraBaca: "むっ、むい / ロク" },
+              { id: 17, kanji: "七", arti: "Tujuh", caraBaca: "なな / シチ" },
+              { id: 18, kanji: "八", arti: "Delapan", caraBaca: "やっ / ハチ" },
+              { id: 19, kanji: "九", arti: "Sembilan", caraBaca: "ここの / キュウ、ク" },
+              { id: 20, kanji: "十", arti: "Sepuluh", caraBaca: "とお / ジュウ" },
+              { id: 21, kanji: "百", arti: "Ratus", caraBaca: "ヒャク、ビャク、ピャク" },
+              { id: 22, kanji: "千", arti: "Ribu", caraBaca: "セン、ゼン" },
+              { id: 23, kanji: "万", arti: "Puluhan Ribu", caraBaca: "マン" },
+              { id: 24, kanji: "円", arti: "Yen", caraBaca: "エン" },
+              { id: 25, kanji: "年", arti: "Tahun", caraBaca: "とし / ネン" },
+              { id: 26, kanji: "上", arti: "Atas", caraBaca: "うえ / ジョウ" },
+              { id: 27, kanji: "下", arti: "Bawah", caraBaca: "した / ゲ、ケ" },
+              { id: 28, kanji: "中", arti: "Dalam", caraBaca: "なか / チュウ、ジュウ" },
+              { id: 29, kanji: "半", arti: "Setengah", caraBaca: "ハン" },
+              { id: 30, kanji: "分", arti: "Menit / Bagian", caraBaca: "わ / プン、フン、ブン" },
+              { id: 31, kanji: "人", arti: "Orang", caraBaca: "ひと / ジン、ニン" },
+              { id: 32, kanji: "子", arti: "Anak", caraBaca: "こ / シ" },
+              { id: 33, kanji: "女", arti: "Perempuan", caraBaca: "おんな / ジョ" },
+              { id: 34, kanji: "男", arti: "Laki-Laki", caraBaca: "おとこ / ダン、ナン" },
+              { id: 35, kanji: "目", arti: "Mata", caraBaca: "め / モク" },
+              { id: 36, kanji: "口", arti: "Mulut", caraBaca: "くち、ぐち / コウ" },
+              { id: 37, kanji: "手", arti: "Tangan", caraBaca: "て / シュ" },
+              { id: 38, kanji: "足", arti: "Kaki", caraBaca: "あし、た / ソク" },
+              { id: 39, kanji: "力", arti: "Kekuatan / Tenaga", caraBaca: "ちから / リョク" },
+              { id: 40, kanji: "父", arti: "Ayah", caraBaca: "ちち" },
+              { id: 41, kanji: "母", arti: "Ibu", caraBaca: "はは / ボ" },
+              { id: 42, kanji: "先", arti: "Depan / Lalu", caraBaca: "さき / セン" },
+              { id: 43, kanji: "生", arti: "Lahir / Hidup", caraBaca: "うまーれる / セイ" },
+              { id: 44, kanji: "学", arti: "Belajar", caraBaca: "まなーぶ / ガク、ガッ" },
+              { id: 45, kanji: "校", arti: "Sekolah / Tempat", caraBaca: "コウ" },
+              { id: 46, kanji: "友", arti: "Teman", caraBaca: "とも / ユウ" },
+              { id: 47, kanji: "本", arti: "Buku / Dasar", caraBaca: "もと / ホン、ボン、ポン" },
+              { id: 48, kanji: "毎", arti: "Setiap", caraBaca: "マイ" },
+              { id: 49, kanji: "何", arti: "Apa", caraBaca: "なに、なん" },
+              { id: 50, kanji: "前", arti: "Depan", caraBaca: "まえ / ゼン" },
+              { id: 51, kanji: "後", arti: "Belakang / Nanti", caraBaca: "うしろ、あと / ゴ、コウ" },
+              { id: 52, kanji: "外", arti: "Luar", caraBaca: "そと / ガイ" },
+              { id: 53, kanji: "左", arti: "Kiri", caraBaca: "ひだり / サ" },
+              { id: 54, kanji: "右", arti: "Kanan", caraBaca: "みぎ / ユウ" },
+              { id: 55, kanji: "東", arti: "Timur", caraBaca: "ひがし / トウ" },
+              { id: 56, kanji: "西", arti: "Barat", caraBaca: "にし" },
+              { id: 57, kanji: "南", arti: "Selatan", caraBaca: "みなみ / ナン" },
+              { id: 58, kanji: "北", arti: "Utara", caraBaca: "きた / ホク" },
+              { id: 59, kanji: "名", arti: "Nama", caraBaca: "な / メイ" },
+              { id: 60, kanji: "雨", arti: "Hujan", caraBaca: "あめ / ウ" },
+              { id: 61, kanji: "牛", arti: "Sapi", caraBaca: "うし / ギュウ" },
+              { id: 62, kanji: "馬", arti: "Kuda", caraBaca: "うま / バ" },
+              { id: 63, kanji: "魚", arti: "Ikan", caraBaca: "さかな / ギョ" },
+              { id: 64, kanji: "貝", arti: "Kerang", caraBaca: "かい" },
+              { id: 65, kanji: "天", arti: "Langit", caraBaca: "テン" },
+              { id: 66, kanji: "気", arti: "Jiwa / Semangat", caraBaca: "キ" },
+              { id: 67, kanji: "車", arti: "Mobil / Gerobak", caraBaca: "くるま / シャ" },
+              { id: 68, kanji: "門", arti: "Gerbang", caraBaca: "モン" },
+              { id: 69, kanji: "午", arti: "Tengah Hari", caraBaca: "ゴ" },
+              { id: 70, kanji: "大", arti: "Besar", caraBaca: "おおーきい / ダイ、タイ" },
+              { id: 71, kanji: "小", arti: "Kecil", caraBaca: "ちいーさい / ショウ" },
+              { id: 72, kanji: "高", arti: "Tinggi / Mahal", caraBaca: "たかーい / コウ" },
+              { id: 73, kanji: "安", arti: "Murah", caraBaca: "やすーい / アン" },
+              { id: 74, kanji: "新", arti: "Baru", caraBaca: "あたらしい / シン" },
+              { id: 75, kanji: "古", arti: "Lama / Bekas", caraBaca: "ふるーい / コ" },
+              { id: 76, kanji: "長", arti: "Panjang", caraBaca: "ながーい / チョウ" },
+              { id: 77, kanji: "多", arti: "Banyak", caraBaca: "おおーい / タ" },
+              { id: 78, kanji: "少", arti: "Sedikit", caraBaca: "すくーない、すこーし / ショウ" },
+              { id: 79, kanji: "早", arti: "Cepat", caraBaca: "はやーい / ソウ" },
+              { id: 80, kanji: "行", arti: "Pergi", caraBaca: "いーく / コウ" },
+              { id: 81, kanji: "来", arti: "Datang", caraBaca: "くーる / ライ" },
+              { id: 82, kanji: "食", arti: "Makan", caraBaca: "たーべる / ショク" },
+              { id: 83, kanji: "見", arti: "Melihat", caraBaca: "みーる / ケン" },
+              { id: 84, kanji: "入", arti: "Masuk", caraBaca: "はいーる、いーれる / ニュウ" },
+              { id: 85, kanji: "出", arti: "Keluar", caraBaca: "でーる、だーす / シュツ" },
+              { id: 86, kanji: "立", arti: "Berdiri", caraBaca: "たーつ / リツ" },
+              { id: 87, kanji: "書", arti: "Menulis", caraBaca: "かーく / ショ" },
+              { id: 88, kanji: "言", arti: "Mengatakan", caraBaca: "いーう / ゲン" },
+              { id: 89, kanji: "飲", arti: "Minum", caraBaca: "のーむ / イン" },
+              { id: 90, kanji: "話", arti: "Berbicara", caraBaca: "はなーす / ワ" },
+              { id: 91, kanji: "読", arti: "Membaca", caraBaca: "よーむ / ドク" },
+              { id: 92, kanji: "語", arti: "Kata / Bahasa", caraBaca: "かたーる / ゴ" },
+              { id: 93, kanji: "間", arti: "Antara", caraBaca: "あいだ / カン" },
+              { id: 94, kanji: "聞", arti: "Mendengarkan", caraBaca: "きーく / ブン" },
+              { id: 95, kanji: "買", arti: "Membeli", caraBaca: "かーう / バイ" },
+              { id: 96, kanji: "休", arti: "Istirahat", caraBaca: "やすーむ / キュウ" },
+              { id: 97, kanji: "時", arti: "Waktu / Jam", caraBaca: "とき / ジ" },
+              { id: 98, kanji: "週", arti: "Minggu", caraBaca: "シュウ" },
+              { id: 99, kanji: "道", arti: "Jalan", caraBaca: "みち / ドウ" },
+              { id: 100, kanji: "今", arti: "Sekarang", caraBaca: "ima / コン、コ" },
+              { id: 101, kanji: "会", arti: "Bertemu", caraBaca: "あーう / カイ" },
+              { id: 102, kanji: "社", arti: "Perusahaan", caraBaca: "シャ、ジャ" },
+              { id: 103, kanji: "店", arti: "Toko", caraBaca: "みせ / テン" },
+              { id: 104, kanji: "駅", arti: "Stasiun", caraBaca: "えき" },
+              { id: 105, kanji: "花", arti: "Bunga", caraBaca: "はな / カ" },
+              { id: 106, kanji: "国", arti: "Negara", caraBaca: "くに / コク、ゴク" },
+              { id: 107, kanji: "白", arti: "Putih", caraBaca: "しろーい / ハク" },
+              { id: 108, kanji: "空", arti: "Langit", caraBaca: "そら / クウ" },
+              { id: 109, kanji: "電", arti: "Listrik", caraBaca: "デン" },
+              { id: 110, kanji: "耳", arti: "Telinga", caraBaca: "みみ" }
+            ];
+          } else if (key === 'hiragana_list') {
+            return [
+              { kategori: "Vokal Dasar", romaji: "a", hiragana: "あ" }, { kategori: "Vokal Dasar", romaji: "i", hiragana: "い" },
+              { kategori: "Vokal Dasar", romaji: "u", hiragana: "う" }, { kategori: "Vokal Dasar", romaji: "e", hiragana: "え" },
+              { kategori: "Vokal Dasar", romaji: "o", hiragana: "お" }, { kategori: "Baris K", romaji: "ka", hiragana: "か" },
+              { kategori: "Baris K", romaji: "ki", hiragana: "き" }, { kategori: "Baris K", romaji: "ku", hiragana: "く" },
+              { kategori: "Baris K", romaji: "ke", hiragana: "け" }, { kategori: "Baris K", romaji: "ko", hiragana: "こ" },
+              { kategori: "Baris S", romaji: "sa", hiragana: "さ" }, { kategori: "Baris S", romaji: "shi", hiragana: "し" },
+              { kategori: "Baris S", romaji: "su", hiragana: "す" }, { kategori: "Baris S", romaji: "se", hiragana: "せ" },
+              { kategori: "Baris S", romaji: "so", hiragana: "そ" }, { kategori: "Baris T", romaji: "ta", hiragana: "た" },
+              { kategori: "Baris T", romaji: "chi", hiragana: "ち" }, { kategori: "Baris T", romaji: "tsu", hiragana: "つ" },
+              { kategori: "Baris T", romaji: "te", hiragana: "て" }, { kategori: "Baris T", romaji: "to", hiragana: "と" },
+              { kategori: "Baris N", romaji: "na", hiragana: "な" }, { kategori: "Baris N", romaji: "ni", hiragana: "に" },
+              { kategori: "Baris N", romaji: "nu", hiragana: "ぬ" }, { kategori: "Baris N", romaji: "ne", hiragana: "ね" },
+              { kategori: "Baris N", romaji: "no", hiragana: "の" }, { kategori: "Baris H", romaji: "ha", hiragana: "は" },
+              { kategori: "Baris H", romaji: "hi", hiragana: "ひ" }, { kategori: "Baris H", romaji: "fu", hiragana: "ふ" },
+              { kategori: "Baris H", romaji: "he", hiragana: "へ" }, { kategori: "Baris H", romaji: "ho", hiragana: "ほ" },
+              { kategori: "Baris M", romaji: "ma", hiragana: "ま" }, { kategori: "Baris M", romaji: "mi", hiragana: "み" },
+              { kategori: "Baris M", romaji: "mu", hiragana: "む" }, { kategori: "Baris M", romaji: "me", hiragana: "め" },
+              { kategori: "Baris M", romaji: "mo", hiragana: "も" }, { kategori: "Baris Y", romaji: "ya", hiragana: "や" },
+              { kategori: "Baris Y", romaji: "yu", hiragana: "ゆ" }, { kategori: "Baris Y", romaji: "yo", hiragana: "よ" },
+              { kategori: "Baris R", romaji: "ra", hiragana: "ら" }, { kategori: "Baris R", romaji: "ri", hiragana: "り" },
+              { kategori: "Baris R", romaji: "ru", hiragana: "る" }, { kategori: "Baris R", romaji: "re", hiragana: "れ" },
+              { kategori: "Baris R", romaji: "ro", hiragana: "ろ" }, { kategori: "Baris W", romaji: "wa", hiragana: "わ" },
+              { kategori: "Baris W", romaji: "wo", hiragana: "を" }, { kategori: "Konsonan N", romaji: "n", hiragana: "ん" },
+              { kategori: "Dakuon G", romaji: "ga", hiragana: "が" }, { kategori: "Dakuon G", romaji: "gi", hiragana: "ぎ" },
+              { kategori: "Dakuon G", romaji: "gu", hiragana: "ぐ" }, { kategori: "Dakuon G", romaji: "ge", hiragana: "げ" },
+              { kategori: "Dakuon G", romaji: "go", hiragana: "ご" }, { kategori: "Dakuon Z", romaji: "za", hiragana: "ざ" },
+              { kategori: "Dakuon Z", romaji: "ji", hiragana: "じ" }, { kategori: "Dakuon Z", romaji: "zu", hiragana: "ず" },
+              { kategori: "Dakuon Z", romaji: "ze", hiragana: "ぜ" }, { kategori: "Dakuon Z", romaji: "zo", hiragana: "ぞ" },
+              { kategori: "Dakuon D", romaji: "da", hiragana: "だ" }, { kategori: "Dakuon D", romaji: "ji", hiragana: "ぢ" },
+              { kategori: "Dakuon D", romaji: "zu", hiragana: "づ" }, { kategori: "Dakuon D", romaji: "de", hiragana: "で" },
+              { kategori: "Dakuon D", romaji: "do", hiragana: "ど" }, { kategori: "Dakuon B", romaji: "ba", hiragana: "ば" },
+              { kategori: "Dakuon B", romaji: "bi", hiragana: "び" }, { kategori: "Dakuon B", romaji: "bu", hiragana: "ぶ" },
+              { kategori: "Dakuon B", romaji: "be", hiragana: "べ" }, { kategori: "Dakuon B", romaji: "bo", hiragana: "ぼ" },
+              { kategori: "Handakuon P", romaji: "pa", hiragana: "ぱ" }, { kategori: "Handakuon P", romaji: "pi", hiragana: "ぴ" },
+              { kategori: "Handakuon P", romaji: "pu", hiragana: "ぷ" }, { kategori: "Handakuon P", romaji: "pe", hiragana: "ぺ" },
+              { kategori: "Handakuon P", romaji: "po", hiragana: "ぽ" }, { kategori: "Yoon K", romaji: "kya", hiragana: "きゃ" },
+              { kategori: "Yoon K", romaji: "kyu", hiragana: "きゅ" }, { kategori: "Yoon K", romaji: "kyo", hiragana: "きょ" },
+              { kategori: "Yoon S", romaji: "sha", hiragana: "しゃ" }, { kategori: "Yoon S", romaji: "shu", hiragana: "しゅ" },
+              { kategori: "Yoon S", romaji: "sho", hiragana: "しょ" }, { kategori: "Yoon T", romaji: "cha", hiragana: "ちゃ" },
+              { kategori: "Yoon T", romaji: "chu", hiragana: "ちゅ" }, { kategori: "Yoon T", romaji: "cho", hiragana: "ちょ" },
+              { kategori: "Yoon N", romaji: "nya", hiragana: "にゃ" }, { kategori: "Yoon N", romaji: "nyu", hiragana: "にゅ" },
+              { kategori: "Yoon N", romaji: "nyo", hiragana: "にょ" }, { kategori: "Yoon H", romaji: "hya", hiragana: "ひゃ" },
+              { kategori: "Yoon H", romaji: "hyu", hiragana: "ひゅ" }, { kategori: "Yoon H", romaji: "hyo", hiragana: "ひょ" },
+              { kategori: "Yoon M", romaji: "mya", hiragana: "みゃ" }, { kategori: "Yoon M", romaji: "myu", hiragana: "みゅ" },
+              { kategori: "Yoon M", romaji: "myo", hiragana: "みょ" }, { kategori: "Yoon R", romaji: "rya", hiragana: "りゃ" },
+              { kategori: "Yoon R", romaji: "ryu", hiragana: "りゅ" }, { kategori: "Yoon R", romaji: "ryo", hiragana: "りょ" },
+              { kategori: "Yoon G", romaji: "gya", hiragana: "ぎゃ" }, { kategori: "Yoon G", romaji: "gyu", hiragana: "ぎゅ" },
+              { kategori: "Yoon G", romaji: "gyo", hiragana: "ぎょ" }, { kategori: "Yoon J", romaji: "ja", hiragana: "じゃ" },
+              { kategori: "Yoon J", romaji: "ju", hiragana: "じゅ" }, { kategori: "Yoon J", romaji: "jo", hiragana: "じょ" },
+              { kategori: "Yoon B", romaji: "bya", hiragana: "びゃ" }, { kategori: "Yoon B", romaji: "byu", hiragana: "びゅ" },
+              { kategori: "Yoon B", romaji: "byo", hiragana: "びょ" }, { kategori: "Yoon P", romaji: "pya", hiragana: "ぴゃ" },
+              { kategori: "Yoon P", romaji: "pyu", hiragana: "ぴゅ" }, { kategori: "Yoon P", romaji: "pyo", hiragana: "ぴょ" }
+            ];
+          } else if (key === 'katakana_list') {
+            return [
+              { kategori: "Vokal Dasar", romaji: "a", katakana: "ア" }, { kategori: "Vokal Dasar", romaji: "i", katakana: "イ" },
+              { kategori: "Vokal Dasar", romaji: "u", katakana: "ウ" }, { kategori: "Vokal Dasar", romaji: "e", katakana: "エ" },
+              { kategori: "Vokal Dasar", romaji: "o", katakana: "オ" }, { kategori: "Baris K", romaji: "ka", katakana: "カ" },
+              { kategori: "Baris K", romaji: "ki", katakana: "キ" }, { kategori: "Baris K", romaji: "ku", katakana: "ク" },
+              { kategori: "Baris K", romaji: "ke", katakana: "ケ" }, { kategori: "Baris K", romaji: "ko", katakana: "コ" },
+              { kategori: "Baris S", romaji: "sa", katakana: "サ" }, { kategori: "Baris S", romaji: "shi", katakana: "シ" },
+              { kategori: "Baris S", romaji: "su", katakana: "ス" }, { kategori: "Baris S", romaji: "se", katakana: "セ" },
+              { kategori: "Baris S", romaji: "so", katakana: "ソ" }, { kategori: "Baris T", romaji: "ta", katakana: "タ" },
+              { kategori: "Baris T", romaji: "chi", katakana: "チ" }, { kategori: "Baris T", romaji: "tsu", katakana: "ツ" },
+              { kategori: "Baris T", romaji: "te", katakana: "テ" }, { kategori: "Baris T", romaji: "to", katakana: "ト" },
+              { kategori: "Baris N", romaji: "na", katakana: "ナ" }, { kategori: "Baris N", romaji: "ni", katakana: "ニ" },
+              { kategori: "Baris N", romaji: "nu", katakana: "ヌ" }, { kategori: "Baris N", romaji: "ne", katakana: "ネ" },
+              { kategori: "Baris N", romaji: "no", katakana: "ノ" }, { kategori: "Baris H", romaji: "ha", katakana: "ハ" },
+              { kategori: "Baris H", romaji: "hi", katakana: "ヒ" }, { kategori: "Baris H", romaji: "fu", katakana: "フ" },
+              { kategori: "Baris H", romaji: "he", katakana: "ヘ" }, { kategori: "Baris H", romaji: "ho", katakana: "ホ" },
+              { kategori: "Baris M", romaji: "ma", katakana: "マ" }, { kategori: "Baris M", romaji: "mi", katakana: "ミ" },
+              { kategori: "Baris M", romaji: "mu", katakana: "ム" }, { kategori: "Baris M", romaji: "me", katakana: "メ" },
+              { kategori: "Baris M", romaji: "mo", katakana: "モ" }, { kategori: "Baris Y", romaji: "ya", katakana: "ヤ" },
+              { kategori: "Baris Y", romaji: "yu", katakana: "ユ" }, { kategori: "Baris Y", romaji: "yo", katakana: "ヨ" },
+              { kategori: "Baris R", romaji: "ra", katakana: "ラ" }, { kategori: "Baris R", romaji: "ri", katakana: "リ" },
+              { kategori: "Baris R", romaji: "ru", katakana: "ル" }, { kategori: "Baris R", romaji: "re", katakana: "レ" },
+              { kategori: "Baris R", romaji: "ro", katakana: "ロ" }, { kategori: "Baris W", romaji: "wa", katakana: "ワ" },
+              { kategori: "Baris W", romaji: "wo", katakana: "ヲ" }, { kategori: "Konsonan N", romaji: "n", katakana: "ン" },
+              { kategori: "Dakuon G", romaji: "ga", katakana: "ガ" }, { kategori: "Dakuon G", romaji: "gi", katakana: "ギ" },
+              { kategori: "Dakuon G", romaji: "gu", katakana: "グ" }, { kategori: "Dakuon G", romaji: "ge", katakana: "ゲ" },
+              { kategori: "Dakuon G", romaji: "go", katakana: "ゴ" }, { kategori: "Dakuon Z", romaji: "za", katakana: "ザ" },
+              { kategori: "Dakuon Z", romaji: "ji", katakana: "ジ" }, { kategori: "Dakuon Z", romaji: "zu", katakana: "ズ" },
+              { kategori: "Dakuon Z", romaji: "ze", katakana: "ゼ" }, { kategori: "Dakuon Z", romaji: "zo", katakana: "ゾ" },
+              { kategori: "Dakuon D", romaji: "da", katakana: "ダ" }, { kategori: "Dakuon D", romaji: "ji", katakana: "ヂ" },
+              { kategori: "Dakuon D", romaji: "zu", katakana: "ヅ" }, { kategori: "Dakuon D", romaji: "de", katakana: "デ" },
+              { kategori: "Dakuon D", romaji: "do", katakana: "ド" }, { kategori: "Dakuon B", romaji: "ba", katakana: "バ" },
+              { kategori: "Dakuon B", romaji: "bi", katakana: "ビ" }, { kategori: "Dakuon B", romaji: "bu", katakana: "ブ" },
+              { kategori: "Dakuon B", romaji: "be", katakana: "ベ" }, { kategori: "Dakuon B", romaji: "bo", katakana: "ボ" },
+              { kategori: "Handakuon P", romaji: "pa", katakana: "パ" }, { kategori: "Handakuon P", romaji: "pi", katakana: "ピ" },
+              { kategori: "Handakuon P", romaji: "pu", katakana: "プ" }, { kategori: "Handakuon P", romaji: "pe", katakana: "ペ" },
+              { kategori: "Handakuon P", romaji: "po", katakana: "ポ" }, { kategori: "Yoon K", romaji: "kya", katakana: "キャ" },
+              { kategori: "Yoon K", romaji: "kyu", katakana: "キュ" }, { kategori: "Yoon K", romaji: "kyo", katakana: "キョ" },
+              { kategori: "Yoon S", romaji: "sha", katakana: "シャ" }, { kategori: "Yoon S", romaji: "shu", katakana: "シュ" },
+              { kategori: "Yoon S", romaji: "sho", katakana: "ショ" }, { kategori: "Yoon T", romaji: "cha", katakana: "チャ" },
+              { kategori: "Yoon T", romaji: "chu", katakana: "チュ" }, { kategori: "Yoon T", romaji: "cho", katakana: "チョ" },
+              { kategori: "Yoon N", romaji: "nya", katakana: "ニャ" }, { kategori: "Yoon N", romaji: "nyu", katakana: "ニュ" },
+              { kategori: "Yoon N", romaji: "nyo", katakana: "ニョ" }, { kategori: "Yoon H", romaji: "hya", katakana: "ヒャ" },
+              { kategori: "Yoon H", romaji: "hyu", katakana: "ヒュ" }, { kategori: "Yoon H", romaji: "hyo", katakana: "ヒョ" },
+              { kategori: "Yoon M", romaji: "mya", katakana: "ミャ" }, { kategori: "Yoon M", romaji: "myu", katakana: "ミュ" },
+              { kategori: "Yoon M", romaji: "myo", katakana: "ミョ" }, { kategori: "Yoon R", romaji: "rya", katakana: "リャ" },
+              { kategori: "Yoon R", romaji: "ryu", katakana: "リュ" }, { kategori: "Yoon R", romaji: "ryo", katakana: "リョ" },
+              { kategori: "Yoon G", romaji: "gya", katakana: "ギャ" }, { kategori: "Yoon G", romaji: "gyu", katakana: "ギュ" },
+              { kategori: "Yoon G", romaji: "gyo", hiragana: "ギョ", katakana: "ギョ" }, { kategori: "Yoon J", romaji: "ja", katakana: "ジャ" },
+              { kategori: "Yoon J", romaji: "ju", katakana: "ジュ" }, { kategori: "Yoon J", romaji: "jo", katakana: "ジョ" },
+              { kategori: "Yoon B", romaji: "bya", katakana: "ビャ" }, { kategori: "Yoon B", romaji: "byu", katakana: "ビュ" },
+              { kategori: "Yoon B", romaji: "byo", katakana: "ビョ" }, { kategori: "Yoon P", romaji: "pya", katakana: "ピャ" },
+              { kategori: "Yoon P", romaji: "pyu", katakana: "ピュ" }, { kategori: "Yoon P", romaji: "pyo", katakana: "ピョ" },
+              { kategori: "Katakana Khusus", romaji: "wi", katakana: "ウィ" }, { kategori: "Katakana Khusus", romaji: "we", katakana: "ウェ" },
+              { kategori: "Katakana Khusus", romaji: "wo", katakana: "ウォ" }, { kategori: "Katakana Khusus", romaji: "va", katakana: "ヴァ" },
+              { kategori: "Katakana Khusus", romaji: "vi", katakana: "ヴィ" }, { kategori: "Katakana Khusus", romaji: "ve", katakana: "ヴェ" },
+              { kategori: "Katakana Khusus", romaji: "vo", katakana: "ヴォ" }, { kategori: "Katakana Khusus", romaji: "fa", katakana: "ファ" },
+              { kategori: "Katakana Khusus", romaji: "fi", katakana: "フィ" }, { kategori: "Katakana Khusus", romaji: "fe", katakana: "フェ" },
+              { kategori: "Katakana Khusus", romaji: "fo", katakana: "フォ" }, { kategori: "Katakana Khusus", romaji: "che", katakana: "チェ" },
+              { kategori: "Katakana Khusus", romaji: "she", katakana: "シェ" }, { kategori: "Katakana Khusus", romaji: "je", katakana: "ジェ" },
+              { kategori: "Katakana Khusus", romaji: "tsa", katakana: "ツァ" }, { kategori: "Katakana Khusus", romaji: "tse", katakana: "ツェ" },
+              { kategori: "Katakana Khusus", romaji: "tso", katakana: "ツォ" }, { kategori: "Katakana Khusus", romaji: "ti", katakana: "ティ" },
+              { kategori: "Katakana Khusus", romaji: "tu", katakana: "トゥ" }, { kategori: "Katakana Khusus", romaji: "di", katakana: "ディ" },
+              { kategori: "Katakana Khusus", romaji: "du", katakana: "ドゥ" }, { kategori: "Katakana Khusus", romaji: "dyu", katakana: "デュ" }
+            ];
+          } else if (key === 'penanda_waktu_list') {
+            return [
+              {
+                subJudul: "Jam (時 - Ji)",
+                items: [
+                  { indonesia: "Jam 1", romaji: "ichiji", hiragana: "いちじ", katakana: "イチジ" },
+                  { indonesia: "Jam 2", romaji: "niji", hiragana: "にじ", katakana: "ニジ" },
+                  { indonesia: "Jam 3", romaji: "sanji", hiragana: "さんじ", katakana: "サンジ" },
+                  { indonesia: "Jam 4", romaji: "yoji", hiragana: "よじ", katakana: "ヨジ" },
+                  { indonesia: "Jam 5", romaji: "goji", hiragana: "ごじ", katakana: "ゴジ" },
+                  { indonesia: "Jam 6", romaji: "rokuji", hiragana: "ろくじ", katakana: "ロクジ" },
+                  { indonesia: "Jam 7", romaji: "shichiji", hiragana: "しちじ", katakana: "シチジ" },
+                  { indonesia: "Jam 8", romaji: "hachiji", hiragana: "はちじ", katakana: "ハチジ" },
+                  { indonesia: "Jam 9", romaji: "kuji", hiragana: "くじ", katakana: "クジ" },
+                  { indonesia: "Jam 10", romaji: "juuji", hiragana: "じゅうじ", katakana: "ジュウジ" },
+                  { indonesia: "Jam 11", romaji: "juuichiji", hiragana: "じゅういちじ", katakana: "ジュウイチジ" },
+                  { indonesia: "Jam 12", romaji: "juuniji", hiragana: "じゅうにじ", katakana: "ジュウニジ" },
+                  { indonesia: "Jam berapa?", romaji: "nanji", hiragana: "なんじ", katakana: "ナンジ" }
+                ]
+              },
+              {
+                subJudul: "Menit (分 - Fun/Pun)",
+                items: [
+                  { indonesia: "Menit 1", romaji: "ippun", hiragana: "いっぷん", katakana: "イップン" },
+                  { indonesia: "Menit 2", romaji: "nifun", hiragana: "にふん", katakana: "ニフン" },
+                  { indonesia: "Menit 3", romaji: "sanpun", hiragana: "さんぷん", katakana: "サンプン" },
+                  { indonesia: "Menit 4", romaji: "yonpun", hiragana: "よんぷん", katakana: "ヨンプン" },
+                  { indonesia: "Menit 5", romaji: "gofun", hiragana: "ごふん", katakana: "ゴフン" },
+                  { indonesia: "Menit 6", romaji: "roppun", hiragana: "ろっぷん", katakana: "ロップン" },
+                  { indonesia: "Menit 7", romaji: "nanafun", hiragana: "ななふん", katakana: "ナナフン" },
+                  { indonesia: "Menit 8", romaji: "happun", hiragana: "はっぷん", katakana: "ハップン" },
+                  { indonesia: "Menit 9", romaji: "kyuufun", hiragana: "きゅうふん", katakana: "キュウフン" },
+                  { indonesia: "Menit 10", romaji: "juppun / jippun", hiragana: "じゅっぷん", katakana: "ジュップン" },
+                  { indonesia: "Menit 15", romaji: "juugofun", hiragana: "じゅうごふん", katakana: "ジュウゴフン" },
+                  { indonesia: "Menit 30 / Setengah", romaji: "sanjuppun / han", hiragana: "さんじゅっぷん / はん", katakana: "サンジュップン / ハン" },
+                  { indonesia: "Berapa menit?", romaji: "nanpun", hiragana: "なんぷん", katakana: "ナンプン" }
+                ]
+              },
+              {
+                subJudul: "Nama Hari (曜日 - Youbi)",
+                items: [
+                  { indonesia: "Hari Minggu", romaji: "nichiyoubi", hiragana: "にちようび", katakana: "ニチヨウビ" },
+                  { indonesia: "Hari Senin", romaji: "getsuyoubi", hiragana: "げつようび", katakana: "ゲツヨウビ" },
+                  { indonesia: "Hari Selasa", romaji: "kayoubi", hiragana: "かようび", katakana: "カヨウビ" },
+                  { indonesia: "Hari Rabu", romaji: "suiyoubi", hiragana: "すいようび", katakana: "スイヨウビ" },
+                  { indonesia: "Hari Kamis", romaji: "mokuyoubi", hiragana: "もくようび", katakana: "モくようび" },
+                  { indonesia: "Hari Jumat", romaji: "kinyoubi", hiragana: "きんようび", katakana: "キンヨウビ" },
+                  { indonesia: "Hari Sabtu", romaji: "doyoubi", hiragana: "どようび", katakana: "ドヨウビ" },
+                  { indonesia: "Hari apa?", romaji: "nanyoubi", hiragana: "なんようび", katakana: "ナンヨウビ" }
+                ]
+              },
+              {
+                subJudul: "Bulan (月 - Gatsu)",
+                items: [
+                  { indonesia: "Januari (Bulan 1)", romaji: "ichigatsu", hiragana: "いちがつ", katakana: "イチガツ" },
+                  { indonesia: "Februari (Bulan 2)", romaji: "nigatsu", hiragana: "にがつ", katakana: "ニガツ" },
+                  { indonesia: "Maret (Bulan 3)", romaji: "sangatsu", hiragana: "さんがつ", katakana: "サンガツ" },
+                  { indonesia: "April (Bulan 4)", romaji: "shigatsu", hiragana: "しがつ", katakana: "シガツ" },
+                  { indonesia: "Mei (Bulan 5)", romaji: "gogatsu", hiragana: "ごがつ", katakana: "ゴガツ" },
+                  { indonesia: "Juni (Bulan 6)", romaji: "rokugatsu", hiragana: "ろくがつ", katakana: "ロクガツ" },
+                  { indonesia: "Juli (Bulan 7)", romaji: "shichigatsu", hiragana: "しちがつ", katakana: "シチガツ" },
+                  { indonesia: "Agustus (Bulan 8)", romaji: "hachigatsu", hiragana: "はちがつ", katakana: "ハチガツ" },
+                  { indonesia: "September (Bulan 9)", romaji: "kugatsu", hiragana: "くがつ", katakana: "クガツ" },
+                  { indonesia: "Oktober (Bulan 10)", romaji: "juugatsu", hiragana: "じゅうがつ", katakana: "ジュウガツ" },
+                  { indonesia: "November (Bulan 11)", romaji: "juuichigatsu", hiragana: "じゅういちがつ", katakana: "ジュウイチガツ" },
+                  { indonesia: "Desember (Bulan 12)", romaji: "juunigatsu", hiragana: "じゅうにがつ", katakana: "ジュウニガツ" },
+                  { indonesia: "Bulan apa?", romaji: "nangatsu", hiragana: "なんがつ", katakana: "ナンガツ" }
+                ]
+              },
+              {
+                subJudul: "Tanggal / Hari ke-N (日 - Nichi / Tachi / Ka)",
+                items: [
+                  { indonesia: "Tanggal 1", romaji: "tsuitachi", hiragana: "ついたち", katakana: "ツイタチ" },
+                  { indonesia: "Tanggal 2", romaji: "futsuka", hiragana: "ふつか", katakana: "フツカ" },
+                  { indonesia: "Tanggal 3", romaji: "mikka", hiragana: "みっか", katakana: "ミッカ" },
+                  { indonesia: "Tanggal 4", romaji: "yokka", hiragana: "よっか", katakana: "ヨッカ" },
+                  { indonesia: "Tanggal 5", romaji: "itsuka", hiragana: "いつか", katakana: "イツカ" },
+                  { indonesia: "Tanggal 6", romaji: "muika", hiragana: "むいか", katakana: "ムイカ" },
+                  { indonesia: "Tanggal 7", romaji: "nanoka", hiragana: "なのか", katakana: "ナノカ" },
+                  { indonesia: "Tanggal 8", romaji: "youka", hiragana: "ようか", katakana: "ヨウカ" },
+                  { indonesia: "Tanggal 9", romaji: "kokonoka", hiragana: "ここのか", katakana: "ココノカ" },
+                  { indonesia: "Tanggal 10", romaji: "tooka", hiragana: "とおか", katakana: "トオカ" },
+                  { indonesia: "Tanggal 11", romaji: "juuichi nichi", hiragana: "じゅういちにち", katakana: "ジュウイチニチ" },
+                  { indonesia: "Tanggal 12", romaji: "juuni nichi", hiragana: "じゅうににち", katakana: "ジュウニニチ" },
+                  { indonesia: "Tanggal 13", romaji: "juusan nichi", hiragana: "じゅうさんにち", katakana: "ジュウサンニチ" },
+                  { indonesia: "Tanggal 14", romaji: "juu yokka", hiragana: "じゅうよっか", katakana: "ジュウヨッカ" },
+                  { indonesia: "Tanggal 15", romaji: "juugo nichi", hiragana: "じゅうごにち", katakana: "ジュウゴニチ" },
+                  { indonesia: "Tanggal 16", romaji: "juuroku nichi", hiragana: "じゅうろくにち", katakana: "ジュウロクニチ" },
+                  { indonesia: "Tanggal 17", romaji: "juushichi nichi", hiragana: "じゅうしちにち", katakana: "ジュウシチニチ" },
+                  { indonesia: "Tanggal 18", romaji: "juuhachi nichi", hiragana: "じゅうはちにち", katakana: "ジュウハチニチ" },
+                  { indonesia: "Tanggal 19", romaji: "juuku nichi", hiragana: "じゅうくにち", katakana: "ジュウクニチ" },
+                  { indonesia: "Tanggal 20", romaji: "hatsuka", hiragana: "はつか", katakana: "ハツカ" },
+                  { indonesia: "Tanggal 21", romaji: "nijuuichi nichi", hiragana: "にじゅういちにち", katakana: "ニジュウイチニチ" },
+                  { indonesia: "Tanggal 22", romaji: "nijuuni nichi", hiragana: "じゅうににち", katakana: "ジュウニニチ" },
+                  { indonesia: "Tanggal 23", romaji: "nijuusan nichi", hiragana: "にじゅうさんにち", katakana: "ニジュウサンニチ" },
+                  { indonesia: "Tanggal 24", romaji: "nijuu yokka", hiragana: "にじゅうよっか", katakana: "ニジュウヨッカ" },
+                  { indonesia: "Tanggal 25", romaji: "nijuugo nichi", hiragana: "じゅうごにち", katakana: "ジュウゴニチ" },
+                  { indonesia: "Tanggal 26", romaji: "nijuuroku nichi", hiragana: "じゅうろくにち", katakana: "ジュウロクニチ" },
+                  { indonesia: "Tanggal 27", romaji: "nijuushichi nichi", hiragana: "じゅうしちにち", katakana: "ジュウシチニチ" },
+                  { indonesia: "Tanggal 28", romaji: "nijuuhachi nichi", hiragana: "じゅうはちにち", katakana: "ジュウハチニチ" },
+                  { indonesia: "Tanggal 29", romaji: "nijuuku nichi", hiragana: "じゅうくにち", katakana: "ジュウクニチ" },
+                  { indonesia: "Tanggal 30", romaji: "sanjuu nichi", hiragana: "さんじゅうにち", katakana: "サンジュウニチ" },
+                  { indonesia: "Tanggal 31", romaji: "sanjuuichi nichi", hiragana: "さんじゅういちにち", katakana: "サンジュウイチニチ" },
+                  { indonesia: "Tanggal berapa?", romaji: "nan nichi", hiragana: "なんにち", katakana: "ナンニチ" }
+                ]
+              },
+              {
+                subJudul: "Keterangan Waktu Tambahan",
+                items: [
+                  { indonesia: "AM (00:00 - 11:59 Pagi)", romaji: "gozen", hiragana: "ごぜん", katakana: "ゴゼン" },
+                  { indonesia: "PM (12:00 - 23:59 Siang/Malam)", romaji: "gogo", hiragana: "ごご", katakana: "ゴゴ" },
+                  { indonesia: "Lebih (Jam)", romaji: "tsugi", hiragana: "つぎ", katakana: "ツギ" },
+                  { indonesia: "Kurang (Jam)", romaji: "mae", hiragana: "まえ", katakana: "マエ" },
+                  { indonesia: "Tepat (Tepat Jam ...)", romaji: "choudou", hiragana: "ちょうど", katakana: "チョウド" }
+                ]
+              }
+            ];
+          } else if (key === 'ungkapan_waktu_list') {
+            return [
+              {
+                subJudul: "Hari (日)",
+                items: [
+                  { indonesia: "Kemarin lusa", romaji: "ototoi", hiragana: "おととい", katakana: "オトトイ" },
+                  { indonesia: "Kemarin", romaji: "kinou", hiragana: "きのう", katakana: "キノウ" },
+                  { indonesia: "Hari ini", romaji: "kyou", hiragana: "きょう", katakana: "キョウ" },
+                  { indonesia: "Besok", romaji: "ashita", hiragana: "あした", katakana: "アシタ" },
+                  { indonesia: "Lusa", romaji: "asatte", hiragana: "あさって", katakana: "アサッテ" },
+                  { indonesia: "Setiap hari", romaji: "mainichi", hiragana: "まいにち", katakana: "マイニチ" }
+                ]
+              },
+              {
+                subJudul: "Pagi (朝)",
+                items: [
+                  { indonesia: "Kemarin lusa pagi", romaji: "ototoi no asa", hiragana: "おとといのあさ", katakana: "オトトイノアサ" },
+                  { indonesia: "Kemarin pagi", romaji: "kinou no asa", hiragana: "きのうのあさ", katakana: "キノウノアサ" },
+                  { indonesia: "Tadi pagi", romaji: "kesa", hiragana: "けさ", katakana: "ケサ" },
+                  { indonesia: "Besok pagi", romaji: "ashita no asa", hiragana: "あしたのあさ", katakana: "アシタノアサ" },
+                  { indonesia: "Lusa pagi", romaji: "asatte no asa", hiragana: "あさってのあさ", katakana: "アサッテノアサ" },
+                  { indonesia: "Setiap pagi", romaji: "maiasa", hiragana: "まいあさ", katakana: "マイアサ" }
+                ]
+              },
+              {
+                subJudul: "Malam (晩 / 夜)",
+                items: [
+                  { indonesia: "Kemarin lusa malam", romaji: "ototoi no ban", hiragana: "おとといのばん", katakana: "オトトイノバン" },
+                  { indonesia: "Kemarin malam", romaji: "kinou no ban", hiragana: "きのうのばん", katakana: "キノウノアサ" },
+                  { indonesia: "Malam ini", romaji: "konban", hiragana: "こんばんは", katakana: "コンバン" },
+                  { indonesia: "Besok malam", romaji: "ashita no ban", hiragana: "あしたのばん", katakana: "アシタノバン" },
+                  { indonesia: "Lusa malam", romaji: "asatte no ban", hiragana: "あさってのばん", katakana: "アサッテノバン" },
+                  { indonesia: "Setiap malam", romaji: "maiban", hiragana: "まいばん", katakana: "マイバン" }
+                ]
+              },
+              {
+                subJudul: "Minggu (週)",
+                items: [
+                  { indonesia: "Dua minggu lalu", romaji: "sen sen shuu", hiragana: "せんせんしゅう", katakana: "センセンシュウ" },
+                  { indonesia: "Minggu lalu", romaji: "sen shuu", hiragana: "せんしゅう", katakana: "センシュウ" },
+                  { indonesia: "Minggu ini", romaji: "kon shuu", hiragana: "こんしゅう", katakana: "コンシュウ" },
+                  { indonesia: "Minggu depan", romaji: "rai shuu", hiragana: "らいしゅう", katakana: "ライシュウ" },
+                  { indonesia: "Dua minggu lagi", romaji: "sa rai shuu", hiragana: "さらいしゅう", katakana: "サライシュウ" },
+                  { indonesia: "Setiap minggu", romaji: "maishuu", hiragana: "まいしゅう", katakana: "マイシュウ" }
+                ]
+              },
+              {
+                subJudul: "Bulan (月)",
+                items: [
+                  { indonesia: "Dua bulan lalu", romaji: "sen sen getsu", hiragana: "せんせんげつ", katakana: "センセンゲツ" },
+                  { indonesia: "Bulan lalu", romaji: "sen getsu", hiragana: "せんげつ", katakana: "センゲツ" },
+                  { indonesia: "Bulan ini", romaji: "kon getsu", hiragana: "こんげつ", katakana: "コンゲツ" },
+                  { indonesia: "Bulan depan", romaji: "rai getsu", hiragana: "らいげつ", katakana: "ライゲツ" },
+                  { indonesia: "Dua bulan lagi", romaji: "sa rai getsu", hiragana: "さらいげつ", katakana: "サライゲツ" },
+                  { indonesia: "Setiap bulan", romaji: "maitsuki", hiragana: "まいつき", katakana: "マイツキ" }
+                ]
+              },
+              {
+                subJudul: "Tahun (年)",
+                items: [
+                  { indonesia: "Dua tahun yang lalu", romaji: "ototoshi", hiragana: "おととし", katakana: "オトトシ" },
+                  { indonesia: "Tahun lalu", romaji: "kyonen", hiragana: "きょねん", katakana: "キョネン" },
+                  { indonesia: "Tahun ini", romaji: "kotoshi", hiragana: "ことし", katakana: "コトシ" },
+                  { indonesia: "Tahun depan", romaji: "rainen", hiragana: "らいねん", katakana: "ライネン" },
+                  { indonesia: "Dua tahun lagi", romaji: "sarainen", hiragana: "さらいねん", katakana: "サライネン" },
+                  { indonesia: "Setiap tahun", romaji: "maitoshi / mainen", hiragana: "まいとし", katakana: "マイトシ" },
+                  { indonesia: "6 Bulan / Setengah tahun", romaji: "han toshi", hiragana: "はんとし", katakana: "ハントシ" }
+                ]
+              },
+              {
+                subJudul: "Jangka Waktu - Jam (時間)",
+                items: [
+                  { indonesia: "1 Jam", romaji: "ichi ji kan", hiragana: "いちじかん", katakana: "イチジカン" },
+                  { indonesia: "2 Jam", romaji: "ni ji kan", hiragana: "にじかん", katakana: "ニジカン" },
+                  { indonesia: "3 Jam", romaji: "san ji kan", hiragana: "さんじかん", katakana: "サンジカン" },
+                  { indonesia: "4 Jam", romaji: "yo ji kan", hiragana: "よじかん", katakana: "ヨジカン" },
+                  { indonesia: "5 Jam", romaji: "go ji kan", hiragana: "ごじかん", katakana: "ゴじかん" },
+                  { indonesia: "6 Jam", romaji: "roku ji kan", hiragana: "ろくじかん", katakana: "ロクジカン" },
+                  { indonesia: "7 Jam", romaji: "shichi ji kan / nana ji kan", hiragana: "しちじかん", katakana: "シチジカン" },
+                  { indonesia: "8 Jam", romaji: "hachi ji kan", hiragana: "はちじかん", katakana: "ハチジカン" },
+                  { indonesia: "9 Jam", romaji: "ku ji kan", hiragana: "くじかん", katakana: "クジカン" },
+                  { indonesia: "10 Jam", romaji: "juu ji kan", hiragana: "じゅうじかん", katakana: "ジュウジカン" },
+                  { indonesia: "Berapa jam?", romaji: "nan ji kan", hiragana: "なんじかん", katakana: "ナンジカン" }
+                ]
+              },
+              {
+                subJudul: "Jangka Waktu - Menit (分)",
+                items: [
+                  { indonesia: "1 Menit", romaji: "ippun", hiragana: "いっぷん", katakana: "イップン" },
+                  { indonesia: "2 Menit", romaji: "nifun", hiragana: "にふん", katakana: "ニフン" },
+                  { indonesia: "3 Menit", romaji: "sanpun", hiragana: "さんぷん", katakana: "サンプン" },
+                  { indonesia: "4 Menit", romaji: "yonpun", hiragana: "よんぷん", katakana: "ヨンプン" },
+                  { indonesia: "5 Menit", romaji: "gofun", hiragana: "ごふん", katakana: "ゴフン" },
+                  { indonesia: "6 Menit", romaji: "roppun", hiragana: "ろっぷん", katakana: "ロップン" },
+                  { indonesia: "7 Menit", romaji: "nanafun", hiragana: "ななふん", katakana: "ナナフン" },
+                  { indonesia: "8 Menit", romaji: "happun", hiragana: "はっぷん", katakana: "ハップン" },
+                  { indonesia: "9 Menit", romaji: "kyuufun", hiragana: "きゅうふん", katakana: "キュウフン" },
+                  { indonesia: "10 Menit", romaji: "juppun / jippun", hiragana: "じゅっぷん", katakana: "ジュップン" },
+                  { indonesia: "Berapa menit?", romaji: "nanpun", hiragana: "なんぷん", katakana: "ナンプン" }
+                ]
+              },
+              {
+                subJudul: "Jangka Waktu - Hari (日)",
+                items: [
+                  { indonesia: "1 Hari", romaji: "ichi nichi", hiragana: "いちにち", katakana: "イチニチ" },
+                  { indonesia: "2 Hari", romaji: "futsu ka", hiragana: "ふつか", katakana: "フツカ" },
+                  { indonesia: "3 Hari", romaji: "mik ka", hiragana: "みっか", katakana: "ミッカ" },
+                  { indonesia: "4 Hari", romaji: "yok ka", hiragana: "よっか", katakana: "ヨッカ" },
+                  { indonesia: "5 Hari", romaji: "itsu ka", hiragana: "いつか", katakana: "イツカ" },
+                  { indonesia: "6 Hari", romaji: "mui ka", hiragana: "むいか", katakana: "ムイカ" },
+                  { indonesia: "7 Hari", romaji: "nano ka", hiragana: "なのか", katakana: "ナノカ" },
+                  { indonesia: "8 Hari", romaji: "you ka", hiragana: "ようか", katakana: "ヨウカ" },
+                  { indonesia: "9 Hari", romaji: "kokono ka", hiragana: "ここのか", katakana: "ココノカ" },
+                  { indonesia: "10 Hari", romaji: "too ka", hiragana: "とおか", katakana: "トオカ" },
+                  { indonesia: "Berapa hari?", romaji: "nan nichi", hiragana: "なんにち", katakana: "ナンニチ" }
+                ]
+              },
+              {
+                subJudul: "Jangka Waktu - Minggu (週間)",
+                items: [
+                  { indonesia: "1 Minggu", romaji: "isshuukan", hiragana: "いっしゅうかん", katakana: "イッシュウカン" },
+                  { indonesia: "2 Minggu", romaji: "ni shuukan", hiragana: "にしゅうかん", katakana: "ニシュウカン" },
+                  { indonesia: "3 Minggu", romaji: "san shuukan", hiragana: "さんしゅうかん", katakana: "サンシュウカン" },
+                  { indonesia: "4 Minggu", romaji: "yon shuukan", hiragana: "よんしゅうかん", katakana: "ヨンシュウカン" },
+                  { indonesia: "5 Minggu", romaji: "go shuukan", hiragana: "ごしゅうかん", katakana: "ゴシュウカン" },
+                  { indonesia: "6 Minggu", romaji: "roku shuukan", hiragana: "ろくしゅうかん", katakana: "ロクシュウカン" },
+                  { indonesia: "7 Minggu", romaji: "nana shuukan", hiragana: "ななしゅうかん", katakana: "ナナシュウカン" },
+                  { indonesia: "8 Minggu", romaji: "hasshuukan", hiragana: "はっしゅうかん", katakana: "ハッシュウカン" },
+                  { indonesia: "9 Minggu", romaji: "kyuu shuukan", hiragana: "きゅうしゅうかん", katakana: "キュウシュウカン" },
+                  { indonesia: "10 Minggu", romaji: "jisshuukan", hiragana: "じっしゅうかん", katakana: "ジッシュウカン" },
+                  { indonesia: "Berapa minggu?", romaji: "nan shuukan", hiragana: "なんしゅうかん", katakana: "ナンシュウカン" }
+                ]
+              },
+              {
+                subJudul: "Jangka Waktu - Bulan (か月)",
+                items: [
+                  { indonesia: "1 Bulan", romaji: "ik Kagetsu", hiragana: "いっかげつ", katakana: "イッカゲツ" },
+                  { indonesia: "2 Bulan", romaji: "ni kagetsu", hiragana: "にかげつ", katakana: "ニカゲツ" },
+                  { indonesia: "3 Bulan", romaji: "san kagetsu", hiragana: "さんかげつ", katakana: "サンカゲツ" },
+                  { indonesia: "4 Bulan", romaji: "yon kagetsu", hiragana: "よんかげつ", katakana: "ヨンカゲツ" },
+                  { indonesia: "5 Bulan", romaji: "go kagetsu", hiragana: "ごかげつ", katakana: "ゴかげつ" },
+                  { indonesia: "6 Bulan", romaji: "rok kagetsu / hantoshi", hiragana: "ろっかげつ", katakana: "ロッカゲツ" },
+                  { indonesia: "7 Bulan", romaji: "nana kagetsu", hiragana: "ななかげつ", katakana: "ナナカげつ" },
+                  { indonesia: "8 Bulan", romaji: "hak kagetsu", hiragana: "はっかげつ", katakana: "ハッカゲツ" },
+                  { indonesia: "9 Bulan", romaji: "kyuu kagetsu", hiragana: "きゅうかげつ", katakana: "キュウカゲツ" },
+                  { indonesia: "10 Bulan", romaji: "jik kagetsu", hiragana: "じっかげつ", katakana: "ジッカゲツ" },
+                  { indonesia: "Berapa bulan?", romaji: "nan kagetsu", hiragana: "なんかげつ", katakana: "ナンカゲツ" }
+                ]
+              },
+              {
+                subJudul: "Jangka Waktu - Tahun (年間)",
+                items: [
+                  { indonesia: "1 Tahun", romaji: "ichi nen", hiragana: "いちねん", katakana: "イチネン" },
+                  { indonesia: "2 Tahun", romaji: "ni nen", hiragana: "にねん", katakana: "ニネン" },
+                  { indonesia: "3 Tahun", romaji: "san nen", hiragana: "さんねん", katakana: "サンネン" },
+                  { indonesia: "4 Tahun", romaji: "yo nen", hiragana: "よねん", katakana: "ヨネン" },
+                  { indonesia: "5 Tahun", romaji: "go nen", hiragana: "ごねん", katakana: "ゴネン" },
+                  { indonesia: "6 Tahun", romaji: "roku nen", hiragana: "ろくねん", katakana: "ロクネン" },
+                  { indonesia: "7 Tahun", romaji: "nana nen / shichi nen", hiragana: "ななねん", katakana: "ナナネン" },
+                  { indonesia: "8 Tahun", romaji: "hachi nen", hiragana: "はちねん", katakana: "ハチネン" },
+                  { indonesia: "9 Tahun", romaji: "kyuu nen", hiragana: "きゅうねん", katakana: "キュウネン" },
+                  { indonesia: "10 Tahun", romaji: "juu nen", hiragana: "じゅうねん", katakana: "ジュウネン" },
+                  { indonesia: "Berapa tahun?", romaji: "nan nen", hiragana: "なんねん", katakana: "ナンネン" }
+                ]
+              }
+            ];
+          }
+          return [];
+        },
+
+        selectAnswer(opt) {
+          if (this.selectedAnswer !== null) return;
+          this.selectedAnswer = opt;
+          if (opt.isCorrect) { this.correctCount++; } else { this.wrongCount++; }
+        },
+
+        nextQuestion() {
+          if (this.currentQuestionIndex < this.quizQuestions.length - 1) {
+            this.currentQuestionIndex++;
+            this.currentQuestion = this.quizQuestions[this.currentQuestionIndex];
+            this.selectedAnswer = null;
+          } else {
+            this.finishQuiz();
+          }
+        },
+
+        finishQuiz() {
+          clearInterval(this.timerInterval);
+          let total = this.quizQuestions.length;
+          let answered = this.correctCount + this.wrongCount;
+          if (answered < total) {
+            this.wrongCount += (total - answered);
+          }
+          this.quizScore = Math.round((this.correctCount / total) * 100);
+          this.quizStage = 'result';
+        },
+
+        resetQuiz() {
+          this.quizStage = 'setup';
+          clearInterval(this.timerInterval);
+          this.loadCategories();
+        },
+
+        formatTime(sec) {
+          let m = Math.floor(sec / 60);
+          let s = sec % 60;
+          return `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+        },
+
+        renderDynamicKotobaSubmenus() {
+          const container = document.getElementById('dynamic-kotoba-links');
+          if (!container) return;
+          let submenus = JSON.parse(localStorage.getItem('minna_submenus')) || [];
+          submenus.forEach(sub => {
+            const link = document.createElement('a');
+            link.href = `kotoba.html?cat=${sub.id}`;
+            link.className = 'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+            link.innerHTML = `<i class="fa-solid fa-angle-right text-[10px]"></i> ${sub.title}`;
+            container.appendChild(link);
+          });
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+        },
+        
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>

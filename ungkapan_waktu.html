@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minna no Nihongo - Ungkapan Waktu</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', }
+  </script>
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+  </style>
+</head>
+<body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="ungkapanWaktuApp()" x-init="initApp()">
+
+  <div class="flex h-screen overflow-hidden">
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+
+    <!-- SIDEBAR CONTAINER (Dimuat otomatis dari sidebar.html) -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <!-- HEADER CONTAINER (Dimuat otomatis dari header.html) -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY CONTENT -->
+      <main class="flex-1 overflow-y-auto p-8 space-y-8">
+        
+        <!-- Header Halaman -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Ungkapan Waktu & Jangka Waktu</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Daftar kosakata keterangan waktu mulai dari hari, pagi, malam, minggu, bulan, tahun, hingga durasi jam dan menit.</p>
+          </div>
+          <span class="text-xs bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold px-4 py-2 rounded-xl border border-blue-100 dark:border-blue-900/50">Materi Lengkap N5</span>
+        </div>
+
+        <!-- DAFTAR KELOMPOK UNGKAPAN WAKTU -->
+        <div class="space-y-8">
+          <template x-for="sub in ungkapanWaktuList" :key="sub.subJudul">
+            <div class="space-y-3">
+              <div class="flex items-center gap-2 border-b-2 border-blue-600 dark:border-blue-500 pb-1.5">
+                <i class="fa-regular fa-calendar-check text-blue-600 dark:text-blue-400"></i>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white" x-text="sub.subJudul"></h3>
+              </div>
+              <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse min-w-[500px]">
+                    <thead>
+                      <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <th class="py-3.5 px-6">Bahasa Indonesia</th>
+                        <th class="py-3.5 px-6">Romaji</th>
+                        <th class="py-3.5 px-6">Hiragana</th>
+                        <th class="py-3.5 px-6">Katakana</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+                      <template x-for="(item, index) in sub.items" :key="index">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+                          <td class="py-3.5 px-6 font-medium text-slate-800 dark:text-slate-200" x-text="item.indonesia"></td>
+                          <td class="py-3.5 px-6 italic font-mono text-slate-500 dark:text-slate-400" x-text="item.romaji"></td>
+                          <td class="py-3.5 px-6 font-bold text-slate-900 dark:text-white" x-text="item.hiragana"></td>
+                          <td class="py-3.5 px-6 text-blue-600 dark:text-blue-400 font-medium" x-text="item.katakana"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function ungkapanWaktuApp() {
+      return {
+        sidebarOpen: false,
+        materiAwalDropdown: true, // Membuka dropdown materi awal secara otomatis di sidebar
+        kotobaDropdown: false,
+        darkMode: false,
+
+        async initApp() {
+          this.initTheme();
+          try {
+            const sidebarRes = await fetch('./sidebar.html');
+            if (sidebarRes.ok) {
+              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+              this.renderDynamicKotobaSubmenus();
+            }
+            const headerRes = await fetch('./header.html');
+            if (headerRes.ok) {
+              document.getElementById('header-container').innerHTML = await headerRes.text();
+            }
+          } catch (e) {
+            console.error('Gagal memuat template modular:', e);
+          }
+        },
+
+        renderDynamicKotobaSubmenus() {
+          const container = document.getElementById('dynamic-kotoba-links');
+          if (!container) return;
+
+          let submenus = JSON.parse(localStorage.getItem('minna_submenus'));
+          if (!submenus) {
+            submenus = [
+              { id: 'ungkapan_waktu', title: 'Ungkapan Waktu' },
+              { id: 'penanda_waktu', title: 'Penanda Waktu' },
+              { id: 'kata_keterangan', title: 'Kata Keterangan' },
+              { id: 'kata_benda', title: 'Kata Benda' },
+              { id: 'kk_gol1', title: 'Kata Kerja Golongan I' },
+              { id: 'kk_gol2', title: 'Kata Kerja Golongan II' },
+              { id: 'kk_gol3', title: 'Kata Kerja Golongan III' },
+              { id: 'salam', title: 'Salam (Aisatsu)' },
+              { id: 'kazoku', title: 'Kazoku (Keluarga)' }
+            ];
+            localStorage.setItem('minna_submenus', JSON.stringify(submenus));
+          }
+
+          submenus.forEach(sub => {
+            const link = document.createElement('a');
+            link.href = `kotoba.html?cat=${sub.id}`;
+            link.className = 'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+            link.innerHTML = `<i class="fa-solid fa-angle-right text-[10px]"></i> ${sub.title}`;
+            container.appendChild(link);
+          });
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+        },
+        
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        },
+
+        // Data Ungkapan Waktu Lengkap
+        ungkapanWaktuList: [
+          {
+            subJudul: "Hari (日)",
+            items: [
+              { indonesia: "Kemarin lusa", romaji: "ototoi", hiragana: "おととい", katakana: "オトトイ" },
+              { indonesia: "Kemarin", romaji: "kinou", hiragana: "きのう", katakana: "キノウ" },
+              { indonesia: "Hari ini", romaji: "kyou", hiragana: "きょう", katakana: "キョウ" },
+              { indonesia: "Besok", romaji: "ashita", hiragana: "あした", katakana: "アシタ" },
+              { indonesia: "Lusa", romaji: "asatte", hiragana: "あさって", katakana: "アサッテ" },
+              { indonesia: "Setiap hari", romaji: "mainichi", hiragana: "まいにち", katakana: "マイニチ" }
+            ]
+          },
+          {
+            subJudul: "Pagi (朝)",
+            items: [
+              { indonesia: "Kemarin lusa pagi", romaji: "ototoi no asa", hiragana: "おとといのあさ", katakana: "オトトイノアサ" },
+              { indonesia: "Kemarin pagi", romaji: "kinou no asa", hiragana: "きのうのあさ", katakana: "キノウノアサ" },
+              { indonesia: "Tadi pagi", romaji: "kesa", hiragana: "けさ", katakana: "ケサ" },
+              { indonesia: "Besok pagi", romaji: "ashita no asa", hiragana: "あしたのあさ", katakana: "アシタノアサ" },
+              { indonesia: "Lusa pagi", romaji: "asatte no asa", hiragana: "あさってのあさ", katakana: "アサッテノアサ" },
+              { indonesia: "Setiap pagi", romaji: "maiasa", hiragana: "まいあさ", katakana: "マイアサ" }
+            ]
+          },
+          {
+            subJudul: "Malam (晩 / 夜)",
+            items: [
+              { indonesia: "Kemarin lusa malam", romaji: "ototoi no ban", hiragana: "おとといのばん", katakana: "オトトイノバン" },
+              { indonesia: "Kemarin malam", romaji: "kinou no ban", hiragana: "きのうのばん", katakana: "キノウノアサ" },
+              { indonesia: "Malam ini", romaji: "konban", hiragana: "こんばんは", katakana: "コンバン" },
+              { indonesia: "Besok malam", romaji: "ashita no ban", hiragana: "あしたのばん", katakana: "アシタノバン" },
+              { indonesia: "Lusa malam", romaji: "asatte no ban", hiragana: "あさってのばん", katakana: "アサッテノバン" },
+              { indonesia: "Setiap malam", romaji: "maiban", hiragana: "まいばん", katakana: "マイバン" }
+            ]
+          },
+          {
+            subJudul: "Minggu (週)",
+            items: [
+              { indonesia: "Dua minggu lalu", romaji: "sen sen shuu", hiragana: "せんせんしゅう", katakana: "センセンシュウ" },
+              { indonesia: "Minggu lalu", romaji: "sen shuu", hiragana: "せんしゅう", katakana: "センシュウ" },
+              { indonesia: "Minggu ini", romaji: "kon shuu", hiragana: "こんしゅう", katakana: "コンシュウ" },
+              { indonesia: "Minggu depan", romaji: "rai shuu", hiragana: "らいしゅう", katakana: "ライシュウ" },
+              { indonesia: "Dua minggu lagi", romaji: "sa rai shuu", hiragana: "さらいしゅう", katakana: "サライシュウ" },
+              { indonesia: "Setiap minggu", romaji: "maishuu", hiragana: "まいしゅう", katakana: "マイシュウ" }
+            ]
+          },
+          {
+            subJudul: "Bulan (月)",
+            items: [
+              { indonesia: "Dua bulan lalu", romaji: "sen sen getsu", hiragana: "せんせんげつ", katakana: "センセンゲツ" },
+              { indonesia: "Bulan lalu", romaji: "sen getsu", hiragana: "せんげつ", katakana: "センゲツ" },
+              { indonesia: "Bulan ini", romaji: "kon getsu", hiragana: "こんげつ", katakana: "コンゲツ" },
+              { indonesia: "Bulan depan", romaji: "rai getsu", hiragana: "らいげつ", katakana: "ライゲツ" },
+              { indonesia: "Dua bulan lagi", romaji: "sa rai getsu", hiragana: "さらいげつ", katakana: "サライゲツ" },
+              { indonesia: "Setiap bulan", romaji: "maitsuki", hiragana: "まいつき", katakana: "マイツキ" }
+            ]
+          },
+          {
+            subJudul: "Tahun (年)",
+            items: [
+              { indonesia: "Dua tahun yang lalu", romaji: "ototoshi", hiragana: "おととし", katakana: "オトトシ" },
+              { indonesia: "Tahun lalu", romaji: "kyonen", hiragana: "きょねん", katakana: "キョネン" },
+              { indonesia: "Tahun ini", romaji: "kotoshi", hiragana: "ことし", katakana: "コトシ" },
+              { indonesia: "Tahun depan", romaji: "rainen", hiragana: "らいねん", katakana: "ライネン" },
+              { indonesia: "Dua tahun lagi", romaji: "sarainen", hiragana: "さらいねん", katakana: "サライネン" },
+              { indonesia: "Setiap tahun", romaji: "maitoshi / mainen", hiragana: "まいとし", katakana: "マイトシ" },
+              { indonesia: "6 Bulan / Setengah tahun", romaji: "han toshi", hiragana: "はんとし", katakana: "ハントシ" }
+            ]
+          },
+          {
+            subJudul: "Jangka Waktu - Jam (時間)",
+            items: [
+              { indonesia: "1 Jam", romaji: "ichi ji kan", hiragana: "いちじかん", katakana: "イチジカン" },
+              { indonesia: "2 Jam", romaji: "ni ji kan", hiragana: "にじかん", katakana: "ニジカン" },
+              { indonesia: "3 Jam", romaji: "san ji kan", hiragana: "さんじかん", katakana: "サンジカン" },
+              { indonesia: "4 Jam", romaji: "yo ji kan", hiragana: "よじかん", katakana: "ヨジカン" },
+              { indonesia: "5 Jam", romaji: "go ji kan", hiragana: "ごじかん", katakana: "ゴジカン" },
+              { indonesia: "6 Jam", romaji: "roku ji kan", hiragana: "ろくじかん", katakana: "ロクジカン" },
+              { indonesia: "7 Jam", romaji: "shichi ji kan / nana ji kan", hiragana: "しちじかん", katakana: "シチジカン" },
+              { indonesia: "8 Jam", romaji: "hachi ji kan", hiragana: "はちじかん", katakana: "ハチジカン" },
+              { indonesia: "9 Jam", romaji: "ku ji kan", hiragana: "くじかん", katakana: "クジカン" },
+              { indonesia: "10 Jam", romaji: "juu ji kan", hiragana: "じゅうじかん", katakana: "ジュウジカン" },
+              { indonesia: "Berapa jam?", romaji: "nan ji kan", hiragana: "なんじかん", katakana: "ナンジカン" }
+            ]
+          },
+          {
+            subJudul: "Jangka Waktu - Menit (分)",
+            items: [
+              { indonesia: "1 Menit", romaji: "ippun", hiragana: "いっぷん", katakana: "イップン" },
+              { indonesia: "2 Menit", romaji: "nifun", hiragana: "にふん", katakana: "ニフン" },
+              { indonesia: "3 Menit", romaji: "sanpun", hiragana: "さんぷん", katakana: "サンプン" },
+              { indonesia: "4 Menit", romaji: "yonpun", hiragana: "よんぷん", katakana: "ヨンプン" },
+              { indonesia: "5 Menit", romaji: "gofun", hiragana: "ごふん", katakana: "ゴフン" },
+              { indonesia: "6 Menit", romaji: "roppun", hiragana: "ろっぷん", katakana: "ロップン" },
+              { indonesia: "7 Menit", romaji: "nanafun", hiragana: "ななふん", katakana: "ナナフン" },
+              { indonesia: "8 Menit", romaji: "happun", hiragana: "はっぷん", katakana: "ハップン" },
+              { indonesia: "9 Menit", romaji: "kyuufun", hiragana: "きゅうふん", katakana: "キュウフン" },
+              { indonesia: "10 Menit", romaji: "juppun / jippun", hiragana: "じゅっぷん", katakana: "ジュップン" },
+              { indonesia: "Berapa menit?", romaji: "nanpun", hiragana: "なんぷん", katakana: "ナンプン" }
+            ]
+          },
+          {
+            subJudul: "Jangka Waktu - Hari (日)",
+            items: [
+              { indonesia: "1 Hari", romaji: "ichi nichi", hiragana: "いちにち", katakana: "イチニチ" },
+              { indonesia: "2 Hari", romaji: "futsu ka", hiragana: "ふつか", katakana: "フツカ" },
+              { indonesia: "3 Hari", romaji: "mik ka", hiragana: "みっか", katakana: "ミッカ" },
+              { indonesia: "4 Hari", romaji: "yok ka", hiragana: "よっか", katakana: "ヨッカ" },
+              { indonesia: "5 Hari", romaji: "itsu ka", hiragana: "いつか", katakana: "イツカ" },
+              { indonesia: "6 Hari", romaji: "mui ka", hiragana: "むいか", katakana: "ムイカ" },
+              { indonesia: "7 Hari", romaji: "nano ka", hiragana: "なのか", katakana: "ナノカ" },
+              { indonesia: "8 Hari", romaji: "you ka", hiragana: "ようか", katakana: "ヨウカ" },
+              { indonesia: "9 Hari", romaji: "kokono ka", hiragana: "ここのか", katakana: "ココノカ" },
+              { indonesia: "10 Hari", romaji: "too ka", hiragana: "とおか", katakana: "トオカ" },
+              { indonesia: "Berapa hari?", romaji: "nan nichi", hiragana: "なんにち", katakana: "ナンニチ" }
+            ]
+          },
+          {
+            subJudul: "Jangka Waktu - Minggu (週間)",
+            items: [
+              { indonesia: "1 Minggu", romaji: "isshuukan", hiragana: "いっしゅうかん", katakana: "イッシュウカン" },
+              { indonesia: "2 Minggu", romaji: "ni shuukan", hiragana: "にしゅうかん", katakana: "ニシュウカン" },
+              { indonesia: "3 Minggu", romaji: "san shuukan", hiragana: "さんしゅうかん", katakana: "サンシュウカン" },
+              { indonesia: "4 Minggu", romaji: "yon shuukan", hiragana: "よんしゅうかん", katakana: "ヨンシュウカン" },
+              { indonesia: "5 Minggu", romaji: "go shuukan", hiragana: "ごしゅうかん", katakana: "ゴシュウカン" },
+              { indonesia: "6 Minggu", romaji: "roku shuukan", hiragana: "ろくしゅうかん", katakana: "ロクシュウカン" },
+              { indonesia: "7 Minggu", romaji: "nana shuukan", hiragana: "ななしゅうかん", katakana: "ナナシュウカン" },
+              { indonesia: "8 Minggu", romaji: "hasshuukan", hiragana: "はっしゅうかん", katakana: "ハッシュウカン" },
+              { indonesia: "9 Minggu", romaji: "kyuu shuukan", hiragana: "きゅうしゅうかん", katakana: "キュウシュウカン" },
+              { indonesia: "10 Minggu", romaji: "jisshuukan", hiragana: "じっしゅうかん", katakana: "ジッシュウカン" },
+              { indonesia: "Berapa minggu?", romaji: "nan shuukan", hiragana: "なんしゅうかん", katakana: "ナンシュウカン" }
+            ]
+          },
+          {
+            subJudul: "Jangka Waktu - Bulan (か月)",
+            items: [
+              { indonesia: "1 Bulan", romaji: "ik Kagetsu", hiragana: "いっかげつ", katakana: "イッカゲツ" },
+              { indonesia: "2 Bulan", romaji: "ni kagetsu", hiragana: "にかげつ", katakana: "ニカゲツ" },
+              { indonesia: "3 Bulan", romaji: "san kagetsu", hiragana: "さんかげつ", katakana: "サンカゲツ" },
+              { indonesia: "4 Bulan", romaji: "yon kagetsu", hiragana: "よんかげつ", katakana: "ヨンカゲツ" },
+              { indonesia: "5 Bulan", romaji: "go kagetsu", hiragana: "ごかげつ", katakana: "ゴカゲツ" },
+              { indonesia: "6 Bulan", romaji: "rok kagetsu / hantoshi", hiragana: "ろっかげつ", katakana: "ロッカゲツ" },
+              { indonesia: "7 Bulan", romaji: "nana kagetsu", hiragana: "ななかげつ", katakana: "ナナカげつ" },
+              { indonesia: "8 Bulan", romaji: "hak kagetsu", hiragana: "はっかげつ", katakana: "ハッカゲツ" },
+              { indonesia: "9 Bulan", romaji: "kyuu kagetsu", hiragana: "きゅうかげつ", katakana: "キュウカゲツ" },
+              { indonesia: "10 Bulan", romaji: "jik kagetsu", hiragana: "じっかげつ", katakana: "ジッカゲツ" },
+              { indonesia: "Berapa bulan?", romaji: "nan kagetsu", hiragana: "なんかげつ", katakana: "ナンカゲツ" }
+            ]
+          },
+          {
+            subJudul: "Jangka Waktu - Tahun (年間)",
+            items: [
+              { indonesia: "1 Tahun", romaji: "ichi nen", hiragana: "いちねん", katakana: "イチネン" },
+              { indonesia: "2 Tahun", romaji: "ni nen", hiragana: "にねん", katakana: "ニネン" },
+              { indonesia: "3 Tahun", romaji: "san nen", hiragana: "さんねん", katakana: "サンネン" },
+              { indonesia: "4 Tahun", romaji: "yo nen", hiragana: "よねん", katakana: "ヨネン" },
+              { indonesia: "5 Tahun", romaji: "go nen", hiragana: "ごねん", katakana: "ゴネン" },
+              { indonesia: "6 Tahun", romaji: "roku nen", hiragana: "ろくねん", katakana: "ロクネン" },
+              { indonesia: "7 Tahun", romaji: "nana nen / shichi nen", hiragana: "ななねん", katakana: "ナナネン" },
+              { indonesia: "8 Tahun", romaji: "hachi nen", hiragana: "はちねん", katakana: "ハチネン" },
+              { indonesia: "9 Tahun", romaji: "kyuu nen", hiragana: "きゅうねん", katakana: "キュウネン" },
+              { indonesia: "10 Tahun", romaji: "juu nen", hiragana: "じゅうねん", katakana: "ジュウネン" },
+              { indonesia: "Berapa tahun?", romaji: "nan nen", hiragana: "なんねん", katakana: "ナンネン" }
+            ]
+          }
+        ]
+      }
+    }
+  </script>
+</body>
+</html>

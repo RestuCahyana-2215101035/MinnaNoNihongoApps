@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minna no Nihongo - Latihan Membaca</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+  </style>
+</head>
+
+<body
+  class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300"
+  x-data="latihanMembacaApp()"
+  x-init="initApp()"
+>
+
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div
+      x-show="sidebarOpen"
+      @click="sidebarOpen = false"
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden"
+      x-transition.opacity
+    ></div>
+
+    <!-- SIDEBAR CONTAINER -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+      <!-- HEADER CONTAINER -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY CONTENT -->
+      <main class="flex-1 overflow-y-auto p-8 space-y-8">
+
+        <!-- Header Halaman -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">
+              Latihan Membaca Bahasa Jepang
+            </h3>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Pilih tingkat kesukaran dan variasi cerita (100% murni Hiragana & Katakana, tanpa Kanji).
+            </p>
+          </div>
+
+          <span
+            class="text-xs bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold px-4 py-2 rounded-xl border border-blue-100 dark:border-blue-900/50"
+            x-text="currentLevelTitle"
+          ></span>
+        </div>
+
+        <!-- PILIHAN TINGKAT KESUKARAN -->
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+          <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            Pilih Panjang Bacaan:
+          </label>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <template x-for="lvl in tingkatList" :key="lvl.key">
+              <button
+                @click="currentTingkat = lvl.key"
+                :class="currentTingkat === lvl.key
+                  ? 'bg-blue-600 text-white font-bold shadow-lg shadow-blue-500/20 border-blue-600'
+                  : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-100 dark:border-slate-800'"
+                class="py-3.5 px-4 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 border"
+              >
+                <i :class="lvl.icon"></i>
+                <span x-text="lvl.label"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- KONTEN BACAAN SESUAI TINGKAT -->
+        <div class="space-y-6">
+
+          <template x-for="cerita in getCeritaByTingkat()" :key="cerita.id">
+
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
+
+              <!-- Judul Cerita -->
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+
+                <h3 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-3">
+
+                  <span
+                    class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-mono font-bold"
+                    x-text="cerita.id"
+                  ></span>
+
+                  <span x-text="cerita.judul"></span>
+
+                </h3>
+
+                <span
+                  class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-3 py-1.5 rounded-xl"
+                  x-text="cerita.badge"
+                ></span>
+
+              </div>
+
+              <!-- Teks Utama Jepang -->
+              <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 font-serif text-base md:text-lg leading-loose tracking-wide text-slate-800 dark:text-slate-200">
+                <p x-text="cerita.paragraf"></p>
+              </div>
+
+              <!-- Terjemahan Indonesia -->
+              <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-sm">
+
+                <span class="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px] block">
+                  Terjemahan Indonesia:
+                </span>
+
+                <p
+                  class="text-slate-600 dark:text-slate-300 italic leading-relaxed"
+                  x-text="cerita.terjemahan"
+                ></p>
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function latihanMembacaApp() {
+      return {
+        sidebarOpen: false,
+        materiAwalDropdown: true,
+        kotobaDropdown: false,
+        darkMode: false,
+        currentTingkat: 'mudah',
+
+        get currentLevelTitle() {
+          if (this.currentTingkat === 'mudah') {
+            return 'Tingkat: Pendek (Hingga 10 Kalimat)';
+          }
+
+          if (this.currentTingkat === 'menengah') {
+            return 'Tingkat: Sedang (Hingga 20 Kalimat)';
+          }
+
+          return 'Tingkat: Panjang (Hingga 30 Kalimat)';
+        },
+
+        async initApp() {
+          this.initTheme();
+
+          try {
+            const sidebarRes = await fetch('./sidebar.html');
+
+            if (sidebarRes.ok) {
+              document.getElementById('sidebar-container').innerHTML =
+                await sidebarRes.text();
+
+              this.renderDynamicKotobaSubmenus();
+            }
+
+            const headerRes = await fetch('./header.html');
+
+            if (headerRes.ok) {
+              document.getElementById('header-container').innerHTML =
+                await headerRes.text();
+            }
+
+          } catch (e) {
+            console.error('Gagal memuat template modular:', e);
+          }
+        },
+
+        renderDynamicKotobaSubmenus() {
+          const container = document.getElementById('dynamic-kotoba-links');
+
+          if (!container) return;
+
+          let submenus = JSON.parse(
+            localStorage.getItem('minna_submenus')
+          );
+
+          if (!submenus) {
+            submenus = [
+              { id: 'ungkapan_waktu', title: 'Ungkapan Waktu' },
+              { id: 'penanda_waktu', title: 'Penanda Waktu' },
+              { id: 'kata_keterangan', title: 'Kata Keterangan' },
+              { id: 'kata_benda', title: 'Kata Benda' },
+              { id: 'kk_gol1', title: 'Kata Kerja Golongan I' },
+              { id: 'kk_gol2', title: 'Kata Kerja Golongan II' },
+              { id: 'kk_gol3', title: 'Kata Kerja Golongan III' },
+              { id: 'salam', title: 'Salam (Aisatsu)' },
+              { id: 'kazoku', title: 'Kazoku (Keluarga)' }
+            ];
+
+            localStorage.setItem(
+              'minna_submenus',
+              JSON.stringify(submenus)
+            );
+          }
+
+          submenus.forEach(sub => {
+            const link = document.createElement('a');
+
+            link.href = `kotoba.html?cat=${sub.id}`;
+
+            link.className =
+              'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+
+            link.innerHTML =
+              `<i class="fa-solid fa-angle-right text-[10px]"></i> ${sub.title}`;
+
+            container.appendChild(link);
+          });
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+        },
+
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        },
+
+        tingkatList: [
+          {
+            key: 'mudah',
+            label: 'Pendek (10 Kalimat)',
+            icon: 'fa-regular fa-face-smile text-emerald-500'
+          },
+          {
+            key: 'menengah',
+            label: 'Sedang (20 Kalimat)',
+            icon: 'fa-solid fa-face-meh text-amber-500'
+          },
+          {
+            key: 'banyak',
+            label: 'Panjang (30 Kalimat)',
+            icon: 'fa-solid fa-face-grin-stars text-rose-500'
+          }
+        ],
+
+        getCeritaByTingkat() {
+          return this.databaseCerita.filter(
+            c => c.tingkat === this.currentTingkat
+          );
+        },
+
+        databaseCerita: [
+
+          // ==========================================================
+          // 10 CERITA TINGKAT MUDAH
+          // ==========================================================
+
+          {
+            id: 1,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 1',
+            judul: "あさの こと",
+            paragraf: "おはようございます。きょうは いい てんき です。まいにち ごぜん ろくじに おきます。あさごはんを たべて、みるくを のみます。それから、ばすで がっこうへ いきます。きょうしつで ともだちと いっしょに べんきょうします。ひるごはんには れすとらんで らーめんを たべます。12じに かふぇてりあで はなします。ごご 5じに うちへ かえって、ほんを よみます。よる 9じに ねます。",
+            terjemahan: "Selamat pagi. Hari ini cuacanya bagus. Setiap hari saya bangun jam 6 pagi. Saya makan sarapan dan minum susu. Setelah itu, saya pergi ke sekolah naik bus. Di ruang kelas, saya belajar bersama teman. Untuk makan siang, saya makan ramen di restoran. Jam 12 saya mengobrol di kafetaria. Jam 5 sore saya pulang ke rumah lalu membaca buku. Jam 9 malam saya tidur."
+          },
+
+          {
+            id: 2,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 2',
+            judul: "くだもの の かいもの",
+            paragraf: "きょうは あさから すこし あめが ふっています。わたしは かさをもって すーぱーへ いきました。みせの なかは とても ひろくて あかるいです。りんごや ばななや いちごが たくさん うっています。あかい りんごを みっつ かいました。それから、おいしい ぱんも ひとつ かいました。おかねを はらって、ふくろに いれました。いえへ かえってから、すぐに りんごを たべました。とても あまくて おいしかったです。あめの ひも わるくありません。",
+            terjemahan: "Hari ini sejak pagi sedikit turun hujan. Saya pergi ke supermarket membawa payung. Bagian dalam toko sangat luas dan terang. Ada banyak apel, pisang, dan stroberi yang dijual. Saya membeli 3 buah apel merah. Setelah itu, saya juga membeli 1 buah roti yang enak. Saya membayar uangnya dan memasukkannya ke dalam kantong. Setelah pulang ke rumah, saya langsung memakan apelnya. Sangat manis dan enak. Hari hujan pun tidak buruk."
+          },
+
+          {
+            id: 3,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 3',
+            judul: "わたしの へや",
+            paragraf: "わたしの へやは にかいに あります。へやの なかは いつも きれいに してあります。まどが おおきくて、あかるい ひかりが はいります。まどぎわには べっどと ちいさな つくえが おいてあります。つくえの うえに ぱそこんと ぺんたてがあります。よるには その つくえで じぶんの べんきょうを します。べっどの よこには おきにりの ぬぐるみがあります。ねるまえには いつも その にんぎょうを だっこします。きれいな ぽすたーも かべに はってあります。とても すてきで おちつく じぶんの じかんなのです。",
+            terjemahan: "Kamar saya ada di lantai 2. Bagian dalam kamar selalu dirapikan dengan bersih. Jendelanya besar, dan cahaya yang terang masuk ke dalam. Di dekat jendela diletakkan tempat tidur dan meja kecil. Di atas meja ada komputer dan tempat pena. Pada malam hari saya belajar sendiri di meja tersebut. Di samping tempat tidur ada boneka kesayangan. Sebelum tidur saya selalu memeluk boneka itu. Poster yang indah juga ditempel di dinding. Ini adalah waktu pribadi saya yang sangat bagus dan menenangkan."
+          },
+
+          {
+            id: 4,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 4',
+            judul: "かわいい いぬ",
+            paragraf: "うちで しろい いぬを いっぴき かっています。なまえは ぽちと いいます。ぽちは まいにち わたしが がっこうから かえるのを まっています。えきまえまで むかえに きてくれることも あります。しっぽを ふりながら ちかづいてくるすがたが とても かわいいです。ゆうがたになると、いっしょに こうえんへ さんぽに いきます。こうえんで はしったり、ぼーるを おいかけたりします。よるは つかれて りびんぐの ゆかですやすねむります。かぞくみんなが ぽちの ことが だいすきです。あしたも いっしょに たくさん あそびたいです。",
+            terjemahan: "Kami memelihara seekor anjing putih di rumah. Namanya Pochi. Pochi setiap hari menunggu saya pulang dari sekolah. Kadang-kadang ia datang menjemput sampai depan stasiun. Penampilannya yang mendekat sambil mengibaskan ekor sangatlah lucu. Saat sore tiba, kami pergi bersama ke taman untuk jalan-jalan. Di taman kami berlari atau mengejar bola. Malam hari ia kelelahan dan tidur di lantai ruang keluarga. Seluruh keluarga sangat menyukai Pochi. Besok pun saya ingin banyak bermain bersama lagi."
+          },
+
+          {
+            id: 5,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 5',
+            judul: "すぽーつの じかん",
+            paragraf: "わたしは うんどうする ことと からだを うごかす ことが すきです。しゅうまつの あさは はやく おきて、ちかくの こうえんを はしります。きもちの よい かぜが ふいていて、とりの こえも きこえます。はしった あとは、つめたい みずを たくさん のみます。ごごは ともだちと さっかーを したり、てにすを したりします。ときどき つかれますが、いい あせを かくので きぶんが すっきりします。すぽーつの あとの しょくじは いつも かくべつに おいしいです。これからも けんこうの ために つづけたいです。",
+            terjemahan: "Saya suka berolahraga dan menggerakkan badan. Pagi hari di akhir pekan saya bangun lebih awal lalu berlari keliling taman dekat rumah. Angin yang nyaman bertiup, dan suara burung pun terdengar. Setelah berlari, saya minum banyak air dingin. Sore harinya saya bermain sepak bola atau tenis bersama teman. Terkadang saya merasa lelah, tetapi karena mengeluarkan keringat yang bagus, perasaan menjadi segar. Makanan setelah berolahraga selalu terasa sangat istimewa enaknya. Mulai sekarang pun saya ingin terus melanjutkannya demi kesehatan."
+          },
+
+          {
+            id: 6,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 6',
+            judul: "としょかんでの すごしかた",
+            paragraf: "しずかな としょかんで ほんを よむのが すきです。そこには いろいろな しゅるいの ほんが ならんでいます。れきしの ほんや かがくの ほんや しょせつが たくさん あります。わたしは よく どうぶつの しゃしんが のった ほんを えらびます。ななめうしろの せきに すわって、ゆっくり ぺーじを めくります。そとの おとが きこえないほど しゅうちゅうする ことが できます。30ぷんほど よんだら、つぎは えいごの べんきょうを はじめます。わからない たんごは のーとに かきとめて おきます。じかんが たつのが とても はやいです。",
+            terjemahan: "Saya suka membaca buku di perpustakaan yang tenang. Di sana berjejer berbagai jenis buku. Ada banyak buku sejarah, buku sains, dan novel. Saya sering memilih buku yang memuat foto-foto hewan. Saya duduk di kursi sebelah serong belakang dan membalik halaman dengan perlahan. Saya bisa berkonsentrasi sampai-sampai suara luar tidak terdengar. Setelah membaca sekitar 30 menit, giliran saya mulai belajar bahasa Inggris. Kosakata yang tidak dipahami saya catat di buku catatan. Waktu berlalu dengan sangat cepat."
+          },
+
+          {
+            id: 7,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 7',
+            judul: "あつい なつの ひ",
+            paragraf: "なながつに なって、とても あつい ひが つづいています。ひざしが つよくて、そとを あるくだけで あせが でます。そんなひは つめたい あいすくりーむが たべたくなります。すーぱーで ちょこれーとあじの あいすを かいました。いえに かえって すぐに れいぞうこから だして たべました。くちの なかが ひんやりして、いきかえる きが します。よるは まどを あけて、せんぷうきを まわしながら ほんを よみます。はやく すずしい あきに なってほしいと おもいます。",
+            terjemahan: "Memasuki bulan Juli, hari-hari yang sangat panas terus berlanjut. Sinar matahari sangat terkuat, hanya dengan berjalan di luar saja keringat sudah keluar. Hari yang panas seperti itu membuat saya ingin makan es krim dingin. Saya membeli es rasa cokelat di supermarket. Pulang ke rumah, saya langsung mengambilnya dari kulkas lalu memakannya. Bagian dalam mulut terasa sejuk, rasanya seperti hidup kembali. Malam hari saya membuka jendela dan membaca buku sambil menyalakan kipas angin. Saya berharap musim gugur yang sejuk segera tiba."
+          },
+
+          {
+            id: 8,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 8',
+            judul: "りょうりの れんしゅう",
+            paragraf: "きょうは だいどころで かれーらいすを つくって みました。まわりの ともだちが じょうずに つくるのをきいたからです。まず、じゃがいもと にんじんの かわを むきました。ほうちょうを つかって ちいさく きるのは すこし こわかったです。たまねぎも きりましたが、めが いたくなって なみだが でました。それから、ぎゅうにくを いれて いろいろな やさいと いっしょに いためました。さいごに みずと かれーの るーを いれて にこみます。おさらに ごはんを もりつけて かんせいです。あじみを したら、とても おいしくできていました。",
+            terjemahan: "Hari ini saya mencoba memasak nasi kari di dapur. Itu karena saya mendengar teman-teman di sekitar bisa memasak dengan mahir. Pertama-tama, saya mengupas kulit kentang dan wortel. Memotong menjadi kecil-kecil menggunakan pisau terasa sedikit menakutkan. Saya juga memotong bawang bombay, tetapi mata saya menjadi sakit dan air mata keluar. Setelah itu, saya memasukkan daging sapi dan menumisnya bersama berbagai sayuran. Terakhir, saya memasukkan air dan bumbu kari lalu merebusnya. Saya menata nasi di piring dan selesai. Saat saya mencicipinya, rasanya matang dengan sangat enak."
+          },
+
+          {
+            id: 9,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 9',
+            judul: "すきな おんがく",
+            paragraf: "わたしは まいにち よかったら おんがくを ききます。とくに ぴあのの おだやかな ねいろが だいすきです。よる、へやの あかりを すこし くらく します。そして、べっどに よこたわりながら いやほんを つけます。しずかな めろでぃが こころの すみまで しみわたります。がっこうでの つかれや なやみごとが すーっと きえていく ようです。たまには げんきの でる ろっくの きょくも ききます。おんがくは わたしの じんせいに とって なくては ならない ものです。これからも たくさんの めいきょくを ききつづけたいです。",
+            terjemahan: "Saya mendengarkan musik setiap hari kalau senggang. Khususnya saya sangat menyukai alunan piano yang tenang. Malam hari, lampu kamar saya redupkan sedikit. Lalu, saya memasang earphone sambil berbaring di tempat tidur. Melodi yang tenang meresap sampai ke sudut hati. Kelelahan dan masalah di sekolah seolah-olah menghilang begitu saja. Sesekali saya juga mendengarkan lagu rock yang membangkitkan semangat. Musik adalah hal yang tidak boleh tidak ada bagi kehidupan saya. Mulai sekarang pun saya ingin terus mendengarkan banyak lagu bagus."
+          },
+
+          {
+            id: 10,
+            tingkat: 'mudah',
+            badge: 'Pendek - Cerita 10',
+            judul: "わたしの たんじょうび",
+            paragraf: "きょうは わたしの はたちの たんじょうびです。あさから かぞくや ともだちから たくさん おいわいの めっせーじが とどきました。ゆうがた、ともだちが いえに あつまって ちいさな ぱーてぃーを ひらいてくれました。おおきな ちょこれーとの けーきに ろうそくが はたち たっています。みんなが 「おめでとう！」と おおきな こえで いってくれました。とても うれしくて むねが あつくなりました。けーきを きってみんなで いっしょに おいしく たべました。すばらしい おもいでが また ひとつ ふえました。まわりの ひとたちに こころから かんしゃします。",
+            terjemahan: "Hari ini adalah hari ulang tahun saya yang ke-20. Sejak pagi banyak pesan ucapan selamat yang datang dari keluarga dan teman-teman. Sore harinya, teman-teman berkumpul di rumah lalu mengadakan pesta kecil. Di atas kue cokelat yang besar berdiri 20 buah lilin. Semuanya berkata 'Selamat!' dengan suara yang lantang. Saya sangat senang sampai dada terasa hangat. Kami memotong kue dan memakannya bersama-sama dengan nikmat. Satu kenangan luar biasa bertambah lagi. Saya mengucapkan terima kasih dari lubuk hati kepada orang-orang di sekitar."
+          },
+
+          // ==========================================================
+          // 10 CERITA TINGKAT MENENGAH
+          // ==========================================================
+
+          {
+            id: 11,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 1',
+            judul: "しゅうまつの たのしい けいかく",
+            paragraf: "こんどの どようびは たいせつな ともだちと いっしょに やまへ のぼる けいかくを たてています。せんしゅうから てんきよほうを なんかいも ちぇっくしていましたが、とうじつは はれの よほうなので とても あんしんしています。あさの ななじに えきで まちあわせて、そこから でんしゃと ばすを のりついで とざんぐちまで むかいます。はいきんぐの とちゅうで たべる おべんとうは、ぜんじつの よるに じぶんで つくる つもりです。おにぎりと からあげと ちいさな たまごやきを おべんとうばこに つめます。さんちょうからは きれいな まちの けしきが みえるはずなので、かめらを もっていくのを わすれないように します。さいきんは うんどうぶそくだったので、すこし たいりょくが しんぱいですが、がんばって のぼりきりたいです。やまを おりたあとは、ちかくの おんせんに はいって からだの つかれを しっかり いやします。おいしい りょうりを たべて、おんせんに つかるのが いちばんの たのしみです。はやく どようびの あさに なってほしいと、まいにち わくわくしながら まっています。",
+            terjemahan: "Sabtu depan, saya berencana mendaki gunung bersama teman penting saya. Sejak minggu lalu saya sudah mengecek prakiraan cuaca berkali-kali, dan karena hari-H diprakirakan cerah, saya merasa sangat lega. Pukul 7 pagi kami akan bertemu di stasiun, lalu dari sana naik kereta sambung bus menuju pintu pendakian. Bento yang akan dimakan di tengah-tengah hiking berencana saya buat sendiri pada malam sebelumnya. Saya mengemas Onigiri, ayam goreng, dan tamagoyaki kecil ke dalam kotak bento. Dari puncak gunung pemandangan kota yang indah pasti akan terlihat, jadi saya akan pastikan tidak lupa membawa kamera. Belakangan ini karena kurang berolahraga, stamina saya sedikit dikhawatirkan, tetapi saya ingin berusaha keras mendaki sampai puncak. Setelah turun gunung, saya akan berendam di pemandian air panas terdekat untuk memulihkan kelelahan tubuh dengan tuntas. Makan makanan lezat dan berendam di air panas adalah hal yang paling dinanti-nantikan. Saya menantikan dengan antusias setiap hari agar pagi hari Sabtu segera datang."
+          },
+
+          {
+            id: 12,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 2',
+            judul: "まちの いちばの おはなし",
+            paragraf: "にちようびに なると、ちかくの ひろい ひろばで おおきな あさいちが ひらかれます。しんせんな やさいや くだものが ふだんより やすい ねだんで たくさん うられています。わたしは おおきな えこばっぐを もって、あさの はちじごろに でかけます。みせの ひとたちの げんきな こえが あちこちから きこえてきて、とても にぎやかな ふんいきです。やおやの おじさんに 「きょうの とまとは とても しんせんだよ」と すすめられて、つい たくさん かってしまいました。おとなりの はなやさんでは、きれいな きいろの ひまわりが めに はいりました。へやに かざると あかるくなると おもい、それも いっしょに こうにゅうしました。いちばの たのしみは かいものだけでなく、おいしい ぐるめを たべる ことでも あります。あげたての ころっけや あたたかい おでんを そのばで たべるのが だいすきです。いろいろな ひとと はなしを しながら あるくのは、いつも いい きぶんてんかんに なります。たくさん かいものを したので ばっぐが おもくなりましたが、こころは なぜか かるくて みたされています。こんどの にちようびも また かならず いこうと きめています。",
+            terjemahan: "Begitu hari Minggu tiba, pasar pagi yang besar diadakan di alun-alun luas dekat rumah. Sayuran dan buah-buahan segar dijual dalam jumlah banyak dengan harga yang lebih murah dari biasanya. Saya membawa tas belanja ramah lingkungan yang besar dan pergi sekitar pukul 8 pagi. Suara penuh semangat dari para penjual terdengar dari sana-sini, menciptakan suasana yang sangat ramai. Paman penjual toko sayur merekomendasikan, 'Tomat hari ini sangat segar lho,' dan tanpa sadar saya jadi membeli banyak. Di toko bunga sebelah, bunga matahari kuning yang indah menarik perhatian saya. Berpikir bahwa ruangan akan menjadi cerah jika dipajang, saya membelinya bersamaan. Kegembiraan di pasar bukan hanya berbelanja, tetapi juga memakan kuliner yang lezat. Saya sangat suka memakan kroket yang baru digoreng dan oden hangat di tempat. Berjalan-jalan sambil mengobrol dengan berbagai orang selalu menjadi penyegar suasana yang baik. Karena banyak berbelanja tas saya menjadi berat, tetapi hati entah mengapa terasa ringan dan terpenuhi. Saya sudah memutuskan untuk pasti pergi lagi hari Minggu depan."
+          },
+
+          {
+            id: 13,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 3',
+            judul: "たいせつな さいふを なくした はなし",
+            paragraf: "きのうの ごご、おおきな しっぱいを してしまいました。おきにいりの かわの さいふを どこかに おとしてしまったのです。すーぱーで かいものを おわって れじで おかねを はらおうとしたとき、ばっぐの なかに さいふが ないことに きづきました。その ときは かおが まっかっかになり、あたまが まっしろに なってしまいました。すぐに こうばんへ いって、けいさつかんに ふんしつの とどけでを だしました。いつ、どこで おとしたか、さいふの なかに いくら はいっていたかなどを こまかく きかれました。あきらめて いえに かえろうとした とき、こうばんの でんわが なりました。なんと、しんせつな ひとが おとしものとして その さいふを とどけてくれた という れんらくでした。なかみの おかねも かーども ひとつも なくなっていませんでした。こころの そこから ほっとして、なみだが でそうに なりました。よのなかには まだまだ いい ひとが たくさん いるのだと じっかんしました。これからは たいせつな ものを おとさないように、もっと ちゅういぶかく せいかつしようと ふかく はんせいしました。",
+            terjemahan: "Kemarin sore, saya melakukan kesalahan besar. Dompet kulit kesayangan saya terjatuh di suatu tempat. Selesai berbelanja di supermarket dan hendak membayar uang di kasir, saya menyadari bahwa dompet tidak ada di dalam tas. Saat itu wajah saya memerah dan kepala saya menjadi kosong. Saya segera pergi ke pos polisi dan mengajukan laporan kehilangan kepada petugas polisi. Saya ditanya secara detail mengenai kapan dan di mana menjatuhkannya, serta berapa banyak uang di dalam dompet. Ketika saya hendak menyerah dan pulang ke rumah, telepon di pos polisi berdering. Ternyata, itu adalah kabar bahwa orang yang baik hati telah mengantarkan dompet tersebut sebagai barang temuan. Uang dan kartu di dalamnya tidak ada yang hilang satupun. Dari lubuk hati saya merasa lega, sampai-sampai air mata hampir keluar. Saya merasakan bahwa di dunia ini masih ada banyak orang baik. Saya merenung dalam-dalam bahwa mulai sekarang saya akan hidup dengan lebih berhati-hati agar tidak menjatuhkan barang berharga."
+          },
+
+          {
+            id: 14,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 4',
+            judul: "あたらしい ぶんかを まなぶ",
+            paragraf: "だいがくで いぶんかこうりゅうの さーくるに はいってから、せかいが ひろがりました。せんしゅうの かつどうでは、にほんの さどうの たいけんを しました。にほんの さどうには こまかい るーるや さほうが たくさん あり、さいしょは とても むずかしく かんじました。しかし、おちゃを たててくれた せんぱいの ての うごきが あまりにも ゆうがで うつくしく、いっしゅんで ひきつけられました。おちゃの せんせいが 「すべての どうさに いみが あり、あいてを おもいやる こころが たいせつなのです」と やさしく おしえてくれました。にがみのある まっちゃと あまい わがしの くみあわせは、おとなの あじで とても おいしかったです。かたちだけでなく、その なかにある せいしんを まなぶ ことの じゅうようせいを りかいしました。くにが ちがっても、ひとを おもいやる きもちは せかいきょうつうだと おもいます。これからも いろいろな くにの ぶんかや れきしを たくさん まなんでいきたいです。じぶんの しらない せかいを しる ことは、こんなにも おもしろいのだと しりました。",
+            terjemahan: "Sejak bergabung dengan klub pertukaran budaya di universitas, dunia saya menjadi semakin luas. Pada kegiatan minggu lalu, saya mencoba pengalaman upacara minum teh Jepang. Upacara minum teh Jepang memiliki banyak aturan dan tata krama yang detail, sehingga awalnya terasa sangat sulit. Namun, gerakan tangan senior yang membuatkan teh sangat anggun dan indah, sampai-sampai saya tertarik dalam sekejap. Guru teh mengajarkan dengan lembut, 'Semua gerakan memiliki arti, dan hati yang memikirkan orang lain adalah hal yang penting.' Kombinasi teh hijau pahit dan wagashi manis adalah rasa orang dewasa yang sangat enak. Saya memahami pentingnya mempelajari bukan hanya bentuk fisiknya, tetapi juga semangat di dalamnya. Meskipun negaranya berbeda, perasaan memikirkan orang lain adalah hal yang sama di seluruh dunia. Mulai sekarang pun saya ingin banyak mempelajari budaya dan sejarah dari berbagai negara. Saya jadi tahu bahwa mengetahui dunia yang belum kita ketahui ternyata sangat menyenangkan."
+          },
+
+          {
+            id: 15,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 5',
+            judul: "あきの おとずれ と こうよう",
+            paragraf: "あつかった なつが すぎさり、あさばんは すずしい かぜが ふくようになって あきが やってきました。やまや こうえんの きぎは みずみずしい みどりいろから、あかや きいろの あざやかな いろに かわっていきます。せんしゅうまつ、かぞくで しみんこうえんへ こうようを みに でかけました。あしもとに はられた おちばの じゅうたんを さくさくと おとを たてながら あるくのが とても たのしかったです。そらは たかく すみきっていて、あおい いろが めに しみました。あきは 「しょくよくの あき」とも いわれるように、おいしい ものが たくさん でまわる きせつです。すーぱーには くりや かぼちゃ、それに あたらしい おこめが ならんでいます。よるには むしの こえが きこえてきて、あきの ふかまりを かんじさせます。きせつが かわるたびに、しぜんの うつくしさと ふしぎさに こころを うたれます。これからの さむい ふゆに むけて、たいちょうを くずさないように けんこうかんりを しっかり やりたいです。きせつの うつりかわりを たのしむ こころの ゆとりを いつも もちつづけたいと おもいます。",
+            terjemahan: "Musim panas yang panas telah berlalu, angin sejuk mulai bertiup pada pagi dan malam hari, menandakan musim gugur telah tiba. Pepohonan di gunung dan taman berubah dari warna hijau segar menjadi warna merah dan kuning yang cerah. Akhir pekan lalu, saya pergi bersama keluarga ke taman kota untuk melihat daun-daun musim gugur. Berjalan di atas karpet daun gugur yang terhampar di kaki sambil mengeluarkan suara 'sakusaku' sangatlah menyenangkan. Langitnya tinggi dan jernih, warna birunya menyejukkan mata. Sebagaimana musim gugur juga disebut sebagai 'musim gugur selera makan', ini adalah musim di mana banyak makanan lezat beredar. Di supermarket berjejer berangan, labu, dan beras baru. Pada malam hari suara serangga terdengar, membuat kita merasakan semakin dalamnya musim gugur. Setiap kali musim berganti, hati kita terpukau oleh keindahan dan keajaiban alam. Menuju musim dingin yang dingin ke depan, saya ingin menjaga kondisi tubuh dengan baik agar tidak jatuh sakit. Saya berpikir ingin selalu memiliki keleluasaan hati untuk menikmati pergantian musim."
+          },
+
+          {
+            id: 16,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 6',
+            judul: "あるばいとの いちにち",
+            paragraf: "わたしは もくようびと きんようびの ゆうがたに、ちかくの ちいさな ぱんやで あるばいとを しています。おもな しごとは やきあがった ぱんを ふくろに つめたり、みせの ゆかを そうじしたりすることです。てんちょうさんは とても あかるい ひとで、しごとの やりかたを やさしく しどうしてくれます。やきたての ぱんの かおりが おみせの なかに ひろがっていて、いるだけで しあわせな きもちに なります。ゆうがたになると、かいしゃがえりの ひとや がくせいが たくさん かいに きてくれます。おきゃくさんに 「いらっしゃいませ！」と げんきな こえで あいさつするのが さいしょは はずかしかったです。でも、いまでは しぜんに えがおで いえるように なりました。ときどき おきゃくさんから 「ここの ぱんは ほんとうに おいしいね」と いわれることが あります。その ひとことを きくだけで、いちにちの つかれが すべて ふっとびます。はたらく ことの たいへんさと、おかねを かせぐことの むずかしさを まなびました。それと どうじに、ひとに よろこんでもらえる しごとの すばらしさを しりました。この けいけんは わたしの おおきな じしんに なっています。",
+            terjemahan: "Saya bekerja paruh waktu di toko roti kecil dekat rumah pada sore hari setiap hari Kamis dan Jumat. Pekerjaan utamanya adalah memasukkan roti yang baru matang ke dalam kantong atau membersihkan lantai toko. Manajer tokonya adalah orang yang sangat ceria dan membimbing cara kerja dengan lembut. Aroma roti yang baru dipanggang menyebar di dalam toko, dan hanya dengan berada di sana saja membuat perasaan menjadi bahagia. Menjelang sore, banyak orang sepulang kantor dan pelajar yang datang membeli. Menyapa pelanggan dengan suara penuh semangat 'Irasshaimase!' awalnya membuat saya malu. Namun, sekarang saya sudah bisa mengatakannya dengan senyuman secara natural. Terkadang ada pelanggan yang berkata, 'Roti di sini benar-benar enak ya.' Hanya dengan mendengar satu patah kata itu, semua kelelahan dalam sehari langsung hilang. Saya belajar betapa melelahkannya bekerja dan betapa sulitnya menghasilkan uang. Pada saat bersamaan, saya mengetahui kehebatan dari pekerjaan yang bisa membuat orang lain senang. Pengalaman ini telah menjadi rasa percaya diri yang besar bagi saya."
+          },
+
+          {
+            id: 17,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 7',
+            judul: "ねことの おもいで",
+            paragraf: "むかし、じっかで ちゃいろい げなみの おおきな ねこを かっていました。なまえは みみと いう おんなのこでした。みみは いつも りびんぐの まどぎわで ひるねを している おとなしい ねこでした。わたしが がっこうから かえってくると、あしもとに すりよってきて あまえた こえを だします。その かおが とても かわいくて、いつも だきしめていました。よるに べんきょうを していると、みみは つくえの うえに あがってきて ぺんの うごきを じっと みつめます。たまには のーとの うえに すわってしまい、べんきょうの じゃまを する ことも ありました。それでも かわいくて おこる ことは できませんでした。10ねんほど いっしょに すみましたが、すうねんまえに びょういんで てんごくへ いってしまいました。みみが いなくなった へやは とても ひろくて さびしく かんじられました。いまでも ときどき あるばむを みかえして、みみとの たのしい おもいでに ひたります。どうぶつと くらした ひびは かけがえのない たからものです。",
+            terjemahan: "Dulu, saya memelihara kucing besar berbulu cokelat di rumah orang tua. Namanya adalah Mimi, seekor anak kucing perempuan. Mimi adalah kucing pendiam yang selalu tidur siang di dekat jendela ruang keluarga. Ketika saya pulang dari sekolah, ia mendekat ke kaki saya dan mengeluarkan suara manja. Wajahnya sangat lucu, dan saya selalu memeluknya. Ketika saya sedang belajar di malam hari, Mimi naik ke atas meja dan menatap lekat-lekat gerakan pena. Terkadang ia duduk di atas buku catatan dan mengganggu belajar saya. Meskipun begitu, ia tetap sangat lucu sehingga saya tidak bisa memarahinya. Kami tinggal bersama sekitar 10 tahun, tetapi beberapa tahun lalu ia pergi ke surga karena sakit. Kamar yang ditinggal pergi Mimi terasa sangat luas dan sepi. Sampai sekarang pun saya terkadang melihat kembali album foto dan tenggelam dalam kenangan indah bersama Mimi. Hari-hari yang dihabiskan bersama hewan adalah harta karun yang tak tergantikan."
+          },
+
+          {
+            id: 18,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 8',
+            judul: "てすとまえの いそがしい ひび",
+            paragraf: "らいしゅうから がっこうの おおきな てすとが はじまるので、こんしゅうは とても いそがしく すごしています。まいにち ほうかごは としょかんに のこって、ともだちと いっしょに てすとべんきょうを しています。とくに すうがくと かんじの てすとが むずかしいので、じゅうてんてきに もんだいを といています。わからない ところが あれば、せんせいの ところへ もっていって しつもんします。せんせいは いつも ていねいに わかりやすく せつめいしてくれます。いえでも よるおそくまで おきて、あんきかもくを いっしょうけんめい おぼえています。つくえの うえには きょうかしょや のーとが やまのように つまっています。さすがに つかれて あくびが でてきますが、がんばって めを こすります。てすとで いい てんすうを とって、りょうしんを よろこばせたいと おもっています。そのためにも、たいちょうを くずさないように えいようの ある ものを たべています。てすとが おわったら、だいすきな えいがを みに いこうと きめています。あと すこしだけ がまんして がんばります。",
+            terjemahan: "Mulai minggu depan tes besar sekolah akan dimulai, jadi minggu ini saya menghabiskan waktu dengan sangat sibuk. Setiap hari sepulang sekolah saya tinggal di perpustakaan dan belajar untuk tes bersama teman-teman. Khususnya tes matematika dan kanji itu sulit, jadi saya mengerjakan soal-soal secara berfokus. Jika ada bagian yang tidak dipahami, saya membawanya ke tempat guru dan bertanya. Guru selalu menjelaskan dengan teliti dan mudah dipahami. Di rumah pun saya begadang sampai larut malam dan menghafalkan mata pelajaran hafalan dengan sungguh-sungguh. Di atas meja, buku pelajaran dan buku catatan bertumpuk seperti gunung. Tentu saja saya merasa lelah dan menguap, tetapi saya berusaha mengucek mata. Saya ingin mendapatkan nilai bagus di tes dan membuat orang tua senang. Demi hal itu juga, saya makan makanan bergizi agar tidak jatuh sakit. Selesai tes, saya sudah memutuskan untuk pergi menonton film kesukaan. Bersabar sedikit lagi dan berjuanglah."
+          },
+
+          {
+            id: 19,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 9',
+            judul: "みずを たいせつに する こと",
+            paragraf: "がっこうの じゅぎょうで、せかいの みずぶそくの もんだいに ついて くわしく まなびました。ちきゅうには たくさん みずが ありますが、にんげんが のめる みずは じつは とても すくない のです。それを しってから、わたしは にちじょうの せいかつの なかで みずを たいせつに つかうように こころがけています。たとえば、はを みがくときは こっぷに みずを いれて、すいどうの じゃぐちを ずっと あけっぱなしに しないように しています。おふろを はいるときも、おゆの りょうに きを つけて、むだに あふれさせないように しています。おさらを あらうときも、せんざいを つけたあとは いちどに すすぐように して みずを せつやくします。ちいさな ことかもしれませんが、ひとりひとりの いしきが とても たいせつだと おもいます。みずは すべての いきものにとって いきていくための きほんです。みらいの こどもたちも きれいな みずを つかえるように、いまから まもっていかなければ なりません。かぞくや ともだちにも この たいせつさを つたえていきたいです。",
+            terjemahan: "Dalam pelajaran sekolah, saya belajar secara mendetail tentang masalah krisis air di dunia. Di bumi memang ada banyak air, tetapi air yang bisa diminum oleh manusia sebenarnya sangat sedikit. Mengetahui hal itu, saya berusaha untuk menggunakan air dengan hati-hati dalam kehidupan sehari-hari. Contohnya, saat menggosok gigi saya memasukkan air ke dalam cangkir dan berusaha untuk tidak membiarkan keran air mengalir terus-menerus. Saat mengisi bak mandi pun, saya memperhatikan jumlah air hangat agar tidak melimpah secara sia-sia. Saat mencuci piring juga, setelah diberi sabun saya membilasnya sekaligus untuk menghemat air. Mungkin ini hal yang kecil, tetapi saya pikir kesadaran setiap individu sangatlah penting. Air adalah dasar bagi semua makhluk hidup untuk bertahan hidup. Agar anak-anak di masa depan juga bisa menggunakan air bersih, kita harus melindunginya mulai dari sekarang. Saya ingin menyampaikan pentingnya hal ini kepada keluarga dan teman-teman."
+          },
+
+          {
+            id: 20,
+            tingkat: 'menengah',
+            badge: 'Sedang - Cerita 10',
+            judul: "しゃしんかの ゆめ",
+            paragraf: "わたしは ちいさいころから かめらで まわりの ふうけいを さつえいする ことが とても すきでした。かぞくや ともだちの えがおや、ゆうがたの うつくしい そらなどを きろくするのが にっかです。かめらの れんずを とおして みると、ふだんの なにげない けしきが まるで べつの せかいの ように かがやいて みえます。ひかりの かくどや かげの つきかたに よって、しゃしんの ふんいきが がらりと かわるところが しゃしんの おもしろさです。こうこうせいに なったとき、りょうしんが たんじょうびに ほんかくてきな いちがんれふの かめらを ぷれぜんとしてくれました。それからというもの、やすみの ひには じてんしゃに のって いろいろな ばしょへ でかけています。いつか じぶんの さつえいした しゃしんで おおきな こてんを ひらくのが、わたしの おおきな ゆめです。せかいじゅうの ひとたちに わたしの しゃしんを みてもらって、かんどうを あたえたいです。その ゆめを かなえるために、いまでも まいにち ほんを よんだり じっさいに さつえいしたりして うでを みがいています。",
+            terjemahan: "Sejak kecil saya sangat suka memotret pemandangan sekitar menggunakan kamera. Adalah rutinitas harian untuk merekam senyuman keluarga dan teman-teman, serta langit sore yang indah. Jika dilihat melalui lensa kamera, pemandangan biasa yang tidak disengaja tampak berkilau seolah-olah menjadi dunia yang berbeda. Menariknya fotografi adalah suasana foto berubah drastis tergantung pada sudut cahaya dan cara bayangan terbentuk. Ketika menjadi siswa SMA, orang tua memberi hadiah kamera DSLR sungguhan di hari ulang tahun saya. Sejak saat itu, di hari libur saya mengendarai sepeda dan pergi ke berbagai tempat. Suatu hari nanti, membuka pameran tunggal yang besar dengan foto-foto hasil jepretan sendiri adalah impian besar saya. Saya ingin orang-orang di seluruh dunia melihat foto saya dan memberikan kesan mendalam. Demi mewujudkan impian itu, sampai sekarang pun saya setiap hari membaca buku dan melakukan pemotretan secara langsung untuk mengasah kemampuan."
+          },
+
+          // ==========================================================
+          // 10 CERITA TINGKAT PANJANG
+          // ==========================================================
+
+          {
+            id: 21,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 1',
+            judul: "はじめての かいがいりょこうの おもいで",
+            paragraf: "きょねん、わたしは はじめて ひこうきに のって かいがいへ りょこうに いきました。いきさきは あじあに ある とても にぎやかな だいとしでした。しゅっぱつの ひは あさから どきどきして、くうこうの てつづきで まごついてしまいました。でも、しんせつな くうこうの かかりの ひとが わざわざ にほんごで おしえてくれたので、ぶじに ひこうきに のる ことが できました。そらの うえから みた くもの うみは まるで しろい わたの ようで、ほんとうに すばらしい けしきでした。げんちに ついた ときは、まわりの ひとびとが はなす ことばが すべて がいこくごで、じぶんが とおくへ きたのだと じっかんしました。ほてるに ちぇっくいんを して にもつを おいたあと、すぐに まちなかへ でかけました。あかい ねおんさいや みなれた おみせが ならんでいて、くうきが ねっきで つつまれていました。よるごはんには じもとの ゆうめいな やたいりょうりを たべてみました。にほんの りょうりとは すこし あじつけが ちがいましたが、すぱいしーで とても おいしかったです。ことばが つうじなくて ちゅうもんに こまった ときも ありましたが、えがおで ゆびさしを すれば なんとか つうじました。にんげんの こみゅにけーしょんに たいせつなのは ことばだけでなく、えがおや やさしい きもちだと きづきました。みっかかんの りょこうでしたが、まいにちが あたらしい はっけんの れんぞくでした。ぶんかの ちがいを はだで かんじる ことで、じぶんの かんがえかたが より ひろがったと おもいます。きこくの ひ、くうこうを しゅっぱつするときは、もうすこし ここに いたいと さみしく なりました。この けいけんは わたしの じんせいにおいて、いつまでも わすれることの ない たいせつな たからものです。また おかねと じかんを ためて、こんどは べつの くにへ いってみたいです。せかいには まだまだ わたしの しらない すばらしい ばしょが たくさん あると かくしんしています。",
+            terjemahan: "Tahun lalu, saya pertama kalinya naik pesawat dan pergi berlibur ke luar negeri. Tempat tujuannya adalah kota besar yang sangat ramai di Asia. Hari keberangkatan membuat saya berdebar-debar sejak pagi, dan saya sempat kebingungan saat prosedur di bandara. Namun, petugas bandara yang ramah sengaja mengajari saya dengan bahasa Jepang, sehingga saya bisa naik pesawat dengan selamat. Lautan awan yang dilihat dari atas langit bagaikan kapas putih, benar-benar pemandangan yang luar biasa. Saat tiba di lokasi tujuan, bahasa yang diucapkan orang-orang di sekitar semuanya adalah bahasa asing, membuat saya menyadari bahwa saya telah datang ke tempat yang jauh. Setelah melakukan check-in di hotel dan meletakkan barang bawaan, saya langsung pergi keluar ke tengah kota. Lampu neon merah dan toko-toko yang tidak asing berjejer, dan udaranya diselimuti oleh hawa panas. Untuk makan malam, saya mencoba memakan hidangan warung pinggir jalan yang terkenal secara lokal. Bumbunya sedikit berbeda dari masakan Jepang, tetapi rasanya pedas dan sangat enak. Ada kalanya saya kesulitan memesan karena bahasa yang tidak dipahami, tetapi dengan tersenyum dan menunjuk jari, komunikasi toh bisa terwujud. Saya menyadari bahwa hal yang penting dalam komunikasi manusia bukan hanya kata-kata, melainkan senyuman dan perasaan yang lembut. Perjalanan tersebut berlangsung selama tiga hari, tetapi setiap harinya adalah rangkaian penemuan baru. Dengan merasakan perbedaan budaya secara langsung, saya pikir cara berpikir saya menjadi semakin luas. Pada hari kepulangan, saat berangkat dari bandara, saya merasa sedih karena ingin tinggal di sini sedikit lebih lama lagi. Pengalaman ini adalah harta berharga yang tidak akan pernah saya lupakan dalam hidup saya. Lain kali, saya ingin menabung uang dan waktu lalu pergi ke negara yang berbeda. Saya yakin bahwa di dunia ini masih ada banyak tempat luar biasa yang belum saya ketahui."
+          },
+
+          {
+            id: 22,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 2',
+            judul: "しぜんを まもる たいせつな こと",
+            paragraf: "わたしたちが くらしている この ちきゅうは、さまざまな しぜんや いきものによって ささえられています。しかし、さいきんは にんげんの かつどうに よって かんきょうの はかいが すすんでいると いわれています。たとえば、まちなかで でる ぷらすちっくの ごみが うみに ながれこんで、うみの いきものが きずつく もんだいが おおきな わだいに なっています。また、やまや もりが きりひらかれる ことで、おおくの どうぶつたちが すむ ばしょを うしなっています。こうした かんきょうの もんだいを かいけつするために、わたしたちに できる ことは なんでしょうか。いちばん たいせつなのは、ひとりひとりが にちじょうの せいかつの なかで えこを いしきして こうどうする ことです。かいものに いく ときは ぷらすちっくの れじぶくろを つかわずに、ぬのの えこばっぐを かならず じさんします。また、つかっていない へやの でんきを こまめに けしたり、すいどうの じゃぐちを むだに あけっぱなしに しないように します。がっこうや しょくばでは、かみの しようりょうを へらしたり、りさいくるを てっていしたりする ことが もとめられます。じぶん ひとりの ちからは とても ちいさいかもしれませんが、みんなの いしきが あつまれば おおきな ちからに かわります。きれいな みずや みどりゆたかな もりを みらいの こどもたちに のこすのは、いまを いきる わたしたちの せきにんです。ちきゅうの いのちを まもるために、きょうから できる ことから はじめてみましょう。みらいの せかいが いつまでも うつくしく あかるい ばしょで あるように ねがいを こめて こうどうします。",
+            terjemahan: "Bumi tempat kita hidup ini ditopang oleh berbagai macam alam dan makhluk hidup. Namun, belakangan dikatakan bahwa kerusakan lingkungan semakin maju akibat aktivitas manusia. Contohnya, sampah plastik yang keluar di perkotaan mengalir ke laut, dan masalah di mana makhluk hidup laut terluka telah menjadi topik besar. Selain itu, dengan dibabatnya gunung dan hutan, banyak hewan yang kehilangan tempat tinggal. Untuk memecahkan masalah lingkungan seperti ini, apa yang bisa kita lakukan? Hal yang paling penting adalah kesadaran setiap individu untuk bertindak dengan menyadari konsep ramah lingkungan dalam kehidupan sehari-hari. Saat pergi berbelanja, kita tidak menggunakan kantong belanja plastik, melainkan selalu membawa tas belanja kain. Selain itu, kita mematikan lampu ruangan yang tidak digunakan secara berkala dan berusaha untuk tidak membiarkan keran air mengalir secara sia-sia. Di sekolah atau tempat kerja, kita dituntut untuk mengurangi jumlah penggunaan kertas atau menerapkan daur ulang secara menyeluruh. Kekuatan diri sendiri mungkin sangat kecil, tetapi jika kesadaran semua orang berkumpul, itu akan berubah menjadi kekuatan yang besar. Menyisihkan air bersih dan hutan yang kaya akan warna hijau kepada anak-anak di masa depan adalah tanggung jawab kita yang hidup di masa sekarang. Demi melindungi kehidupan bumi, mari kita mulai dari hal yang bisa dilakukan sejak hari ini. Kita bertindak dengan menaruh harapan agar dunia masa depan selamanya menjadi tempat yang indah dan cerah."
+          },
+
+          {
+            id: 23,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 3',
+            judul: "ゆめを かなえる ための ひび",
+            paragraf: "にんげんの いっしょうに おいて、じぶんの もくひょうや ゆめを もつ ことは とても すばらしい ことです。しかし、その ゆめを かなえるまでの みちのりは、けっして かんたんな ものでは ありません。ときには よそうも しない かべに ぶつかったり、おおきな しっぱいを して じしんを なくしたり する ことも あります。そんな とき、まわりの ひとたちから 「もう あきらめたら？」と いわれる かもしれません。それでも じぶんの こころの おくそこにある あつい きもちを しんじつづける ことが じゅうようです。しっぱいを ただの しっぱいとして おわるのではなく、つぎの せいこうの ための たいせつな けいけんとして まなぶ しせいが ひつようです。まいにち すこしずつでも どりょくを つみかさねる ことで、ちゃくじつに まえへ すすむ ことが できます。あさは だれよりも はやく おきて べんきょうを はじめ、よるは おそくまで けいかくてきに さぎょうを おこないます。からだが つかれて やすみたいと おもう ひも ありますが、ゆめを いだく じぶんを そうぞうすれば また げんきが わいてきます。同じ ゆめを もつ なかまたちと はげましあう ことも、おおきな ちからに なります。おたがいに なやみや ふあんを うちあける ことで、ひとりでは ないと あんしんできるからです。ながい じかんを かけて どりょくした けっか、ついに もくひょうを たっせいできた ときの よろこびは ことばでは いいあらわせないほど おおきいです。その しゅんかん、これまでの くろうや なみだが すべて むくわれたと こころから かんじます。どんなに こんなんな みちで あっても、ゆめを もちつづける つよい いしが あれば、かならず みちを きりひらく ことが できます。",
+            terjemahan: "Dalam kehidupan manusia, memiliki target atau impian sendiri adalah hal yang sangat luar biasa. Namun, jalan sampai mewujudkan impian tersebut bukanlah hal yang mudah. Kadang-kadang kita membentur tembok yang tidak diduga atau melakukan kesalahan besar hingga kehilangan kepercayaan diri. Di saat seperti itu, kita mungkin akan dikatai oleh orang di sekitar, 'Kenapa tidak menyerah saja?'. Meskipun begitu, penting untuk terus mempercayai perasaan panas yang ada di lubuk hati. Sikap untuk belajar dari kesalahan bukan sebagai kegagalan semata, melainkan sebagai pengalaman penting demi kesuksesan berikutnya sangatlah diperlukan. Dengan menumpuk usaha sedikit demi sedikit setiap hari, kita dapat maju ke depan secara mantap. Pagi hari kita bangun lebih awal dari siapa pun untuk mulai belajar, dan malam hari kita mengerjakan rencana secara teratur sampai larut. Ada hari di mana tubuh merasa lelah dan ingin istirahat, tetapi jika membayangkan diri yang memeluk impian, semangat akan bangkit kembali. Saling menyemangati dengan sesama rekan yang memiliki impian yang sama juga menjadi kekuatan besar. Karena dengan saling mencurahkan keresahan dan kecemasan, kita bisa merasa tenang bahwa kita tidak sendirian. Sebagai hasil usaha yang memakan waktu lama, kegembiraan saat akhirnya bisa mencapai target sangatlah besar sampai-sampai tidak bisa diungkapkan dengan tulisan. Pada saat itu, kita merasakan dari lubuk hati bahwa semua kerja keras dan air mata selama ini terbayar sudah. Betapapun sulitnya jalan tersebut, jika ada kemauan kuat untuk terus memiliki impian, kita pasti bisa membukakan jalan."
+          },
+
+          {
+            id: 24,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 4',
+            judul: "にほんの なつまつりの ぶんか",
+            paragraf: "にほんの なつに なると、ぜんこくの さまざまな ちいきで でんとうてきな なつまつりが ひらかれます。おまつりの ひの ゆうがたになると、ひとびとは いろあざやかな ゆかたを きて まちなかを あるきます。あたまの うえには たくさんの はなびが うちあげられ、よぞらを うつくしい いろで そめあげます。やたいが ならぶ とおりには、りんごあめや たこやき、きんぎょすくいなどの おみせが ずらりと ならびます。こどもたちは もちろん、おとなたちも むかしの なつかしい きおくを おもいだしながら たのしく あるいています。おおきな みこしを なんにんもの わかものたちが 「わっしょい、わっしょい」と ちからづよい こえを だしながら かつぎます。この みこしには、ちいきの かみさまが のっていると しんじられており、ひとびとの すこやかな くらしや ほうさくを いのる ぎょうじです。ぼんおどりの おんがくが ひびきわたると、わの なかに はいって だれもが いっしょに おどりだします。ことばの かべを こえて、みしらぬ ひととも しぜんに えがおで つながる ことが できます。なつの あつさを わすれさせてくれるような ねっきと いったいかんが、にほんの なつまつりには あふれています。げんだいの いそがしい せいかつの なかでも、こうした ふるくからの でんとうぶんかが たいせつに まもられているのは すばらしい ことです。らいねんの なつが くるのも、いまから すでに こころまちに している じぶんが います。にほんの ぶんかの ふかさと あたたかさを あらためて じっかんする さいこうの いべんとです。",
+            terjemahan: "Begitu musim panas di Jepang tiba, festival musim panas tradisional diadakan di berbagai wilayah seluruh negeri. Menjelang sore hari festival, orang-orang mengenakan yukata berwarna cerah lalu berjalan-jalan di kota. Di atas kepala, banyak kembang api diluncurkan dan mewarnai langit malam dengan warna yang indah. Di jalanan tempat warung berjejer, toko-toko seperti permen apel, takoyaki, dan jaring mas koki berbaris rapi. Anak-anak tentu saja, orang dewasa pun berjalan-jalan dengan gembira sambil mengenang memori masa lalu yang dirindukan. Sejumlah anak muda memikul mikoshi (tandu kuil) besar sambil mengeluarkan suara penuh semangat 'Wasshoi, wasshoi'. Di dalam mikoshi ini diyakini dewa wilayah setempat bersemayam, dan ini adalah acara untuk mendoakan kehidupan masyarakat yang sehat serta panen yang melimpah. Begitu musik tarian Bon Odori bergema, siapa pun masuk ke dalam lingkaran lalu mulai menari bersama. Melewati batasan bahasa, kita bisa terhubung secara natural dengan senyuman bahkan dengan orang tak dikenal sekalipun. Hawa panas dan rasa kebersamaan yang seolah membuat kita melupakan teriknya musim panas melimpah di festival musim panas Jepang. Di tengah kehidupan modern yang sibuk pun, fakta bahwa budaya tradisional dari zaman dahulu ini dilindungi dengan baik adalah hal yang luar biasa. Kedatangan musim panas tahun depan pun, diri saya sudah menantikannya dari sekarang. Ini adalah acara terbaik yang membuat saya menyadari kembali kedalaman dan kehangatan budaya Jepang."
+          },
+
+          {
+            id: 25,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 5',
+            judul: "ほんを よむ ことの すばらしさ",
+            paragraf: "ほんを よむ ことは、わたしたちの じんせいを より ゆたかに するための もっとも ゆうこうな ほうほうの ひとつです。ほんの なかには、さくしゃの ながねんの けいけんや ちしき、そして ふかい どうさつが つつまれています。わたしたちは わずかな おかねと じかんで、せかいじゅうの すばらしい ひとたちの かんがえに ふれる ことが できます。たとえば、なんびゃくねんも まえに かかれた れきしてきな ぶんがくを よむことで、とうじの ひとびとの かんじょうや しゃかいの じょうたいを なまなましく りかいできます。また、かがくや うちゅうに かんする ほんを よめば、じぶんの しらなかった そうだいな うちゅうの しんぴを まなぶ ことが かのうです。いそがしい ひびの なかでも、まいにち 15ぷんだけ どくしょの しゅうかんを もつ ことで、おおきな へんかが うまれます。ことばの ひょうげんりょくが ゆたかに なり、たにんの きもちを おもいやる こころが しぜんと きたえられます。さらに、ぶんしょうを よみとく ちからは、しごとや がっこうの べんきょうでも おおきな やくに たつのです。いんたーねっとで かんたんに じょうほうが てに はいる げんだいだからこそ、いっさつの ほんと じっくり むきあう じかんが たいせつです。ぺーじを めくる てざわりや、あたらしい ことばに であったときの よろこびは でんしききでは あじわえない みりょくです。これからも たくさんの いい ほんと であい、じぶんの こころの えいように していきたいです。ほんは いつでも どこでも わたしたちを まってくれる、いちばん せいじつな ともだちの ひとりです。",
+            terjemahan: "Membaca buku adalah salah satu cara paling efektif untuk membuat kehidupan kita semakin kaya. Di dalam buku, terangkum pengalaman bertahun-tahun, pengetahuan, serta wawasan mendalam dari penulisnya. Kita bisa menyentuh pemikiran orang-orang hebat di seluruh dunia hanya dengan sedikit uang dan waktu. Contohnya, dengan membaca sastra bersejarah yang ditulis ratusan tahun lalu, kita bisa memahami emosi orang-orang pada masa itu dan kondisi masyarakat secara hidup. Selain itu, jika membaca buku mengenai sains atau alam semesta, kita bisa mempelajari misteri alam semesta megah yang belum kita ketahui. Di tengah hari-hari yang sibuk sekalipun, dengan memiliki kebiasaan membaca buku hanya 15 menit setiap hari, perubahan besar akan lahir. Kemampuan ekspresi kata-kata menjadi kaya, dan hati yang memikirkan perasaan orang lain akan terlatih secara natural. Lebih jauh lagi, kemampuan mengurai bacaan juga akan sangat berguna dalam pekerjaan atau pelajaran di sekolah. Justru karena zaman sekarang informasi bisa didapatkan dengan mudah di internet, waktu untuk berhadapan secara saksama dengan satu buah buku menjadi sangat penting. Sensasi meraba halaman saat dibalik dan kegembiraan saat menemukan kata-kata baru adalah daya tarik yang tidak bisa dirasakan pada perangkat elektronik. Mulai sekarang pun saya ingin berjumpa dengan banyak buku bagus dan menjadikannya nutrisi bagi hati saya. Buku adalah salah satu teman paling tulus yang menunggu kita kapan pun dan di mana pun."
+          },
+
+          {
+            id: 26,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 6',
+            judul: "こころと からだを やすめる めいそうの じかん",
+            paragraf: "まいにち おおくの じょうほうや しごとに かこまれて いる わたしたちは、きづかない うちに おおきな すとれすを かかえています。そんな いそがしい ひびの なかで、じぶんじしんと むきあう ほうほうとして 「めいそう」が ちゅうもくを あつめています。やりかたは とても かんたんで、しずかな へやで あぐらを かいて すわり、じぶんの こきゅうだけに いしきを むけます。すう いきと はく いきの おとや、むねの うごきを ただ かんじながら、あたまの なかに ある ざつねんを すこしずつ はなしていきます。さいしょは いろいろな かんがえが うかんできて しゅうちゅうできませんが、それは ごく しぜんな ことなので しんぱいりません。つづけていくうちに、すこしずつ のうの きんちょうが ほぐれていき、こころが ふかい やすらぎに つつまれるのを かんじられます。けんきゅうに よると、めいそうは しゅうちゅうりょくを たかめたり、すいみんの しつを かいぜんしたりする こうかが あるそうです。たった 5ふんや 10ぷんの みじかい じかんでも、まいにち つづける ことで にちじょうの けしきが ちがって みえてきます。すまほの がめんを みるのを おやすみして、じぶんの こころの こえを きく じかんを つくってみませんか。こころに ゆとりが うまれると、まわりの ひとびとにも やさしく せっする ことが できるように なります。すとれすの おおい げんだいしゃかいを いきぬく ための ちえとして、この しゅうかんを つづけていく つもりです。",
+            terjemahan: "Kita yang setiap hari dikelilingi oleh banyak informasi dan pekerjaan, tanpa disadari menanggung stres yang besar. Di tengah hari-hari yang sibuk tersebut, 'meditasi' menarik perhatian sebagai metode untuk menghadapi diri sendiri. Caranya sangat mudah, duduk bersila di ruangan yang tenang, lalu arahkan kesadaran hanya pada pernapasan sendiri. Sambil merasakan suara napas masuk dan napas keluar serta gerakan dada, kita melepaskan pikiran-pikiran kotor di dalam kepala sedikit demi sedikit. Awalnya berbagai pikiran akan muncul sehingga tidak bisa berkonsentrasi, tetapi itu adalah hal yang sangat wajar jadi tidak perlu khawatir. Seiring melanjutkannya, ketegangan otak akan terurai sedikit demi sedikit, dan kita bisa merasakan hati diselimuti oleh ketenangan yang mendalam. Menurut penelitian, meditasi memiliki efek untuk meningkatkan konsentrasi atau memperbaiki kualitas tidur. Bahkan dalam waktu singkat hanya 5 atau 10 menit pun, dengan melanjutkannya setiap hari pemandangan sehari-hari akan tampak berbeda. Bagaimana jika kita meliburkan diri dari melihat layar ponsel dan meluangkan waktu untuk mendengarkan suara hati sendiri? Ketika kelonggaran lahir di dalam hati, kita pun akan bisa memperlakukan orang-orang di sekitar dengan lembut. Sebagai kebijaksanaan untuk bertahan hidup di masyarakat modern yang penuh stres, saya berniat untuk terus melanjutkan kebiasaan ini."
+          },
+
+          {
+            id: 27,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 7',
+            judul: "しょくぶつを そだてる よろこび",
+            paragraf: "わたしは きょねんから いえの べらんだで ちいさな やさいや はなを そだてる がーでにんぐを はじめました。ちいさかった たねが つちの なかで ねむり、やがて ちいさな めを だす しゅんかんは いつみても かんどうします。まいあさ おきたら まず べらんだへ いき、つちの かわきぐあいを ちぇっくして やさしく みずを やります。しょくぶつは ことばを はなしませんが、あいじょうを かけたぶんだけ かくじつに うつくしい はなや みで こたえてくれます。なつには あかく あまい とまとが たくさん みのり、じぶんで しゅうかくして しょくたくに ならべました。しはんの ものよりも あじが こくて、しんせんな よろこびを ぜんしんで かみしめました。しかし、すべてが じゅんちょうに そだった わけではなく、ときには むしに たべられたり みずが たりずに かれてしまったり した ことも あります。その しっぱいから まなび、どうすれば げんきに そだつか しらべる ことで、いのちを あつかう むずかしさも しりました。つちを さわり、しょくぶつの せいちょうを みまもる じかんは、ひびの いそがしさを わすれさせてくれる さいこうの いやしです。きせつごとに かわっていく べらんだの けしきを みるのが、いまの いちばんの たのしみに なっています。しぜんの りずむを かんじながら いきる ことは、にんげんの こころを おだやかに してくれます。これからも たいせつな しょくぶつたちと いっしょに、のんびり いっぽずつ せいちょうしていきたいです。",
+            terjemahan: "Mulai tahun lalu saya hobi berkebun menanam sayuran kecil dan bunga di beranda rumah. Saat benih yang tadinya kecil tidur di dalam tanah dan akhirnya memunculkan tunas kecil selalu membuat saya kagum kapan pun melihatnya. Setiap pagi begitu bangun saya langsung pergi ke beranda, mengecek tingkat kekeringan tanah dan menyiramnya dengan lembut. Tanaman tidak berbicara bahasa, tetapi mereka pasti membalas dengan bunga atau buah yang indah sebanyak kasih sayang yang kita berikan. Di musim panas, banyak buah tomat merah yang manis berbuah, saya memanennya sendiri dan menatanya di meja makan. Rasanya lebih pekat daripada barang yang dijual di pasaran, dan saya meresapi kegembiraan segar dengan seluruh tubuh. Namun, tidak semuanya tumbuh dengan lancar, ada kalanya juga dimakan serangga atau layu karena kurang air. Belajar dari kegagalan tersebut dan mencari tahu bagaimana agar bisa tumbuh dengan sehat, saya jadi tahu betapa sulitnya memperlakukan kehidupan. Waktu menyentuh tanah dan mengawasi pertumbuhan tanaman adalah penyembuhan terbaik yang membuat kita melupakan kesibukan sehari-hari. Melihat pemandangan beranda yang berubah setiap musim telah menjadi kesenangan terbesar saya saat ini. Hidup sambil merasakan ritme alam akan membuat hati manusia menjadi tenang. Mulai sekarang pun bersama tanaman-tanaman berharga, saya ingin tumbuh dengan santai selangkah demi selangkah."
+          },
+
+          {
+            id: 28,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 8',
+            judul: "ほんとうの ともだちとは",
+            paragraf: "じんせいを あゆんでいく なかにおいて、こころから しんらいできる ともだちを みつける ことは かけがえのない ざいさんです。ほんとうの ともだちは、わたしたちが せいこうして うかれているときだけでなく、しっぱいして おちこんでいるときも そばに いてくれます。よのなかには じぶんの りえきだけを かんがえて ひとに ちかづく ひとも いますが、しんの ゆうじょうには みかえりを もとめない むしょうの あいが あります。おたがいに いけんが あわずに ぶつかりあう ことも ありますが、ほんねで はなしあう ことで きずなが さらに ふかまります。がっこうや しょくばが ちがっても、あえば すぐに むかしの かんけいに もどって なんじかんも はなしこんでしまいます。うれしい ときは いっしょに おどりあがり、かなしい ときは いっしょに なみだを ながしてくれる、そんな そんざいが いるだけで こころづよくなります。おとなに なって それぞれの みちを すすむように なっても、れんらくを とりあって きんきょうを ほうこくしあいます。ともだちが ちゃれんじする ときは ぜんりょくで おうえんし、じぶんが くじけそうな ときは はげましの ことばを もらいます。ゆうじょうという めに みえない きずなは、じかんを かけて ていねいに そだてる ことで つよく なっていきます。まわりに いる ゆうじんたちへの かんしゃの きもちを けっして わすれず、じぶんも だれかに とっての よい ともで ありたいです。おたがいの せいちょうを よろこびあえる かんけいを いっしょう つづけていきたいと こころから ねがっています。",
+            terjemahan: "Di dalam menjalani kehidupan, menemukan teman yang bisa dipercayai dari lubuk hati adalah aset yang tak tergantikan. Teman sejati bukan hanya ada saat kita sukses dan bersenang-senang, tetapi juga ada di sisi kita saat kita gagal dan merasa down. Di dunia ini ada orang yang mendekati orang lain hanya dengan memikirkan keuntungan sendiri, tetapi di dalam persahabatan sejati terdapat cinta tanpa pamrih yang tidak menuntut imbalan. Ada kalanya kita saling berbenturan karena pendapat yang tidak cocok, tetapi dengan berbicara dari hati ke hati, ikatan akan semakin dalam. Meskipun sekolah atau tempat kerja berbeda, jika bertemu kita akan langsung kembali ke hubungan masa lalu dan asyik mengobrol selama berjam-jam. Saat senang kita melompat kegirangan bersama, saat sedih kita mengalirkan air mata bersama, hanya dengan adanya eksistensi seperti itu saja hati menjadi kuat. Meskipun kelak menjadi dewasa dan maju di jalan masing-masing, kita tetap saling menghubungi dan melaporkan kabar terbaru. Saat teman menantang sesuatu, kita mendukung dengan segenap tenaga, dan saat diri kita hampir menyerah, kita mendapat kata-kata dorongan semangat. Ikatan tak kasat mata bernama persahabatan akan menjadi kuat dengan cara merawatnya secara teliti seiring waktu berjalan. Perasaan terima kasih kepada teman-teman yang ada di sekitar tidak boleh dilupakan sama sekali, dan saya pun ingin menjadi teman yang baik bagi seseorang. Dari lubuk hati saya berharap untuk terus melanjutkan hubungan di mana kita bisa saling bersukacita atas pertumbuhan satu sama lain seumur hidup."
+          },
+
+          {
+            id: 29,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 9',
+            judul: "じぶんを みつめなおす たび",
+            paragraf: "まいにちの いそがしい さいくるから すこし はなれて、しらない とちへ ひとりたびを する ことに しました。もくてきちは うみの みえる しずかな ちいさな まちで、かんこうきゃくも あまり いない ばしょです。でんしゃの まどから そとを みていると、だんだん びるが へってきて みどりゆたかな でんえんふうけいが ひろがります。その けしきを みているだけで、こころの なかに たまっていた きんちょうや ふあんが すーっと とけていく ようでした。えきを おりて からは、あてもなく かいがんの ちかくを ぼんやりと あるきつづけました。ただ なみの おとを きき、しおの かおりを かんじる だけの じかんが、いまの わたしには なによりも ひつようだったのです。よるは ちいさな やどに とまり、あかりの すくない へやで これまでの じんせいを ふりかえりました。じぶんが ほんとうに やりたい ことは なんなのか、なにに びびって あしぶみを していたのか、じっくりと むきあいました。たびを つうじて、たにんの ひょうかや きじゅんに まどわされず、じぶんらしい いきかたを えらぶ たいせつさに きづく ことが できました。ひとは ひとりでは いきていけませんが、ときには すべての しがらみから はなれて ひとりの じかんを もつことも たいせつです。この ひとりたびで えた おだやかな きもちを わすれずに、あしたから また あたらしい きもちで あるきだします。こころが かるくなった わたしは、つぎの えきへ むかう でんしゃに のりこみました。じんせいの あたらしい ぺーじを めくる じゅんびは もう すっかり できています。",
+            terjemahan: "Menjauh sedikit dari siklus harian yang sibuk, saya memutuskan untuk melakukan perjalanan seorang diri ke daerah yang belum dikenal. Tempat tujuannya adalah kota kecil yang tenang dengan pemandangan laut, tempat yang tidak begitu banyak dikunjungi turis. Saat melihat keluar dari jendela kereta, perlahan gedung-gedung mulai berkurang dan pemandangan pedesaan yang kaya akan warna hijau terbentang luas. Hanya dengan melihat pemandangan itu, ketegangan dan kecemasan yang menumpuk di dalam hati seolah meleleh begitu saja. Sejak turun dari stasiun, saya terus berjalan-jalan dengan santai di dekat pantai tanpa tujuan. Waktu yang hanya dihabiskan untuk mendengarkan suara ombak dan merasakan aroma air laut adalah hal yang paling saya butuhkan saat ini. Malam hari saya menginap di penginapan kecil, dan di dalam kamar yang minim cahaya saya menengok kembali kehidupan selama ini. Apa yang sebenarnya ingin saya lakukan, apa yang saya takuti sehingga menghentikan langkah, saya menghadapinya dengan seksama. Melalui perjalanan ini, saya bisa menyadari pentingnya memilih cara hidup yang sesuai dengan diri sendiri tanpa terkecoh oleh penilaian atau standar orang lain. Manusia memang tidak bisa hidup sendirian, tetapi terkadang melepaskan diri dari segala keterikatan dan memiliki waktu sendirian juga penting. Tanpa melupakan perasaan tenang yang didapat dari perjalanan seorang diri ini, mulai besok saya akan kembali melangkah dengan perasaan baru. Diri saya yang hatinya telah menjadi ringan naik ke kereta yang menuju ke stasiun berikutnya. Persiapan untuk membalik lembaran baru kehidupan sudah sepenuhnya siap."
+          },
+
+          {
+            id: 30,
+            tingkat: 'banyak',
+            badge: 'Panjang - Cerita 10',
+            judul: "いまと いう しゅんかんを いきる",
+            paragraf: "わたしたちは 「じかん」という かけがえのない しげんを びょうどうに あたえられて このよに いきています。しかし、おおくの ひとは その じかんが いつかは おわる ことを わすれて、むだに すごしてしまいがちです。あした やろう、あとで やろうと さきのばしに しているうちに、たいせつな ちゃんすを みすみす のがしてしまう ことが あります。じかんは おかねでは けっして かう ことも、かこに もどして やりなおす ことも できません。だからこそ、いま めのまえに ある しゅんかんを せいいっぱい いきる ことが なによりも たいせつなのです。たとえば、かぞくや ともだちと すごす じかんも、いつまでも あたりまえに ある わけでは ありません。だからこそ、ひごろから かんしゃの きもちを ことばに して つたえたり、いっしょに いる ひとときを こころから たのしんだり するべきです。しごとや べんきょうの もくひょうに むかって どりょくする ときも、みらいの ために いまを おろそかに してはいけません。かこの こうかいや みらいの ふあんに こころを うばわれるのではなく、いま この しゅんかんに ぜんりょくを つくします。そうする ことで、じんせいの いちぺーじ いちぺーじが じゅうじつした すばらしい ものに かわっていきます。じんせいの おわりを むかえる ときに 「やりたい ことを すべて やりきった」と むねを はって いえるような いきかたを したいです。きょうという ひは、にどと こない にどと ない とくべつな いちにちです。その ことを むねに きざみこみ、あかるい えがおで まえを むいて あるきつづけます。あなたの いまの しゅんかんは、どんな いろで かがやいていますか。きょうという ひを たいせつに いきる すべての ひとに、こころからの えーるを おくります。",
+            terjemahan: "Kita hidup di dunia ini dengan diberikan sumber daya yang tak tergantikan bernama 'waktu' secara setara. Namun, banyak orang melupakan bahwa waktu tersebut suatu saat akan berakhir, dan cenderung menghabiskannya secara sia-sia. Sambil menunda-nunda dengan berkata 'lakukan besok saja', 'lakukan nanti saja', terkadang kita malah melewatkan kesempatan penting begitu saja. Waktu sama sekali tidak bisa dibeli dengan uang, dan tidak bisa dikembalikan ke masa lalu untuk diulang kembali. Oleh karena itu, hidup secara maksimal pada saat ini di depan mata adalah hal yang paling penting di atas segalanya. Contohnya, waktu yang dihabiskan bersama keluarga dan teman-teman pun tidak akan selamanya ada sebagai hal yang lumrah. Oleh karena itu, kita harus menyampaikan rasa terima kasih dengan kata-kata dari keseharian, atau menikmati waktu bersama dengan sepenuh hati. Saat berjuang menghadap target pekerjaan atau belajar pun, kita tidak boleh mengabaikan masa kini demi masa depan. Daripada membiarkan hati direbut oleh penyesalan masa lalu atau kecemasan masa depan, kita mengerahkan seluruh tenaga pada saat ini di detik ini. Dengan cara itu, halaman demi halaman kehidupan akan berubah menjadi hal yang luar biasa dan terpenuhi. Saat menyambut akhir kehidupan, saya ingin menjalani cara hidup di mana saya bisa membusungkan dada dan berkata 'saya telah melakukan semua hal yang ingin saya lakukan'. Hari yang bernama hari ini adalah satu hari spesial yang tidak akan pernah datang dua kali. Mengukir hal itu di dalam dada, saya akan terus melangkah menghadap ke depan dengan senyuman cerah. Detik ini Anda sekarang berkilau dengan warna apa? Saya mengirimkan dukungan dari lubuk hati kepada semua orang yang hidup menghargai hari yang disebut hari ini."
+          }
+
+        ]
+      }
+    }
+  </script>
+
+</body>
+</html>
