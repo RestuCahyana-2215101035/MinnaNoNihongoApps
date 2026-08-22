@@ -1,0 +1,3911 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Latihan Perubahan Kata Kerja - Minna no Nihongo</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Alpine -->
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js">
+  </script>
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+
+  <style>
+    body {
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
+  </style>
+</head>
+
+
+<body
+  class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300"
+  x-data="latihanPerubahanApp()"
+  x-init="initApp()"
+>
+
+<div class="flex h-screen overflow-hidden">
+
+  <!-- ========================================= -->
+  <!-- MOBILE OVERLAY -->
+  <!-- ========================================= -->
+
+  <div
+    x-show="sidebarOpen"
+    @click="sidebarOpen = false"
+    x-transition.opacity
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden"
+  ></div>
+
+
+  <!-- ========================================= -->
+  <!-- SIDEBAR -->
+  <!-- ========================================= -->
+
+  <div
+    id="sidebar-container"
+    class="contents"
+  ></div>
+
+
+  <!-- ========================================= -->
+  <!-- MAIN -->
+  <!-- ========================================= -->
+
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+    <!-- HEADER -->
+    <div
+      id="header-container"
+      class="contents"
+    ></div>
+
+
+    <!-- ========================================= -->
+    <!-- CONTENT -->
+    <!-- ========================================= -->
+
+    <main
+      class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 space-y-6"
+    >
+
+
+      <!-- ========================================= -->
+      <!-- HEADER -->
+      <!-- ========================================= -->
+
+      <div
+        class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 p-6 md:p-7 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6"
+      >
+
+        <div class="space-y-1.5 flex-1">
+
+          <span
+            class="bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-white/20 inline-block"
+          >
+            <i class="fa-solid fa-graduation-cap mr-1"></i>
+            Ujian Konjugasi
+          </span>
+
+          <h2 class="text-xl md:text-2xl font-black tracking-tight">
+            Latihan Perubahan Kata Kerja
+          </h2>
+
+          <p class="text-xs text-blue-100 max-w-xl">
+            Latihan konjugasi kata kerja Bahasa Jepang Golongan 1, 2, dan 3
+            berdasarkan pola perubahan yang benar.
+          </p>
+
+        </div>
+
+
+        <!-- POTENSI SOAL -->
+
+        <div
+          class="bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 rounded-2xl flex items-center gap-3 shrink-0"
+        >
+
+          <div
+            class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-rotate"></i>
+          </div>
+
+          <div>
+
+            <div
+              class="text-[9px] text-blue-200 font-bold uppercase tracking-wider"
+            >
+              Potensi Soal
+            </div>
+
+            <div
+              class="text-base font-black"
+              x-text="maxAvailableQuestions + ' Soal'"
+            ></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ========================================= -->
+      <!-- SETUP -->
+      <!-- ========================================= -->
+
+      <template x-if="quizStage === 'setup'">
+
+        <div
+          class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl space-y-8 max-w-4xl mx-auto w-full"
+        >
+
+          <!-- TITLE -->
+
+          <div
+            class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4"
+          >
+
+            <h4
+              class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2.5 uppercase tracking-wider"
+            >
+
+              <div
+                class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center"
+              >
+                <i class="fa-solid fa-sliders"></i>
+              </div>
+
+              Konfigurasi Latihan
+
+            </h4>
+
+          </div>
+
+
+          <!-- ========================================= -->
+          <!-- NO DATA -->
+          <!-- ========================================= -->
+
+          <template x-if="availableVerbCategories.length === 0">
+
+            <div
+              class="p-6 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl text-center"
+            >
+
+              <i
+                class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl"
+              ></i>
+
+              <h5
+                class="text-xs font-bold text-amber-800 dark:text-amber-300 mt-2"
+              >
+                Belum Ada Data Kata Kerja
+              </h5>
+
+              <p
+                class="text-[11px] text-amber-600 dark:text-amber-400 mt-1"
+              >
+                Tambahkan data kata kerja Golongan 1, 2, atau 3 melalui Panel Admin.
+              </p>
+
+            </div>
+
+          </template>
+
+
+          <!-- ========================================= -->
+          <!-- KATEGORI -->
+          <!-- ========================================= -->
+
+          <template x-if="availableVerbCategories.length > 0">
+
+            <div class="space-y-3">
+
+              <label
+                class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+              >
+                1. Pilih Golongan Kata Kerja
+              </label>
+
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                <template
+                  x-for="cat in availableVerbCategories"
+                  :key="cat.key"
+                >
+
+                  <label
+                    :class="
+                      selectedCategories.includes(cat.key)
+                      ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20'
+                      : 'border-slate-100 dark:border-slate-800'
+                    "
+                    class="flex items-center p-3.5 rounded-2xl border-2 cursor-pointer transition"
+                  >
+
+                    <input
+                      type="checkbox"
+                      :value="cat.key"
+                      x-model="selectedCategories"
+                      @change="updateMaxQuestions()"
+                      class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                    >
+
+                    <span
+                      class="ml-3 text-slate-700 dark:text-slate-300 font-bold text-xs"
+                      x-text="cat.title"
+                    ></span>
+
+                  </label>
+
+                </template>
+
+              </div>
+
+            </div>
+
+          </template>
+
+
+          <!-- ========================================= -->
+          <!-- FORM CATEGORY -->
+          <!-- ========================================= -->
+
+          <div class="space-y-3">
+
+            <label
+              class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+            >
+              2. Pilih Bentuk Perubahan
+            </label>
+
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+              <template
+                x-for="form in formCategories"
+                :key="form.key"
+              >
+
+                <label
+                  :class="
+                    selectedFormCategory === form.key
+                    ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25'
+                    : 'border-slate-200 dark:border-slate-800'
+                  "
+                  class="flex items-start p-4 rounded-2xl border-2 cursor-pointer transition"
+                >
+
+                  <input
+                    type="radio"
+                    :value="form.key"
+                    x-model="selectedFormCategory"
+                    @change="updateMaxQuestions()"
+                    class="mt-0.5 w-4 h-4 text-blue-600"
+                  >
+
+                  <div class="ml-3">
+
+                    <div
+                      class="text-xs font-black text-slate-800 dark:text-slate-200"
+                      x-text="form.title"
+                    ></div>
+
+                    <div
+                      class="text-[10px] text-slate-400 mt-1"
+                      x-text="form.description"
+                    ></div>
+
+                  </div>
+
+                </label>
+
+              </template>
+
+            </div>
+
+          </div>
+
+
+          <!-- ========================================= -->
+          <!-- LANGUAGE -->
+          <!-- ========================================= -->
+
+          <div class="space-y-3">
+
+            <label
+              class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+            >
+              3. Bahasa Soal & Jawaban
+            </label>
+
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+              <!-- INDONESIA → ROMAJI -->
+
+              <label
+                :class="
+                  questionLanguageMode === 'bindo_romaji'
+                  ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25'
+                  : 'border-slate-200 dark:border-slate-800'
+                "
+                class="flex items-start p-4 rounded-2xl border-2 cursor-pointer transition"
+              >
+
+                <input
+                  type="radio"
+                  value="bindo_romaji"
+                  x-model="questionLanguageMode"
+                  class="mt-0.5 w-4 h-4 text-blue-600"
+                >
+
+                <div class="ml-3">
+
+                  <div class="text-xs font-black">
+                    Indonesia → Romaji
+                  </div>
+
+                  <div class="text-[10px] text-slate-400 mt-1">
+                    Soal Indonesia, jawaban Romaji
+                  </div>
+
+                </div>
+
+              </label>
+
+
+              <!-- ROMAJI → INDONESIA -->
+
+              <label
+                :class="
+                  questionLanguageMode === 'romaji_bindo'
+                  ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25'
+                  : 'border-slate-200 dark:border-slate-800'
+                "
+                class="flex items-start p-4 rounded-2xl border-2 cursor-pointer transition"
+              >
+
+                <input
+                  type="radio"
+                  value="romaji_bindo"
+                  x-model="questionLanguageMode"
+                  class="mt-0.5 w-4 h-4 text-blue-600"
+                >
+
+                <div class="ml-3">
+
+                  <div class="text-xs font-black">
+                    Romaji → Indonesia
+                  </div>
+
+                  <div class="text-[10px] text-slate-400 mt-1">
+                    Soal Romaji, jawaban Indonesia
+                  </div>
+
+                </div>
+
+              </label>
+
+
+              <!-- MIXED -->
+
+              <label
+                :class="
+                  questionLanguageMode === 'mixed'
+                  ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25'
+                  : 'border-slate-200 dark:border-slate-800'
+                "
+                class="flex items-start p-4 rounded-2xl border-2 cursor-pointer transition"
+              >
+
+                <input
+                  type="radio"
+                  value="mixed"
+                  x-model="questionLanguageMode"
+                  class="mt-0.5 w-4 h-4 text-blue-600"
+                >
+
+                <div class="ml-3">
+
+                  <div class="text-xs font-black">
+                    Campuran
+                  </div>
+
+                  <div class="text-[10px] text-slate-400 mt-1">
+                    Indonesia ↔ Romaji secara acak
+                  </div>
+
+                </div>
+
+              </label>
+
+            </div>
+
+          </div>
+
+
+          <!-- ========================================= -->
+          <!-- TIME + LENGTH -->
+          <!-- ========================================= -->
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- TIME -->
+
+            <div class="space-y-2">
+
+              <label
+                class="block text-xs font-bold text-slate-400 uppercase tracking-wider"
+              >
+                Batas Waktu
+              </label>
+
+              <select
+                x-model="quizTimeOption"
+                class="w-full p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-bold focus:outline-none focus:border-blue-500"
+              >
+
+                <option value="0">
+                  Tanpa Batas Waktu
+                </option>
+
+                <option value="1">
+                  1 Menit
+                </option>
+
+                <option value="3">
+                  3 Menit
+                </option>
+
+                <option value="5">
+                  5 Menit
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <!-- LENGTH -->
+
+            <div class="space-y-2">
+
+              <div class="flex justify-between">
+
+                <label
+                  class="text-xs font-bold text-slate-400 uppercase tracking-wider"
+                >
+                  Jumlah Soal
+                </label>
+
+                <span
+                  class="text-[11px] text-blue-600 font-black"
+                  x-text="'Maks: ' + maxAvailableQuestions"
+                ></span>
+
+              </div>
+
+
+              <input
+                type="number"
+                min="1"
+                :max="maxAvailableQuestions"
+                x-model.number="quizLength"
+                class="w-full p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-bold focus:outline-none focus:border-blue-500"
+              >
+
+            </div>
+
+          </div>
+
+
+          <!-- ========================================= -->
+          <!-- START -->
+          <!-- ========================================= -->
+
+          <button
+            @click="startQuiz()"
+            :disabled="
+              selectedCategories.length === 0 ||
+              maxAvailableQuestions === 0
+            "
+            class="w-full py-4 rounded-2xl font-black text-sm transition flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-xl"
+          >
+
+            Mulai Latihan
+
+            <i class="fa-solid fa-rocket"></i>
+
+          </button>
+
+        </div>
+
+      </template>
+
+
+      <!-- ========================================= -->
+      <!-- QUIZ -->
+      <!-- ========================================= -->
+
+      <template x-if="quizStage === 'active'">
+
+        <div
+          class="bg-white dark:bg-slate-900 p-5 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl space-y-6 max-w-2xl mx-auto w-full"
+        >
+
+          <!-- TOP -->
+
+          <div
+            class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4"
+          >
+
+            <span
+              class="text-[11px] font-black uppercase tracking-widest text-slate-400"
+            >
+
+              Soal
+
+              <span
+                class="text-blue-600 text-base"
+                x-text="currentQuestionIndex + 1"
+              ></span>
+
+              /
+
+              <span
+                x-text="quizQuestions.length"
+              ></span>
+
+            </span>
+
+
+            <div class="flex items-center gap-3">
+
+              <button
+                @click="finishQuiz()"
+                class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl"
+              >
+
+                <i class="fa-solid fa-flag-checkered"></i>
+
+                Selesai
+
+              </button>
+
+
+              <div
+                class="flex items-center gap-2 font-mono text-sm px-3.5 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl"
+              >
+
+                <i class="fa-regular fa-clock"></i>
+
+                <span
+                  x-text="
+                    quizTimeOption > 0
+                      ? formatTime(timeLeft)
+                      : 'Bebas'
+                  "
+                ></span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- ========================================= -->
+          <!-- PROGRESS -->
+          <!-- ========================================= -->
+
+          <div
+            class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden"
+          >
+
+            <div
+              class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all"
+              :style="
+                `width: ${
+                  ((currentQuestionIndex + 1) /
+                  quizQuestions.length) * 100
+                }%`
+              "
+            ></div>
+
+          </div>
+
+
+          <!-- ========================================= -->
+          <!-- QUESTION -->
+          <!-- ========================================= -->
+
+          <div
+            class="text-center py-6 px-5 bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3"
+          >
+
+            <span
+              class="text-[10px] uppercase tracking-widest font-black text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950 px-4 py-1.5 rounded-full inline-block"
+              x-text="currentQuestion.modeLabel"
+            ></span>
+
+
+            <div
+              class="text-[10px] text-slate-400 font-bold uppercase tracking-wider"
+              x-text="currentQuestion.directionLabel"
+            ></div>
+
+
+            <h3
+              class="text-xl md:text-2xl font-black text-slate-900 dark:text-white"
+              x-text="currentQuestion.question"
+            ></h3>
+
+          </div>
+
+
+          <!-- ========================================= -->
+          <!-- OPTIONS A B C D -->
+          <!-- ========================================= -->
+
+          <div class="grid grid-cols-1 gap-3">
+
+            <template
+              x-for="(opt, idx) in currentQuestion.options"
+              :key="idx"
+            >
+
+              <button
+                @click="selectAnswer(opt)"
+                :disabled="selectedAnswer !== null"
+
+                :class="{
+
+                  /* NORMAL */
+
+                  'border-slate-200 dark:border-slate-800 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-slate-800 dark:hover:border-slate-600 hover:-translate-y-0.5 hover:shadow-md':
+                    selectedAnswer === null,
+
+                  /* BENAR */
+
+                  'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200':
+                    selectedAnswer !== null &&
+                    opt.isCorrect,
+
+                  /* SALAH */
+
+                  'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200':
+                    selectedAnswer !== null &&
+                    selectedAnswer === opt &&
+                    !opt.isCorrect,
+
+                  /* OPSI LAIN */
+
+                  'opacity-40':
+                    selectedAnswer !== null &&
+                    selectedAnswer !== opt &&
+                    !opt.isCorrect
+
+                }"
+
+                class="group w-full text-left p-3.5 md:p-4 rounded-2xl border-2 transition-all duration-200 text-sm md:text-base font-bold flex items-center gap-3"
+              >
+
+                <!-- ========================================= -->
+                <!-- LABEL A / B / C / D -->
+                <!-- ========================================= -->
+
+                <span
+                  class="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center font-black text-sm md:text-base bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all duration-200"
+
+                  :class="{
+
+                    'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400':
+                      selectedAnswer === null,
+
+                    'bg-emerald-500 text-white':
+                      selectedAnswer !== null &&
+                      opt.isCorrect,
+
+                    'bg-rose-500 text-white':
+                      selectedAnswer !== null &&
+                      selectedAnswer === opt &&
+                      !opt.isCorrect
+
+                  }"
+
+                  x-text="String.fromCharCode(65 + idx)"
+                ></span>
+
+
+                <!-- ========================================= -->
+                <!-- TEXT JAWABAN -->
+                <!-- ========================================= -->
+
+                <span
+                  class="flex-1 min-w-0 break-words leading-relaxed"
+                  x-text="opt.text"
+                ></span>
+
+
+                <!-- ========================================= -->
+                <!-- STATUS ICON -->
+                <!-- ========================================= -->
+
+                <span class="shrink-0 w-7 flex justify-center">
+
+                  <!-- BENAR -->
+
+                  <template
+                    x-if="
+                      selectedAnswer !== null &&
+                      opt.isCorrect
+                    "
+                  >
+
+                    <i
+                      class="fa-solid fa-circle-check text-emerald-600 text-xl md:text-2xl"
+                    ></i>
+
+                  </template>
+
+
+                  <!-- SALAH -->
+
+                  <template
+                    x-if="
+                      selectedAnswer !== null &&
+                      selectedAnswer === opt &&
+                      !opt.isCorrect
+                    "
+                  >
+
+                    <i
+                      class="fa-solid fa-circle-xmark text-rose-600 text-xl md:text-2xl"
+                    ></i>
+
+                  </template>
+
+                </span>
+
+              </button>
+
+            </template>
+
+          </div>
+
+
+          <!-- ========================================= -->
+          <!-- NEXT -->
+          <!-- ========================================= -->
+
+          <div class="flex justify-end">
+
+            <button
+              x-show="selectedAnswer !== null"
+              @click="nextQuestion()"
+              class="px-8 py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-black rounded-2xl text-xs uppercase tracking-wider shadow-xl flex items-center gap-2"
+            >
+
+              Lanjut Soal
+
+              <i class="fa-solid fa-arrow-right"></i>
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </template>
+
+
+      <!-- ========================================= -->
+      <!-- RESULT -->
+      <!-- ========================================= -->
+
+      <template x-if="quizStage === 'result'">
+
+        <div
+          class="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl text-center space-y-6 max-w-md mx-auto w-full"
+        >
+
+          <!-- TROPHY -->
+
+          <div
+            class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-lg"
+          >
+
+            <i class="fa-solid fa-trophy"></i>
+
+          </div>
+
+
+          <!-- TITLE -->
+
+          <div>
+
+            <h2
+              class="text-2xl font-black text-slate-900 dark:text-white"
+            >
+              Latihan Selesai!
+            </h2>
+
+            <p class="text-xs text-slate-500 mt-1">
+              Berikut hasil latihan perubahan kata kerja kamu.
+            </p>
+
+          </div>
+
+
+          <!-- SCORE -->
+
+          <div
+            class="bg-slate-900 text-white rounded-3xl p-7 shadow-xl"
+          >
+
+            <div
+              class="text-[10px] uppercase tracking-widest text-slate-400 font-black"
+            >
+              Nilai Akhir
+            </div>
+
+            <div
+              class="text-6xl font-black text-blue-400"
+              x-text="quizScore"
+            ></div>
+
+          </div>
+
+
+          <!-- STATISTICS -->
+
+          <div class="grid grid-cols-3 gap-3">
+
+            <!-- BENAR -->
+
+            <div
+              class="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl"
+            >
+
+              <div
+                class="text-emerald-600 font-extrabold text-[10px] uppercase"
+              >
+                Benar
+              </div>
+
+              <div
+                class="text-xl font-black text-emerald-700 mt-1"
+                x-text="correctCount"
+              ></div>
+
+            </div>
+
+
+            <!-- SALAH -->
+
+            <div
+              class="p-4 bg-rose-50 dark:bg-rose-950/40 rounded-2xl"
+            >
+
+              <div
+                class="text-rose-600 font-extrabold text-[10px] uppercase"
+              >
+                Salah
+              </div>
+
+              <div
+                class="text-xl font-black text-rose-700 mt-1"
+                x-text="wrongCount"
+              ></div>
+
+            </div>
+
+
+            <!-- WAKTU -->
+
+            <div
+              class="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-2xl"
+            >
+
+              <div
+                class="text-blue-600 font-extrabold text-[10px] uppercase"
+              >
+                Waktu
+              </div>
+
+              <div
+                class="text-xs font-black text-blue-700 mt-1.5"
+                x-text="formatTime(timeSpent)"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <!-- RESET -->
+
+          <button
+            @click="resetQuiz()"
+            class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg"
+          >
+
+            Ulangi Latihan
+
+            <i class="fa-solid fa-rotate-right ml-1"></i>
+
+          </button>
+
+        </div>
+
+      </template>
+
+    </main>
+
+  </div>
+
+</div>
+
+
+<script>
+
+function latihanPerubahanApp() {
+
+  return {
+
+    /* =====================================================
+       STATE
+    ===================================================== */
+
+    sidebarOpen: false,
+    darkMode: false,
+
+    availableVerbCategories: [],
+    selectedCategories: [],
+
+    selectedFormCategory: 'all',
+
+    questionLanguageMode: 'bindo_romaji',
+
+    quizTimeOption: '0',
+    quizLength: 10,
+
+    maxAvailableQuestions: 0,
+
+    quizStage: 'setup',
+
+    quizQuestions: [],
+    currentQuestionIndex: 0,
+    currentQuestion: {},
+
+    selectedAnswer: null,
+
+    correctCount: 0,
+    wrongCount: 0,
+    quizScore: 0,
+
+    timerInterval: null,
+
+    timeLeft: 0,
+    timeSpent: 0,
+
+
+    /* =====================================================
+       FORM CATEGORY
+    ===================================================== */
+
+    formCategories: [
+
+      {
+        key: 'dasar',
+        title: 'Bentuk Dasar',
+        description: 'Masu, Tai, Te/Ta, Nai'
+      },
+
+      {
+        key: 'lanjutan',
+        title: 'Bentuk Lanjutan',
+        description: 'Maeni, Kara, Kudasai, Imasu, dll.'
+      },
+
+      {
+        key: 'all',
+        title: 'Semua Bentuk',
+        description: 'Gabungkan seluruh perubahan'
+      }
+
+    ],
+
+
+    /* =====================================================
+       INITIALIZATION
+    ===================================================== */
+
+    async initApp() {
+
+      this.initTheme();
+
+      try {
+
+        const sidebarRes =
+          await fetch('./sidebar.html');
+
+        if (sidebarRes.ok) {
+
+          document.getElementById(
+            'sidebar-container'
+          ).innerHTML =
+            await sidebarRes.text();
+
+          this.renderDynamicKotobaSubmenus();
+
+        }
+
+
+        const headerRes =
+          await fetch('./header.html');
+
+        if (headerRes.ok) {
+
+          document.getElementById(
+            'header-container'
+          ).innerHTML =
+            await headerRes.text();
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          'Gagal memuat template modular:',
+          error
+        );
+
+      }
+
+      this.loadCategories();
+
+    },
+
+
+    /* =====================================================
+       LOAD CATEGORY
+    ===================================================== */
+
+    loadCategories() {
+
+      const vocabData =
+        JSON.parse(
+          localStorage.getItem(
+            'minna_vocab_data'
+          )
+        ) || {};
+
+
+      const submenus =
+        JSON.parse(
+          localStorage.getItem(
+            'minna_submenus'
+          )
+        ) || [];
+
+
+      const targetKeys = [
+
+        'kata_kerja_gol1',
+        'kata_kerja_gol2',
+        'kata_kerja_gol3'
+
+      ];
+
+
+      const validList = [];
+
+
+      targetKeys.forEach(key => {
+
+        if (
+          Array.isArray(vocabData[key]) &&
+          vocabData[key].length > 0
+        ) {
+
+          const foundSub =
+            submenus.find(
+              s => s.id === key
+            );
+
+
+          let title;
+
+
+          if (foundSub) {
+
+            title = foundSub.title;
+
+          } else {
+
+            title =
+              key === 'kata_kerja_gol1'
+                ? 'Golongan 1'
+                : key === 'kata_kerja_gol2'
+                  ? 'Golongan 2'
+                  : 'Golongan 3';
+
+          }
+
+
+          validList.push({
+            key,
+            title
+          });
+
+        }
+
+      });
+
+
+      this.availableVerbCategories =
+        validList;
+
+
+      this.selectedCategories =
+        validList.map(
+          item => item.key
+        );
+
+
+      this.updateMaxQuestions();
+
+    },
+
+
+    /* =====================================================
+       UPDATE MAX QUESTION
+    ===================================================== */
+
+    updateMaxQuestions() {
+
+      const vocabData =
+        JSON.parse(
+          localStorage.getItem(
+            'minna_vocab_data'
+          )
+        ) || {};
+
+
+      let total = 0;
+
+
+      this.selectedCategories.forEach(
+        catKey => {
+
+          const items =
+            vocabData[catKey] || [];
+
+
+          items.forEach(item => {
+
+            const conjugations =
+              this.getConjugations(
+                item.romaji,
+                catKey,
+                item.indonesia
+              );
+
+
+            let filtered =
+              conjugations;
+
+
+            if (
+              this.selectedFormCategory ===
+              'dasar'
+            ) {
+
+              filtered =
+                conjugations.filter(
+                  c => c.type === 'dasar'
+                );
+
+            }
+
+
+            if (
+              this.selectedFormCategory ===
+              'lanjutan'
+            ) {
+
+              filtered =
+                conjugations.filter(
+                  c => c.type === 'lanjutan'
+                );
+
+            }
+
+
+            total += filtered.length;
+
+          });
+
+        }
+      );
+
+
+      this.maxAvailableQuestions =
+        total;
+
+
+      if (total === 0) {
+
+        this.quizLength = 0;
+
+      } else if (
+        this.quizLength > total
+      ) {
+
+        this.quizLength = total;
+
+      } else if (
+        this.quizLength < 1
+      ) {
+
+        this.quizLength =
+          Math.min(10, total);
+
+      }
+
+    },
+
+
+    /* =====================================================
+       UTILITAS
+    ===================================================== */
+
+    normalizeRomaji(value) {
+
+      return String(value || '')
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ');
+
+    },
+
+
+    getLastSyllable(romaji) {
+
+      const endings = [
+
+        'tsu',
+        'chi',
+        'shi',
+        'dzu',
+        'zu',
+        'fu',
+        'ru',
+        'ku',
+        'gu',
+        'su',
+        'nu',
+        'bu',
+        'mu',
+        'yu',
+        'yo',
+        'ya',
+        'wa',
+        'wo',
+        'u'
+
+      ];
+
+
+      for (
+        const ending of endings
+      ) {
+
+        if (
+          romaji.endsWith(ending)
+        ) {
+
+          return ending;
+
+        }
+
+      }
+
+
+      return '';
+
+    },
+
+
+    removeEnding(
+      romaji,
+      ending
+    ) {
+
+      return romaji.slice(
+        0,
+        romaji.length - ending.length
+      );
+
+    },
+
+
+    /* =====================================================
+       GOLONGAN 1
+       KAMUS → MASU
+    ===================================================== */
+
+    makeGol1MasuStem(romaji) {
+
+      const ending =
+        this.getLastSyllable(
+          romaji
+        );
+
+
+      const base =
+        this.removeEnding(
+          romaji,
+          ending
+        );
+
+
+      const map = {
+
+        'u': 'i',
+        'ku': 'ki',
+        'gu': 'gi',
+        'su': 'shi',
+        'tsu': 'chi',
+        'nu': 'ni',
+        'bu': 'bi',
+        'mu': 'mi',
+        'ru': 'ri'
+
+      };
+
+
+      if (!map[ending]) {
+
+        return null;
+
+      }
+
+
+      return base + map[ending];
+
+    },
+
+
+    /* =====================================================
+       GOLONGAN 1
+       KAMUS → NAI
+    ===================================================== */
+
+    makeGol1Nai(romaji) {
+
+      const ending =
+        this.getLastSyllable(
+          romaji
+        );
+
+
+      const base =
+        this.removeEnding(
+          romaji,
+          ending
+        );
+
+
+      if (romaji === 'aru') {
+
+        return 'nai';
+
+      }
+
+
+      const map = {
+
+        'u': 'wa',
+        'ku': 'ka',
+        'gu': 'ga',
+        'su': 'sa',
+        'tsu': 'ta',
+        'nu': 'na',
+        'bu': 'ba',
+        'mu': 'ma',
+        'ru': 'ra'
+
+      };
+
+
+      if (!map[ending]) {
+
+        return null;
+
+      }
+
+
+      return base +
+        map[ending] +
+        ' nai';
+
+    },
+
+
+    /* =====================================================
+       GOLONGAN 1
+       KAMUS → TE / TA
+    ===================================================== */
+
+    makeGol1TeTa(romaji) {
+
+      const ending =
+        this.getLastSyllable(
+          romaji
+        );
+
+
+      const base =
+        this.removeEnding(
+          romaji,
+          ending
+        );
+
+
+      if (romaji === 'iku') {
+
+        return {
+
+          te: 'itte',
+          ta: 'itta'
+
+        };
+
+      }
+
+
+      if (
+        ['u', 'tsu', 'ru']
+          .includes(ending)
+      ) {
+
+        return {
+
+          te: base + 'tte',
+          ta: base + 'tta'
+
+        };
+
+      }
+
+
+      if (
+        ['nu', 'bu', 'mu']
+          .includes(ending)
+      ) {
+
+        return {
+
+          te: base + 'nde',
+          ta: base + 'nda'
+
+        };
+
+      }
+
+
+      if (ending === 'ku') {
+
+        return {
+
+          te: base + 'ite',
+          ta: base + 'ita'
+
+        };
+
+      }
+
+
+      if (ending === 'gu') {
+
+        return {
+
+          te: base + 'ide',
+          ta: base + 'ida'
+
+        };
+
+      }
+
+
+      if (ending === 'su') {
+
+        return {
+
+          te: base + 'shite',
+          ta: base + 'shita'
+
+        };
+
+      }
+
+
+      return null;
+
+    },
+
+
+    /* =====================================================
+       GOLONGAN 2
+    ===================================================== */
+
+    makeGol2Forms(romaji) {
+
+      if (!romaji.endsWith('ru')) {
+
+        return null;
+
+      }
+
+
+      const root =
+        romaji.slice(
+          0,
+          -2
+        );
+
+
+      return {
+
+        masu:
+          root + 'masu',
+
+        masen:
+          root + 'masen',
+
+        mashita:
+          root + 'mashita',
+
+        masendeshita:
+          root + 'masen deshita',
+
+        tai:
+          root + 'tai desu',
+
+        takunai:
+          root + 'takunai desu',
+
+        takatta:
+          root + 'takatta desu',
+
+        takunakatta:
+          root + 'takunakatta desu',
+
+        te:
+          root + 'te',
+
+        ta:
+          root + 'ta',
+
+        nai:
+          root + 'nai'
+
+      };
+
+    },
+
+
+    /* =====================================================
+       GOLONGAN 3
+    ===================================================== */
+
+    makeGol3Forms(romaji) {
+
+      if (
+        romaji.endsWith('suru')
+      ) {
+
+        const prefix =
+          romaji.slice(
+            0,
+            -4
+          ).trim();
+
+
+        const p =
+          prefix
+            ? prefix + ' '
+            : '';
+
+
+        return {
+
+          masu:
+            p + 'shimasu',
+
+          masen:
+            p + 'shimasen',
+
+          mashita:
+            p + 'shimashita',
+
+          masendeshita:
+            p + 'shimasen deshita',
+
+          tai:
+            p + 'shitai desu',
+
+          takunai:
+            p + 'shitakunai desu',
+
+          takatta:
+            p + 'shitakatta desu',
+
+          takunakatta:
+            p + 'shitakunakatta desu',
+
+          te:
+            p + 'shite',
+
+          ta:
+            p + 'shita',
+
+          nai:
+            p + 'shinaide?'
+
+        };
+
+      }
+
+
+      if (
+        romaji.endsWith('kuru')
+      ) {
+
+        const prefix =
+          romaji.slice(
+            0,
+            -4
+          ).trim();
+
+
+        const p =
+          prefix
+            ? prefix + ' '
+            : '';
+
+
+        return {
+
+          masu:
+            p + 'kimasu',
+
+          masen:
+            p + 'kimasen',
+
+          mashita:
+            p + 'kimashita',
+
+          masendeshita:
+            p + 'kimasen deshita',
+
+          tai:
+            p + 'kitai desu',
+
+          takunai:
+            p + 'kitakunai desu',
+
+          takatta:
+            p + 'kitakatta desu',
+
+          takunakatta:
+            p + 'kitakunakatta desu',
+
+          te:
+            p + 'kite',
+
+          ta:
+            p + 'kita',
+
+          nai:
+            p + 'konai'
+
+        };
+
+      }
+
+
+      return null;
+
+    },
+
+
+    /* =====================================================
+       GENERATOR UTAMA KONJUGASI
+    ===================================================== */
+
+    getConjugations(
+      romaji,
+      group,
+      indonesia = 'kata kerja'
+    ) {
+
+      romaji =
+        this.normalizeRomaji(
+          romaji
+        );
+
+
+      if (!romaji) {
+
+        return [];
+
+      }
+
+
+      const results = [];
+
+
+      /* =====================================================
+         GOLONGAN 1
+      ===================================================== */
+
+      if (
+        group === 'kata_kerja_gol1'
+      ) {
+
+        const masuStem =
+          this.makeGol1MasuStem(
+            romaji
+          );
+
+
+        const teTa =
+          this.makeGol1TeTa(
+            romaji
+          );
+
+
+        const nai =
+          this.makeGol1Nai(
+            romaji
+          );
+
+
+        if (masuStem) {
+
+          results.push(
+            this.createConjugation(
+              'masu',
+              'Bentuk Masu — Positif',
+              masuStem + 'masu',
+              'dasar',
+              indonesia,
+              `... ${masuStem}masu`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'masen',
+              'Bentuk Masu — Negatif',
+              masuStem + 'masen',
+              'dasar',
+              indonesia,
+              `tidak ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'mashita',
+              'Bentuk Masu — Positif Lampau',
+              masuStem + 'mashita',
+              'dasar',
+              indonesia,
+              `sudah ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'masendeshita',
+              'Bentuk Masu — Negatif Lampau',
+              masuStem + 'masen deshita',
+              'dasar',
+              indonesia,
+              `tidak ${indonesia} (lampau)`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'tai',
+              'Bentuk Tai — Ingin',
+              masuStem + 'tai desu',
+              'dasar',
+              indonesia,
+              `ingin ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'takunai',
+              'Bentuk Tai — Tidak Ingin',
+              masuStem + 'takunai desu',
+              'dasar',
+              indonesia,
+              `tidak ingin ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'takatta',
+              'Bentuk Tai — Ingin (Lampau)',
+              masuStem + 'takatta desu',
+              'dasar',
+              indonesia,
+              `ingin ${indonesia} (lampau)`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'takunakatta',
+              'Bentuk Tai — Tidak Ingin (Lampau)',
+              masuStem + 'takunakatta desu',
+              'dasar',
+              indonesia,
+              `tidak ingin ${indonesia} (lampau)`
+            )
+          );
+
+        }
+
+
+        if (teTa) {
+
+          results.push(
+            this.createConjugation(
+              'te',
+              'Bentuk Te',
+              teTa.te,
+              'dasar',
+              indonesia,
+              `sedang ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'ta',
+              'Bentuk Ta',
+              teTa.ta,
+              'dasar',
+              indonesia,
+              `sudah ${indonesia}`
+            )
+          );
+
+        }
+
+
+        if (nai) {
+
+          const naiBase =
+            nai.endsWith(' nai')
+              ? nai.slice(0, -4)
+              : nai;
+
+
+          results.push(
+            this.createConjugation(
+              'nai',
+              'Bentuk Nai — Tidak',
+              nai,
+              'dasar',
+              indonesia,
+              `tidak ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'nai_kereba',
+              'Nai + Kereba Narimasen — Harus',
+              naiBase + ' nakereba narimasen',
+              'lanjutan',
+              indonesia,
+              `harus ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'nai_kutemo',
+              'Nai + Kutemo Ii Desu — Tidak Perlu',
+              naiBase + ' nakutemo ii desu',
+              'lanjutan',
+              indonesia,
+              `tidak perlu ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'nai_de_kudasai',
+              'Nai + De Kudasai — Jangan',
+              naiBase + 'naide kudasai',
+              'lanjutan',
+              indonesia,
+              `jangan ${indonesia}`
+            )
+          );
+
+        }
+
+
+        if (masuStem) {
+
+          results.push(
+            this.createConjugation(
+              'masu_kara',
+              'Masu + Kara — Karena',
+              masuStem + 'masu kara',
+              'lanjutan',
+              indonesia,
+              `karena ${indonesia}`
+            )
+          );
+
+        }
+
+
+        if (teTa) {
+
+          results.push(
+            this.createConjugation(
+              'te_kara',
+              'Te + Kara — Setelah',
+              teTa.te + ' kara',
+              'lanjutan',
+              indonesia,
+              `setelah ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'te_kudasai',
+              'Te + Kudasai — Tolong',
+              teTa.te + ' kudasai',
+              'lanjutan',
+              indonesia,
+              `tolong ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'te_imasu',
+              'Te + Imasu — Sedang',
+              teTa.te + ' imasu',
+              'lanjutan',
+              indonesia,
+              `sedang ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'te_mo_ii_desu',
+              'Te + Mo Ii Desu — Boleh',
+              teTa.te + ' mo ii desu',
+              'lanjutan',
+              indonesia,
+              `boleh ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'te_mo_ii_desu_ka',
+              'Te + Mo Ii Desu Ka — Bolehkah?',
+              teTa.te + ' mo ii desu ka',
+              'lanjutan',
+              indonesia,
+              `bolehkah ${indonesia}?`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'te_wa_ikemasen',
+              'Te + Wa Ikemasen — Tidak Boleh',
+              teTa.te + ' wa ikemasen',
+              'lanjutan',
+              indonesia,
+              `tidak boleh ${indonesia}`
+            )
+          );
+
+        }
+
+
+        results.push(
+          this.createConjugation(
+            'kamus_maeni',
+            'Bentuk Kamus + Maeni — Sebelum',
+            romaji + ' maeni',
+            'lanjutan',
+            indonesia,
+            `sebelum ${indonesia}`
+          )
+        );
+
+      }
+
+
+      /* =====================================================
+         GOLONGAN 2
+      ===================================================== */
+
+      else if (
+        group === 'kata_kerja_gol2'
+      ) {
+
+        const forms =
+          this.makeGol2Forms(
+            romaji
+          );
+
+
+        if (!forms) {
+
+          return [];
+
+        }
+
+
+        results.push(
+          this.createConjugation(
+            'masu',
+            'Bentuk Masu — Positif',
+            forms.masu,
+            'dasar',
+            indonesia,
+            indonesia
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'masen',
+            'Bentuk Masu — Negatif',
+            forms.masen,
+            'dasar',
+            indonesia,
+            `tidak ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'mashita',
+            'Bentuk Masu — Positif Lampau',
+            forms.mashita,
+            'dasar',
+            indonesia,
+            `sudah ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'masendeshita',
+            'Bentuk Masu — Negatif Lampau',
+            forms.masendeshita,
+            'dasar',
+            indonesia,
+            `tidak ${indonesia} (lampau)`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'tai',
+            'Bentuk Tai — Ingin',
+            forms.tai,
+            'dasar',
+            indonesia,
+            `ingin ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'takunai',
+            'Bentuk Tai — Tidak Ingin',
+            forms.takunai,
+            'dasar',
+            indonesia,
+            `tidak ingin ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'takatta',
+            'Bentuk Tai — Ingin (Lampau)',
+            forms.takatta,
+            'dasar',
+            indonesia,
+            `ingin ${indonesia} (lampau)`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'takunakatta',
+            'Bentuk Tai — Tidak Ingin (Lampau)',
+            forms.takunakatta,
+            'dasar',
+            indonesia,
+            `tidak ingin ${indonesia} (lampau)`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te',
+            'Bentuk Te',
+            forms.te,
+            'dasar',
+            indonesia,
+            `sedang ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'ta',
+            'Bentuk Ta',
+            forms.ta,
+            'dasar',
+            indonesia,
+            `sudah ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'nai',
+            'Bentuk Nai — Tidak',
+            forms.nai,
+            'dasar',
+            indonesia,
+            `tidak ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'masu_kara',
+            'Masu + Kara — Karena',
+            forms.masu + ' kara',
+            'lanjutan',
+            indonesia,
+            `karena ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_kara',
+            'Te + Kara — Setelah',
+            forms.te + ' kara',
+            'lanjutan',
+            indonesia,
+            `setelah ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_kudasai',
+            'Te + Kudasai — Tolong',
+            forms.te + ' kudasai',
+            'lanjutan',
+            indonesia,
+            `tolong ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_imasu',
+            'Te + Imasu — Sedang',
+            forms.te + ' imasu',
+            'lanjutan',
+            indonesia,
+            `sedang ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_mo_ii_desu',
+            'Te + Mo Ii Desu — Boleh',
+            forms.te + ' mo ii desu',
+            'lanjutan',
+            indonesia,
+            `boleh ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_mo_ii_desu_ka',
+            'Te + Mo Ii Desu Ka — Bolehkah?',
+            forms.te + ' mo ii desu ka',
+            'lanjutan',
+            indonesia,
+            `bolehkah ${indonesia}?`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_wa_ikemasen',
+            'Te + Wa Ikemasen — Tidak Boleh',
+            forms.te + ' wa ikemasen',
+            'lanjutan',
+            indonesia,
+            `tidak boleh ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'nai_kereba',
+            'Nai + Kereba Narimasen — Harus',
+            forms.nai.slice(0, -1) +
+              'kereba narimasen',
+            'lanjutan',
+            indonesia,
+            `harus ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'nai_kutemo',
+            'Nai + Kutemo Ii Desu — Tidak Perlu',
+            forms.nai.slice(0, -1) +
+              'kutemo ii desu',
+            'lanjutan',
+            indonesia,
+            `tidak perlu ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'nai_de_kudasai',
+            'Nai + De Kudasai — Jangan',
+            forms.nai +
+              ' de kudasai',
+            'lanjutan',
+            indonesia,
+            `jangan ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'kamus_maeni',
+            'Bentuk Kamus + Maeni — Sebelum',
+            romaji + ' maeni',
+            'lanjutan',
+            indonesia,
+            `sebelum ${indonesia}`
+          )
+        );
+
+      }
+
+
+      /* =====================================================
+         GOLONGAN 3
+      ===================================================== */
+
+      else if (
+        group === 'kata_kerja_gol3'
+      ) {
+
+        const forms =
+          this.makeGol3Forms(
+            romaji
+          );
+
+
+        if (!forms) {
+
+          return [];
+
+        }
+
+
+        const isKuru =
+          romaji.endsWith('kuru');
+
+
+        results.push(
+          this.createConjugation(
+            'masu',
+            'Bentuk Masu — Positif',
+            forms.masu,
+            'dasar',
+            indonesia,
+            indonesia
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'masen',
+            'Bentuk Masu — Negatif',
+            forms.masen,
+            'dasar',
+            indonesia,
+            `tidak ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'mashita',
+            'Bentuk Masu — Positif Lampau',
+            forms.mashita,
+            'dasar',
+            indonesia,
+            `sudah ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'masendeshita',
+            'Bentuk Masu — Negatif Lampau',
+            forms.masendeshita,
+            'dasar',
+            indonesia,
+            `tidak ${indonesia} (lampau)`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'tai',
+            'Bentuk Tai — Ingin',
+            forms.tai,
+            'dasar',
+            indonesia,
+            `ingin ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'takunai',
+            'Bentuk Tai — Tidak Ingin',
+            forms.takunai,
+            'dasar',
+            indonesia,
+            `tidak ingin ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'takatta',
+            'Bentuk Tai — Ingin (Lampau)',
+            forms.takatta,
+            'dasar',
+            indonesia,
+            `ingin ${indonesia} (lampau)`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'takunakatta',
+            'Bentuk Tai — Tidak Ingin (Lampau)',
+            forms.takunakatta,
+            'dasar',
+            indonesia,
+            `tidak ingin ${indonesia} (lampau)`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te',
+            'Bentuk Te',
+            forms.te,
+            'dasar',
+            indonesia,
+            `sedang ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'ta',
+            'Bentuk Ta',
+            forms.ta,
+            'dasar',
+            indonesia,
+            `sudah ${indonesia}`
+          )
+        );
+
+
+        let naiText;
+
+
+        if (isKuru) {
+
+          naiText = forms.nai;
+
+        } else {
+
+          naiText =
+            forms.nai.replace(
+              /\?$/,
+              ''
+            );
+
+        }
+
+
+        results.push(
+          this.createConjugation(
+            'nai',
+            'Bentuk Nai — Tidak',
+            naiText,
+            'dasar',
+            indonesia,
+            `tidak ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'masu_kara',
+            'Masu + Kara — Karena',
+            forms.masu + ' kara',
+            'lanjutan',
+            indonesia,
+            `karena ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_kara',
+            'Te + Kara — Setelah',
+            forms.te + ' kara',
+            'lanjutan',
+            indonesia,
+            `setelah ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_kudasai',
+            'Te + Kudasai — Tolong',
+            forms.te + ' kudasai',
+            'lanjutan',
+            indonesia,
+            `tolong ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_imasu',
+            'Te + Imasu — Sedang',
+            forms.te + ' imasu',
+            'lanjutan',
+            indonesia,
+            `sedang ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_mo_ii_desu',
+            'Te + Mo Ii Desu — Boleh',
+            forms.te + ' mo ii desu',
+            'lanjutan',
+            indonesia,
+            `boleh ${indonesia}`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_mo_ii_desu_ka',
+            'Te + Mo Ii Desu Ka — Bolehkah?',
+            forms.te + ' mo ii desu ka',
+            'lanjutan',
+            indonesia,
+            `bolehkah ${indonesia}?`
+          )
+        );
+
+
+        results.push(
+          this.createConjugation(
+            'te_wa_ikemasen',
+            'Te + Wa Ikemasen — Tidak Boleh',
+            forms.te + ' wa ikemasen',
+            'lanjutan',
+            indonesia,
+            `tidak boleh ${indonesia}`
+          )
+        );
+
+
+        if (isKuru) {
+
+          const root =
+            forms.nai.endsWith('nai')
+              ? forms.nai.slice(0, -3)
+              : forms.nai;
+
+
+          results.push(
+            this.createConjugation(
+              'nai_kereba',
+              'Nai + Kereba Narimasen — Harus',
+              root +
+                'nakereba narimasen',
+              'lanjutan',
+              indonesia,
+              `harus ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'nai_kutemo',
+              'Nai + Kutemo Ii Desu — Tidak Perlu',
+              root +
+                'nakutemo ii desu',
+              'lanjutan',
+              indonesia,
+              `tidak perlu ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'nai_de_kudasai',
+              'Nai + De Kudasai — Jangan',
+              root +
+                'naide kudasai',
+              'lanjutan',
+              indonesia,
+              `jangan ${indonesia}`
+            )
+          );
+
+        } else {
+
+          const root =
+            forms.nai.replace(
+              /shinaide\?$/,
+              ''
+            );
+
+
+          results.push(
+            this.createConjugation(
+              'nai_kereba',
+              'Nai + Kereba Narimasen — Harus',
+              root +
+                'shinakereba narimasen',
+              'lanjutan',
+              indonesia,
+              `harus ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'nai_kutemo',
+              'Nai + Kutemo Ii Desu — Tidak Perlu',
+              root +
+                'shinakutemo ii desu',
+              'lanjutan',
+              indonesia,
+              `tidak perlu ${indonesia}`
+            )
+          );
+
+
+          results.push(
+            this.createConjugation(
+              'nai_de_kudasai',
+              'Nai + De Kudasai — Jangan',
+              root +
+                'shinaide kudasai',
+              'lanjutan',
+              indonesia,
+              `jangan ${indonesia}`
+            )
+          );
+
+        }
+
+
+        results.push(
+          this.createConjugation(
+            'kamus_maeni',
+            'Bentuk Kamus + Maeni — Sebelum',
+            romaji + ' maeni',
+            'lanjutan',
+            indonesia,
+            `sebelum ${indonesia}`
+          )
+        );
+
+      }
+
+
+      return results;
+
+    },
+
+
+    /* =====================================================
+       CREATE CONJUGATION
+    ===================================================== */
+
+    createConjugation(
+      formKey,
+      formName,
+      target,
+      type,
+      indonesia,
+      answerIndonesia
+    ) {
+
+      return {
+
+        formKey,
+
+        formName,
+
+        target:
+          this.normalizeRomaji(
+            target
+          ),
+
+        type,
+
+        indonesia,
+
+        answerIndonesia,
+
+        formula:
+          this.getFormula(
+            formKey
+          ),
+
+        example:
+          this.getExample(
+            formKey,
+            target,
+            indonesia
+          )
+
+      };
+
+    },
+
+
+    /* =====================================================
+       FORMULA
+    ===================================================== */
+
+    getFormula(formKey) {
+
+      const formulas = {
+
+        masu:
+          'Golongan 1: akhiran u diubah ke baris i + masu. tsu → chi. Golongan 2: ru dihilangkan + masu. Golongan 3: suru → shimasu, kuru → kimasu.',
+
+        masen:
+          'Bentuk masu + n diganti menjadi masen.',
+
+        mashita:
+          'Bentuk masu + masu diganti menjadi mashita.',
+
+        masendeshita:
+          'Bentuk masu + masu diganti menjadi masen deshita.',
+
+        tai:
+          'Bentuk masu → hilangkan masu → tambahkan tai desu.',
+
+        takunai:
+          'Bentuk tai → tai diganti takunai desu.',
+
+        takatta:
+          'Bentuk tai → tai diganti takatta desu.',
+
+        takunakatta:
+          'Bentuk tai → tai diganti takunakatta desu.',
+
+        te:
+          'u/tsu/ru → tte; nu/bu/mu → nde; ku → ite; gu → ide; su → shite. iku → itte.',
+
+        ta:
+          'u/tsu/ru → tta; nu/bu/mu → nda; ku → ita; gu → ida; su → shita. iku → itta.',
+
+        nai:
+          'Golongan 1: u → wa, ku → ka, tsu → ta, lainnya vokal u → a + nai. Golongan 2: ru dihilangkan + nai. Golongan 3: suru → shinai, kuru → konai.',
+
+        kamus_maeni:
+          'Bentuk kamus + maeni.',
+
+        masu_kara:
+          'Bentuk masu + kara.',
+
+        te_kara:
+          'Bentuk te + kara.',
+
+        te_kudasai:
+          'Bentuk te + kudasai.',
+
+        te_imasu:
+          'Bentuk te + imasu.',
+
+        te_mo_ii_desu:
+          'Bentuk te + mo ii desu.',
+
+        te_mo_ii_desu_ka:
+          'Bentuk te + mo ii desu ka.',
+
+        te_wa_ikemasen:
+          'Bentuk te + wa ikemasen.',
+
+        nai_kereba:
+          'Bentuk nai. Huruf i dihilangkan + kereba narimasen.',
+
+        nai_kutemo:
+          'Bentuk nai. Huruf i dihilangkan + kutemo ii desu.',
+
+        nai_de_kudasai:
+          'Bentuk nai + de kudasai.'
+
+      };
+
+
+      return formulas[formKey] || '';
+
+    },
+
+
+    /* =====================================================
+       CONTOH
+    ===================================================== */
+
+    getExample(
+      formKey,
+      target,
+      indonesia
+    ) {
+
+      return `${target}。`;
+
+    },
+
+
+    /* =====================================================
+       START QUIZ
+    ===================================================== */
+
+    startQuiz() {
+
+      this.updateMaxQuestions();
+
+
+      if (
+        this.selectedCategories.length === 0 ||
+        this.maxAvailableQuestions === 0
+      ) {
+
+        alert(
+          'Pilih minimal satu golongan kata kerja yang memiliki data.'
+        );
+
+        return;
+
+      }
+
+
+      let desiredLength =
+        parseInt(
+          this.quizLength
+        );
+
+
+      if (
+        isNaN(desiredLength) ||
+        desiredLength <= 0
+      ) {
+
+        alert(
+          'Jumlah soal tidak valid.'
+        );
+
+        return;
+
+      }
+
+
+      const vocabData =
+        JSON.parse(
+          localStorage.getItem(
+            'minna_vocab_data'
+          )
+        ) || {};
+
+
+      let pool = [];
+
+
+      this.selectedCategories.forEach(
+        catKey => {
+
+          const items =
+            vocabData[catKey] || [];
+
+
+          items.forEach(item => {
+
+            const romaji =
+              this.normalizeRomaji(
+                item.romaji
+              );
+
+
+            const indonesia =
+              String(
+                item.indonesia ||
+                'kata kerja'
+              ).trim();
+
+
+            if (!romaji) {
+
+              return;
+
+            }
+
+
+            let conjugations =
+              this.getConjugations(
+                romaji,
+                catKey,
+                indonesia
+              );
+
+
+            if (
+              this.selectedFormCategory ===
+              'dasar'
+            ) {
+
+              conjugations =
+                conjugations.filter(
+                  c => c.type === 'dasar'
+                );
+
+            }
+
+
+            if (
+              this.selectedFormCategory ===
+              'lanjutan'
+            ) {
+
+              conjugations =
+                conjugations.filter(
+                  c => c.type === 'lanjutan'
+                );
+
+            }
+
+
+            conjugations.forEach(
+              conj => {
+
+                pool.push({
+
+                  catKey,
+
+                  dict: romaji,
+
+                  mean: indonesia,
+
+                  formKey:
+                    conj.formKey,
+
+                  formName:
+                    conj.formName,
+
+                  target:
+                    conj.target,
+
+                  answerIndonesia:
+                    conj.answerIndonesia,
+
+                  formula:
+                    conj.formula,
+
+                  example:
+                    conj.example
+
+                });
+
+              }
+            );
+
+          });
+
+        }
+      );
+
+
+      if (pool.length === 0) {
+
+        alert(
+          'Tidak ada soal yang sesuai dengan pilihan.'
+        );
+
+        return;
+
+      }
+
+
+      pool =
+        this.shuffle(
+          pool
+        );
+
+
+      const limit =
+        Math.min(
+          desiredLength,
+          pool.length
+        );
+
+
+      const selected =
+        pool.slice(
+          0,
+          limit
+        );
+
+
+      this.quizQuestions =
+        selected.map(
+          item => {
+
+            let mode =
+              this.questionLanguageMode;
+
+
+            if (mode === 'mixed') {
+
+              mode =
+                Math.random() < 0.5
+                  ? 'bindo_romaji'
+                  : 'romaji_bindo';
+
+            }
+
+
+            return this.buildQuestion(
+              item,
+              mode,
+              pool
+            );
+
+          }
+        );
+
+
+      this.currentQuestionIndex = 0;
+
+      this.currentQuestion =
+        this.quizQuestions[0];
+
+      this.selectedAnswer = null;
+
+      this.correctCount = 0;
+      this.wrongCount = 0;
+      this.quizScore = 0;
+
+      this.timeSpent = 0;
+
+
+      const mins =
+        parseInt(
+          this.quizTimeOption
+        );
+
+
+      this.timeLeft =
+        mins > 0
+          ? mins * 60
+          : 0;
+
+
+      this.quizStage = 'active';
+
+
+      clearInterval(
+        this.timerInterval
+      );
+
+
+      this.timerInterval =
+        setInterval(
+          () => {
+
+            this.timeSpent++;
+
+
+            if (mins > 0) {
+
+              this.timeLeft--;
+
+
+              if (
+                this.timeLeft <= 0
+              ) {
+
+                this.finishQuiz();
+
+              }
+
+            }
+
+          },
+          1000
+        );
+
+    },
+
+
+    /* =====================================================
+       BUILD QUESTION
+    ===================================================== */
+
+    buildQuestion(
+      item,
+      mode,
+      pool
+    ) {
+
+      let question;
+      let correctAnswer;
+      let directionLabel;
+
+
+      if (
+        mode === 'bindo_romaji'
+      ) {
+
+        question =
+          this.getQuestionIndonesia(
+            item
+          );
+
+        correctAnswer =
+          item.target;
+
+        directionLabel =
+          'Bahasa Indonesia → Romaji';
+
+      } else {
+
+        question =
+          item.dict;
+
+        correctAnswer =
+          item.answerIndonesia;
+
+        directionLabel =
+          'Romaji → Bahasa Indonesia';
+
+      }
+
+
+      /*
+       * CANDIDATE DISTRACTOR
+       */
+
+      let candidates =
+        pool.filter(
+          p =>
+            p.catKey === item.catKey &&
+            p.formKey === item.formKey &&
+            p.target !== item.target
+        );
+
+
+      if (
+        candidates.length < 3
+      ) {
+
+        candidates =
+          pool.filter(
+            p =>
+              p.formKey === item.formKey &&
+              p.target !== item.target
+          );
+
+      }
+
+
+      if (
+        candidates.length < 3
+      ) {
+
+        candidates =
+          pool.filter(
+            p =>
+              p.catKey === item.catKey &&
+              p.target !== item.target
+          );
+
+      }
+
+
+      /*
+       * HAPUS DUPLIKAT
+       */
+
+      const seen =
+        new Set();
+
+
+      candidates =
+        candidates.filter(
+          p => {
+
+            const answer =
+              mode === 'bindo_romaji'
+                ? p.target
+                : p.answerIndonesia;
+
+
+            if (
+              seen.has(answer)
+            ) {
+
+              return false;
+
+            }
+
+
+            seen.add(answer);
+
+
+            return (
+              answer !== correctAnswer
+            );
+
+          }
+        );
+
+
+      candidates =
+        this.shuffle(
+          candidates
+        );
+
+
+      let distractors =
+        candidates
+          .slice(0, 3)
+          .map(
+            p => ({
+
+              text:
+                mode === 'bindo_romaji'
+                  ? p.target
+                  : p.answerIndonesia,
+
+              isCorrect: false
+
+            })
+          );
+
+
+      /*
+       * FALLBACK
+       */
+
+      if (
+        distractors.length < 3
+      ) {
+
+        const fallback =
+          pool.filter(
+            p => {
+
+              const answer =
+                mode === 'bindo_romaji'
+                  ? p.target
+                  : p.answerIndonesia;
+
+
+              return (
+
+                answer &&
+
+                answer !== correctAnswer &&
+
+                !distractors.some(
+                  d =>
+                    d.text === answer
+                )
+
+              );
+
+            }
+          );
+
+
+        this.shuffle(
+          fallback
+        );
+
+
+        fallback.forEach(
+          p => {
+
+            if (
+              distractors.length < 3
+            ) {
+
+              distractors.push({
+
+                text:
+                  mode === 'bindo_romaji'
+                    ? p.target
+                    : p.answerIndonesia,
+
+                isCorrect: false
+
+              });
+
+            }
+
+          }
+        );
+
+      }
+
+
+      /*
+       * SELALU 1 BENAR + 3 SALAH
+       * JIKA DATA MENCUKUPI
+       */
+
+      const options = [
+
+        {
+          text: correctAnswer,
+          isCorrect: true
+        },
+
+        ...distractors
+
+      ];
+
+
+      return {
+
+        question,
+
+        correctAnswer,
+
+        modeLabel:
+          item.formName,
+
+        directionLabel,
+
+        options:
+          this.shuffle(
+            options
+          ),
+
+        formula:
+          item.formula,
+
+        example:
+          item.example
+
+      };
+
+    },
+
+
+    /* =====================================================
+       PERTANYAAN INDONESIA
+    ===================================================== */
+
+    getQuestionIndonesia(item) {
+
+      const formKey =
+        item.formKey;
+
+
+      const base =
+        item.mean;
+
+
+      const labels = {
+
+        masu:
+          `${base}`,
+
+        masen:
+          `${base}`,
+
+        mashita:
+          `${base}`,
+
+        masendeshita:
+          `${base}`,
+
+        tai:
+          `ingin ${base}`,
+
+        takunai:
+          `tidak ingin ${base}`,
+
+        takatta:
+          `ingin ${base} (lampau)`,
+
+        takunakatta:
+          `tidak ingin ${base} (lampau)`,
+
+        te:
+          `sedang ${base}`,
+
+        ta:
+          `sudah ${base}`,
+
+        nai:
+          `tidak ${base}`,
+
+        kamus_maeni:
+          `sebelum ${base}`,
+
+        masu_kara:
+          `karena ${base}`,
+
+        te_kara:
+          `setelah ${base}`,
+
+        te_kudasai:
+          `tolong ${base}`,
+
+        te_imasu:
+          `sedang ${base}`,
+
+        te_mo_ii_desu:
+          `boleh ${base}`,
+
+        te_mo_ii_desu_ka:
+          `bolehkah ${base}?`,
+
+        te_wa_ikemasen:
+          `tidak boleh ${base}`,
+
+        nai_kereba:
+          `harus ${base}`,
+
+        nai_kutemo:
+          `tidak perlu ${base}`,
+
+        nai_de_kudasai:
+          `jangan ${base}`
+
+      };
+
+
+      return labels[
+        formKey
+      ] || base;
+
+    },
+
+
+    /* =====================================================
+       ANSWER
+    ===================================================== */
+
+    selectAnswer(opt) {
+
+      if (
+        this.selectedAnswer !== null
+      ) {
+
+        return;
+
+      }
+
+
+      this.selectedAnswer =
+        opt;
+
+
+      if (
+        opt.isCorrect
+      ) {
+
+        this.correctCount++;
+
+      } else {
+
+        this.wrongCount++;
+
+      }
+
+    },
+
+
+    /* =====================================================
+       NEXT
+    ===================================================== */
+
+    nextQuestion() {
+
+      if (
+        this.currentQuestionIndex <
+        this.quizQuestions.length - 1
+      ) {
+
+        this.currentQuestionIndex++;
+
+        this.currentQuestion =
+          this.quizQuestions[
+            this.currentQuestionIndex
+          ];
+
+        this.selectedAnswer =
+          null;
+
+      } else {
+
+        this.finishQuiz();
+
+      }
+
+    },
+
+
+    /* =====================================================
+       FINISH
+    ===================================================== */
+
+    finishQuiz() {
+
+      clearInterval(
+        this.timerInterval
+      );
+
+
+      const total =
+        this.quizQuestions.length;
+
+
+      if (
+        total === 0
+      ) {
+
+        return;
+
+      }
+
+
+      const answered =
+        this.correctCount +
+        this.wrongCount;
+
+
+      if (
+        answered < total
+      ) {
+
+        this.wrongCount +=
+          total - answered;
+
+      }
+
+
+      this.quizScore =
+        Math.round(
+          (
+            this.correctCount /
+            total
+          ) * 100
+        );
+
+
+      this.quizStage =
+        'result';
+
+    },
+
+
+    /* =====================================================
+       RESET
+    ===================================================== */
+
+    resetQuiz() {
+
+      clearInterval(
+        this.timerInterval
+      );
+
+
+      this.quizStage =
+        'setup';
+
+
+      this.selectedAnswer =
+        null;
+
+
+      this.loadCategories();
+
+    },
+
+
+    /* =====================================================
+       SHUFFLE
+    ===================================================== */
+
+    shuffle(array) {
+
+      const result =
+        [...array];
+
+
+      for (
+        let i = result.length - 1;
+        i > 0;
+        i--
+      ) {
+
+        const j =
+          Math.floor(
+            Math.random() *
+            (i + 1)
+          );
+
+
+        [
+          result[i],
+          result[j]
+        ] =
+        [
+          result[j],
+          result[i]
+        ];
+
+      }
+
+
+      return result;
+
+    },
+
+
+    /* =====================================================
+       TIME
+    ===================================================== */
+
+    formatTime(seconds) {
+
+      const m =
+        Math.floor(
+          seconds / 60
+        );
+
+
+      const s =
+        seconds % 60;
+
+
+      return (
+        String(m).padStart(2, '0') +
+        ':' +
+        String(s).padStart(2, '0')
+      );
+
+    },
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    renderDynamicKotobaSubmenus() {
+
+      const container =
+        document.getElementById(
+          'dynamic-kotoba-links'
+        );
+
+
+      if (!container) {
+
+        return;
+
+      }
+
+
+      const submenus =
+        JSON.parse(
+          localStorage.getItem(
+            'minna_submenus'
+          )
+        ) || [];
+
+
+      container.innerHTML =
+        '';
+
+
+      submenus.forEach(
+        sub => {
+
+          const link =
+            document.createElement(
+              'a'
+            );
+
+
+          link.href =
+            `kotoba.html?cat=${sub.id}`;
+
+
+          link.className =
+            'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+
+
+          link.innerHTML =
+            `
+              <i class="fa-solid fa-angle-right text-[10px]"></i>
+              ${sub.title}
+            `;
+
+
+          container.appendChild(
+            link
+          );
+
+        }
+      );
+
+    },
+
+
+    /* =====================================================
+       THEME
+    ===================================================== */
+
+    initTheme() {
+
+      const savedTheme =
+        localStorage.getItem(
+          'theme'
+        );
+
+
+      if (
+        savedTheme === 'dark'
+      ) {
+
+        this.darkMode =
+          true;
+
+
+        document.documentElement
+          .classList
+          .add('dark');
+
+      } else {
+
+        this.darkMode =
+          false;
+
+
+        document.documentElement
+          .classList
+          .remove('dark');
+
+      }
+
+    },
+
+
+    toggleDarkMode() {
+
+      this.darkMode =
+        !this.darkMode;
+
+
+      if (
+        this.darkMode
+      ) {
+
+        document.documentElement
+          .classList
+          .add('dark');
+
+
+        localStorage.setItem(
+          'theme',
+          'dark'
+        );
+
+      } else {
+
+        document.documentElement
+          .classList
+          .remove('dark');
+
+
+        localStorage.setItem(
+          'theme',
+          'light'
+        );
+
+      }
+
+    }
+
+  };
+
+}
+
+</script>
+
+</body>
+</html>

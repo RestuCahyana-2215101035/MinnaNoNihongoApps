@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perubahan Kata Kerja Lanjutan - Minna no Nihongo</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', }
+  </script>
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+  </style>
+</head>
+<body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="perubahanLanjutanApp()" x-init="initApp()">
+
+  <div class="flex h-screen overflow-hidden">
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+
+    <!-- SIDEBAR CONTAINER -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <!-- HEADER CONTAINER -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY CONTENT -->
+      <main class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
+        
+        <!-- Header Halaman -->
+        <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 p-6 md:p-8 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+          <div class="space-y-1.5 flex-1">
+            <span class="bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-white/20 inline-block shadow-xs">
+              <i class="fa-solid fa-rotate mr-1"></i> Materi Tata Bahasa N5/N4
+            </span>
+            <h2 class="text-xl md:text-2xl font-black tracking-tight">Perubahan Kata Kerja Lanjutan (Bunpou)</h2>
+            <p class="text-xs text-blue-100 max-w-xl">Panduan lengkap 10 pola gabungan kata kerja mulai dari waktu, permintaan, izin, hingga keharusan dan larangan.</p>
+          </div>
+          
+          <div class="bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3.5 rounded-2xl flex items-center gap-3.5 shrink-0 shadow-inner">
+            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-bold">
+              <i class="fa-solid fa-book-bookmark"></i>
+            </div>
+            <div>
+              <div class="text-[9px] text-blue-200 font-bold uppercase tracking-wider">Total Pola</div>
+              <div class="text-sm font-black">10 Pola Utama</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRID KARTU MATERI LANJUTAN -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <!-- 1. SEBELUM (MAENI) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">Bentuk Kamus + Maeni</span>
+              <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Sebelum</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Menyatakan kegiatan yang dilakukan sebelum melakukan kata kerja utama.</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">しょくじの<span class="text-blue-600">まえに</span>、てをあらいます。</span>
+              <p class="text-[11px] text-slate-400">Shokuji no mae ni, te o araimasu. (Sebelum makan, mencuci tangan.)</p>
+            </div>
+          </div>
+
+          <!-- 2. KARENA (KARA) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-blue-50 dark:bg-slate-950/60 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">Bentuk Masu + Kara</span>
+              <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Karena</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Menyatakan alasan atau sebab terjadinya sesuatu (menggunakan bentuk sopan).</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">じかんが<span class="text-blue-600">ないから</span>、いそぎます。</span>
+              <p class="text-[11px] text-slate-400">Jikan ga nai kara, isogimasu. (Karena tidak ada waktu, bergegas.)</p>
+            </div>
+          </div>
+
+          <!-- 3. SETELAH (TE + KARA) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-blue-50 dark:bg-slate-950/60 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">Bentuk Te + Kara</span>
+              <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Setelah</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Menyatakan bahwa setelah satu tindakan selesai, tindakan lain dilakukan.</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">しごとを<span class="text-blue-600">おえてから</span>、かえります。</span>
+              <p class="text-[11px] text-slate-400">Shigoto o oete kara, kaerimasu. (Setelah selesai bekerja, pulang.)</p>
+            </div>
+          </div>
+
+          <!-- 4. TOLONG (TE + KUDASAI) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-blue-50 dark:bg-slate-950/60 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">Bentuk Te + Kudasai</span>
+              <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Tolong</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Digunakan untuk meminta atau menyuruh seseorang melakukan sesuatu dengan sopan.</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">ここにたまえを<span class="text-blue-600">書いてください</span>。 (Di sini: ここになまえをかいてください)</span>
+              <p class="text-[11px] text-slate-400">Koko ni namae o kaite kudasai. (Tolong tulis nama di sini.)</p>
+            </div>
+          </div>
+
+          <!-- 5. SEDANG (TE + IMASU) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-blue-50 dark:bg-slate-950/60 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">Bentuk Te + Imasu</span>
+              <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Sedang</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Menyatakan suatu aktivitas yang sedang berlangsung pada saat ini.</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">いまほんを<span class="text-blue-600">よんでいます</span>。</span>
+              <p class="text-[11px] text-slate-400">Ima hon o yonde imasu. (Sekarang sedang membaca buku.)</p>
+            </div>
+          </div>
+
+          <!-- 6. BOLEH / BOLEHKAH? (TE + MOI DESU) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-blue-50 dark:bg-slate-950/60 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">Bentuk Te + Moi desu / ka?</span>
+              <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Boleh</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Digunakan untuk meminta izin atau memberikan izin melakukan sesuatu.</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">ここに<span class="text-blue-600">すわってもいいですか</span>。</span>
+              <p class="text-[11px] text-slate-400">Koko ni suwatte mo ii desu ka. (Bolehkah duduk di sini?)</p>
+            </div>
+          </div>
+
+          <!-- 7. TIDAK BOLEH (TE + WA IKEMASEN) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-100 dark:border-rose-900/40">Bentuk Te + Wa Ikemasen</span>
+              <span class="text-xs font-black text-rose-500 uppercase tracking-wider">Tidak Boleh</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Menyatakan larangan keras untuk melakukan suatu tindakan tertentu.</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">ここでしゃしんを<span class="text-rose-600">とってはいけません</span>。</span>
+              <p class="text-[11px] text-slate-400">Koko de shashin o totte wa ikemasen. (Tidak boleh memotret di sini.)</p>
+            </div>
+          </div>
+
+          <!-- 8. HARUS (NAI (I HILANG) + KEREBA NARIMASEN) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-blue-50 dark:bg-slate-950/60 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">Nai (i hilang) + Kereba Narimasen</span>
+              <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Harus</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Menyatakan kewajiban mutlak (huruf <i>i</i> pada bentuk nai diganti menjadi <i>kereba narimasen</i>).</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">くすりを<span class="text-blue-600">のまなければなりません</span>。</span>
+              <p class="text-[11px] text-slate-400">Kusuri o nomanakereba narimasen. (Harus minum obat.)</p>
+            </div>
+          </div>
+
+          <!-- 9. TIDAK PERLU (NAI (I HILANG) + KUTEMO IIDESU) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-blue-50 dark:bg-slate-950/60 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">Nai (i hilang) + Kutemo Iidesu</span>
+              <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Tidak Perlu</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Menyatakan bahwa seseorang tidak harus atau tidak perlu melakukan sesuatu.</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">あしたはこなくても<span class="text-blue-600">いいです</span>。</span>
+              <p class="text-[11px] text-slate-400">Ashita wa konakutemo ii desu. (Besok tidak perlu datang.)</p>
+            </div>
+          </div>
+
+          <!-- 10. JANGAN (NAI + DE KUDASAI) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-black px-3 py-1 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-100 dark:border-rose-900/40">Bentuk Nai + De Kudasai</span>
+              <span class="text-xs font-black text-rose-500 uppercase tracking-wider">Jangan</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Permintaan atau imbauan agar seseorang <b>jangan</b> melakukan sesuatu.</p>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+              <span class="font-bold text-slate-900 dark:text-white">ここでしゃしんを<span class="text-rose-600">とらないでください</span>。</span>
+              <p class="text-[11px] text-slate-400">Koko de shashin o toranaide kudasai. (Tolong jangan ambil foto di sini.)</p>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- SCRIPT HALAMAN -->
+  <script>
+    function perubahanLanjutanApp() {
+      return {
+        sidebarOpen: false,
+        darkMode: false,
+
+        async initApp() {
+          this.initTheme();
+          try {
+            const sidebarRes = await fetch('./sidebar.html');
+            if (sidebarRes.ok) {
+              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+              this.renderDynamicKotobaSubmenus();
+            }
+            const headerRes = await fetch('./header.html');
+            if (headerRes.ok) {
+              document.getElementById('header-container').innerHTML = await headerRes.text();
+            }
+          } catch (e) {
+            console.error('Gagal memuat template modular:', e);
+          }
+        },
+
+        renderDynamicKotobaSubmenus() {
+          const container = document.getElementById('dynamic-kotoba-links');
+          if (!container) return;
+          let submenus = JSON.parse(localStorage.getItem('minna_submenus')) || [];
+          container.innerHTML = '';
+          submenus.forEach(sub => {
+            const link = document.createElement('a');
+            link.href = `kotoba.html?cat=${sub.id}`;
+            link.className = 'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+            link.innerHTML = `<i class="fa-solid fa-angle-right text-[10px]"></i> ${sub.title}`;
+            container.appendChild(link);
+          });
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+        },
+        
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>

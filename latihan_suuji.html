@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Latihan Kata Bilangan (Suuji) - Minna no Nihongo</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    [x-cloak] { display: none !important; }
+    .romaji-text { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+  </style>
+</head>
+
+<body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="suujiQuizApp()" x-init="initApp()">
+
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden" x-transition.opacity x-cloak></div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar-container" class="contents"></div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+      <!-- HEADER -->
+      <div id="header-container" class="contents"></div>
+
+      <!-- MAIN BODY -->
+      <main class="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 space-y-5">
+
+        <!-- HEADER HALAMAN -->
+        <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 p-5 md:p-7 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-5">
+          <div class="space-y-1.5 flex-1 min-w-0">
+            <span class="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-white/20 inline-block shadow-sm">
+              <i class="fa-solid fa-brain mr-1"></i> Latihan Otomatis Generator
+            </span>
+            <h2 class="text-lg md:text-2xl font-black tracking-tight">Latihan Kata Bilangan (Suuji)</h2>
+            <p class="text-xs text-blue-100 max-w-xl leading-relaxed">
+              Uji kemampuan membaca dan menghafal angka bahasa Jepang hingga 12 digit, mencakup satuan, puluhan, ratusan, ribuan, man, dan oku dengan spasi teratur.
+            </p>
+          </div>
+
+          <div class="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-3 rounded-2xl flex items-center gap-3 shrink-0 shadow-inner">
+            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-bold">
+              <i class="fa-solid fa-hashtag"></i>
+            </div>
+            <div>
+              <div class="text-[9px] text-blue-200 font-bold uppercase tracking-wider">Maksimal Digit</div>
+              <div class="text-sm font-black">12 Digit</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETUP -->
+        <template x-if="quizStage === 'setup'">
+          <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl space-y-7 max-w-2xl mx-auto w-full transition-all duration-300">
+            
+            <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center text-xs shadow-sm">
+                <i class="fa-solid fa-sliders"></i>
+              </div>
+              <h4 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Konfigurasi Latihan Bilangan</h4>
+            </div>
+
+            <!-- INPUT BATAS DIGIT -->
+            <div class="space-y-3">
+              <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Batas Maksimal Digit Angka:</label>
+              <div class="relative">
+                <input type="text" inputmode="numeric" autocomplete="off" maxlength="2" :value="maxDigits"
+                  @input="maxDigits = $event.target.value.replace(/\D/g, '').slice(0, 2); if (maxDigits !== '') { maxDigits = Math.min(Math.max(parseInt(maxDigits), 1), 12); }"
+                  @blur="if (!maxDigits || maxDigits < 1) { maxDigits = 1; } if (maxDigits > 12) { maxDigits = 12; }"
+                  class="w-full p-4 pr-28 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-bold text-lg focus:outline-none focus:border-blue-500 transition"
+                  placeholder="1 - 12">
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-blue-600 dark:text-blue-400">/ 12 digit</div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <p class="text-[10px] text-slate-400 dark:text-slate-500">Masukkan jumlah digit yang ingin digunakan.</p>
+                <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400"><span x-text="maxDigits"></span> digit</p>
+              </div>
+
+              <!-- INFO RENTANG -->
+              <div class="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50">
+                <div class="flex items-start gap-3">
+                  <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                  <div class="text-[11px]">
+                    <p class="font-bold text-blue-800 dark:text-blue-300">Rentang angka</p>
+                    <p class="mt-1 text-blue-600 dark:text-blue-400"><span x-text="getDigitRangeText()"></span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MODE SOAL -->
+            <div class="space-y-3">
+              <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Format Pertanyaan:</label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-semibold">
+                <label :class="questionMode === 'indo_to_jp' ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25' : 'border-slate-200 dark:border-slate-800'" class="flex items-center p-4 rounded-2xl border-2 cursor-pointer transition">
+                  <input type="radio" value="indo_to_jp" x-model="questionMode" class="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                  <span class="ml-2.5 font-bold">Angka → Romaji</span>
+                </label>
+                <label :class="questionMode === 'jp_to_indo' ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25' : 'border-slate-200 dark:border-slate-800'" class="flex items-center p-4 rounded-2xl border-2 cursor-pointer transition">
+                  <input type="radio" value="jp_to_indo" x-model="questionMode" class="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                  <span class="ml-2.5 font-bold">Romaji → Angka</span>
+                </label>
+                <label :class="questionMode === 'both' ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/25' : 'border-slate-200 dark:border-slate-800'" class="flex items-center p-4 rounded-2xl border-2 cursor-pointer transition">
+                  <input type="radio" value="both" x-model="questionMode" class="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                  <span class="ml-2.5 font-bold">Acak Keduanya</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- JUMLAH SOAL -->
+            <div class="space-y-2 text-xs">
+              <label class="block font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jumlah Soal:</label>
+              <select x-model.number="quizLength" class="w-full p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-bold focus:outline-none focus:border-blue-500 transition">
+                <option :value="5">5 Soal</option>
+                <option :value="10">10 Soal</option>
+                <option :value="15">15 Soal</option>
+                <option :value="20">20 Soal</option>
+              </select>
+            </div>
+
+            <button @click="startQuiz()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xl shadow-blue-500/25 cursor-pointer rounded-2xl font-black text-sm transition flex items-center justify-center gap-2">
+              <span>Mulai Latihan Bilangan</span> <i class="fa-solid fa-rocket"></i>
+            </button>
+          </div>
+        </template>
+
+        <!-- ACTIVE QUIZ -->
+        <template x-if="quizStage === 'active'">
+          <div class="bg-white dark:bg-slate-900 p-5 md:p-7 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl space-y-6 max-w-2xl mx-auto w-full transition-all duration-300">
+            
+            <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <span class="text-slate-400 dark:text-slate-500 uppercase tracking-widest text-[10px] md:text-[11px] font-black">
+                Soal <span class="text-blue-600 dark:text-blue-400 text-base" x-text="currentQuestionIndex + 1"></span> dari <span x-text="quizQuestions.length"></span>
+              </span>
+              <button @click="finishQuiz()" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0">
+                <i class="fa-solid fa-flag-checkered"></i>
+                <span class="hidden sm:inline">Selesai Latihan</span>
+                <span class="sm:hidden">Selesai</span>
+              </button>
+            </div>
+
+            <!-- PROGRESS -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Progress</span>
+                <span class="text-[9px] font-black text-blue-600 dark:text-blue-400" x-text="Math.round(((currentQuestionIndex + 1) / quizQuestions.length) * 100) + '%'"></span>
+              </div>
+              <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden shadow-inner">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full transition-all duration-300 rounded-full" :style="`width: ${((currentQuestionIndex + 1) / quizQuestions.length) * 100}%`"></div>
+              </div>
+            </div>
+
+            <!-- PERTANYAAN -->
+            <div class="relative text-center px-5 py-6 md:px-8 md:py-7 bg-gradient-to-br from-blue-50/70 via-white to-indigo-50/50 dark:from-slate-800/60 dark:via-slate-900 dark:to-slate-800/60 rounded-3xl border border-blue-100/80 dark:border-slate-800 shadow-sm overflow-hidden">
+              
+              <div class="relative inline-flex items-center gap-2 text-[9px] md:text-[10px] uppercase tracking-wider font-black text-blue-600 dark:text-blue-400 bg-blue-100/80 dark:bg-blue-950/60 px-3 md:px-3.5 py-1.5 rounded-full border border-blue-200 dark:border-blue-900/50 shadow-sm mb-3">
+                <i class="fa-solid fa-language text-[10px]"></i>
+                <span x-text="currentQuestion.modeLabel"></span>
+              </div>
+
+              <div class="relative flex items-center justify-center min-h-[82px] md:min-h-[100px] mt-2 md:mt-3 px-1">
+                <h3 class="max-w-full text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight break-words [overflow-wrap:anywhere] romaji-text" x-text="currentQuestion.question"></h3>
+              </div>
+
+              <div class="relative flex items-center justify-center gap-2 mt-1 text-[11px] md:text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                <span class="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-blue-500 shadow-sm shrink-0">
+                  <i class="fa-solid fa-lightbulb text-[11px]"></i>
+                </span>
+                <span x-text="currentQuestion.hiraganaSub"></span>
+              </div>
+            </div>
+
+            <!-- OPTIONS -->
+            <div class="space-y-3">
+              <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Pilih Jawaban</div>
+              <div class="grid grid-cols-1 gap-3">
+                <template x-for="(opt, idx) in currentQuestion.options" :key="idx">
+                  <button @click="selectAnswer(opt)" :disabled="selectedAnswer !== null"
+                    :class="{
+                      'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-blue-50/60 hover:border-blue-300 dark:hover:bg-slate-800/70 hover:-translate-y-0.5 shadow-sm': selectedAnswer === null,
+                      'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 shadow-md': selectedAnswer !== null && opt.isCorrect,
+                      'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200 shadow-md': selectedAnswer !== null && selectedAnswer === opt && !opt.isCorrect,
+                      'opacity-40 border-slate-200 dark:border-slate-800 shadow-none': selectedAnswer !== null && selectedAnswer !== opt && !opt.isCorrect
+                    }"
+                    class="w-full min-h-[58px] text-left px-4 py-3 rounded-2xl border-2 transition-all duration-200 text-sm md:text-base font-bold flex items-center gap-3 cursor-pointer disabled:cursor-default">
+                    
+                    <span class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-[11px] font-black bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                      :class="{
+                        'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400': selectedAnswer === null,
+                        'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400': selectedAnswer !== null && opt.isCorrect,
+                        'bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400': selectedAnswer !== null && selectedAnswer === opt && !opt.isCorrect
+                      }">
+                      <span x-text="['A','B','C','D'][idx]"></span>
+                    </span>
+
+                    <span class="flex-1 min-w-0 romaji-text whitespace-pre-wrap break-words leading-relaxed" x-text="opt.text"></span>
+
+                    <template x-if="selectedAnswer !== null && opt.isCorrect">
+                      <span class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-check text-emerald-600 dark:text-emerald-400 text-sm"></i>
+                      </span>
+                    </template>
+                    <template x-if="selectedAnswer !== null && selectedAnswer === opt && !opt.isCorrect">
+                      <span class="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-xmark text-rose-600 dark:text-rose-400 text-sm"></i>
+                      </span>
+                    </template>
+                  </button>
+                </template>
+              </div>
+            </div>
+
+            <!-- NEXT -->
+            <div class="flex justify-end pt-1">
+              <button x-show="selectedAnswer !== null" @click="nextQuestion()" x-transition
+                class="px-6 md:px-8 py-3.5 md:py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-black rounded-2xl text-[10px] md:text-xs uppercase tracking-wider hover:opacity-90 transition shadow-xl flex items-center gap-2.5 cursor-pointer">
+                <span>Lanjut Soal</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </button>
+            </div>
+
+          </div>
+        </template>
+
+        <!-- RESULT -->
+        <template x-if="quizStage === 'result'">
+          <div class="bg-white dark:bg-slate-900 p-7 md:p-10 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl text-center space-y-6 max-w-md mx-auto w-full transition-all duration-300">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto text-3xl font-bold shadow-lg shadow-blue-500/30">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-black text-slate-900 dark:text-white mb-1">Latihan Selesai!</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Berikut hasil latihan bilangan kamu.</p>
+            </div>
+
+            <div class="bg-slate-900 dark:bg-slate-950 text-white rounded-3xl p-7 shadow-xl space-y-1 relative overflow-hidden">
+              <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-blue-500/20 rounded-full blur-xl pointer-events-none"></div>
+              <div class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Nilai Akhir</div>
+              <div class="text-6xl font-black text-blue-400" x-text="quizScore"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 shadow-sm">
+                <div class="text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] uppercase">Benar</div>
+                <div class="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1" x-text="correctCount"></div>
+              </div>
+              <div class="p-4 bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-100 dark:border-rose-900/50 shadow-sm">
+                <div class="text-rose-600 dark:text-rose-400 font-extrabold text-[10px] uppercase">Salah</div>
+                <div class="text-xl font-black text-rose-700 dark:text-rose-300 mt-1" x-text="wrongCount"></div>
+              </div>
+            </div>
+
+            <button @click="resetQuiz()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-2xl text-xs uppercase tracking-wider transition shadow-lg shadow-blue-500/25 cursor-pointer flex items-center justify-center gap-2">
+              <span>Ulangi Latihan</span> <i class="fa-solid fa-rotate-right"></i>
+            </button>
+          </div>
+        </template>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    function suujiQuizApp() {
+      return {
+        sidebarOpen: false,
+        darkMode: false,
+        maxDigits: 4,
+        questionMode: 'indo_to_jp',
+        quizLength: 10,
+        quizStage: 'setup',
+        quizQuestions: [],
+        currentQuestionIndex: 0,
+        currentQuestion: {},
+        selectedAnswer: null,
+        correctCount: 0,
+        wrongCount: 0,
+        quizScore: 0,
+
+        async initApp() {
+          this.initTheme();
+          try {
+            const sidebarRes = await fetch('./sidebar.html');
+            if (sidebarRes.ok) {
+              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+              this.renderDynamicKotobaSubmenus();
+            }
+            const headerRes = await fetch('./header.html');
+            if (headerRes.ok) {
+              document.getElementById('header-container').innerHTML = await headerRes.text();
+            }
+          } catch (e) {
+            console.error('Gagal memuat template modular:', e);
+          }
+        },
+
+        getDigitRangeText() {
+          const digit = Number(this.maxDigits);
+          if (!digit || digit < 1) return 'Masukkan 1 sampai 12 digit.';
+          const min = digit === 1 ? 1 : Math.pow(10, digit - 1);
+          const max = Math.pow(10, digit) - 1;
+          return `${this.formatNumberIndo(min)} sampai ${this.formatNumberIndo(max)}`;
+        },
+
+        randomInteger(min, max) {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        },
+
+        convertBelow10000(num) {
+          num = Number(num);
+          if (num === 0) return '';
+          const ones = ['', 'ichi', 'ni', 'san', 'yon', 'go', 'roku', 'nana', 'hachi', 'kyuu'];
+          let parts = [];
+
+          const thousands = Math.floor(num / 1000);
+          if (thousands > 0) {
+            if (thousands === 1) parts.push('sen');
+            else if (thousands === 3) parts.push('sanzen');
+            else if (thousands === 8) parts.push('hassen');
+            else parts.push(ones[thousands] + 'sen');
+          }
+
+          const hundreds = Math.floor((num % 1000) / 100);
+          if (hundreds > 0) {
+            if (hundreds === 1) parts.push('hyaku');
+            else if (hundreds === 3) parts.push('sanbyaku');
+            else if (hundreds === 6) parts.push('roppyaku');
+            else if (hundreds === 8) parts.push('happyaku');
+            else parts.push(ones[hundreds] + 'hyaku');
+          }
+
+          const tens = Math.floor((num % 100) / 10);
+          if (tens > 0) {
+            if (tens === 1) parts.push('juu');
+            else parts.push(ones[tens] + 'juu');
+          }
+
+          const one = num % 10;
+          if (one > 0) {
+            parts.push(ones[one]);
+          }
+
+          return parts.join(' ');
+        },
+
+        numberToJapaneseRomaji(num) {
+          num = Number(num);
+          if (!Number.isInteger(num)) return '';
+          if (num === 0) return 'zero';
+          if (num < 0 || num > 999999999999) return '';
+
+          const oku = Math.floor(num / 100000000);
+          const remainderAfterOku = num % 100000000;
+          const man = Math.floor(remainderAfterOku / 10000);
+          const remainder = remainderAfterOku % 10000;
+
+          const parts = [];
+
+          if (oku > 0) {
+            parts.push(this.convertBelow10000(oku));
+            parts.push('oku');
+          }
+
+          if (man > 0) {
+            parts.push(this.convertBelow10000(man));
+            parts.push('man');
+          }
+
+          if (remainder > 0) {
+            parts.push(this.convertBelow10000(remainder));
+          }
+
+          // Memastikan setiap komponen dipisahkan dengan spasi bersih
+          return parts.filter(Boolean).join(' ');
+        },
+
+        formatNumberIndo(num) {
+          return new Intl.NumberFormat('id-ID').format(Number(num));
+        },
+
+        normalizeRomaji(text) {
+          return String(text).toLowerCase().trim().replace(/\s+/g, ' ');
+        },
+
+        generateFakeNumber(correctNumber) {
+          const correct = Number(correctNumber);
+          let fake;
+          if (correct < 100) {
+            const offset = this.randomInteger(1, 10);
+            fake = correct + (Math.random() < 0.5 ? -offset : offset);
+          } else if (correct < 10000) {
+            const offset = this.randomInteger(1, 50);
+            fake = correct + (Math.random() < 0.5 ? -offset : offset);
+          } else {
+            const offsetChoices = [1, 10, 100, 1000, 10000, 100000];
+            const offset = offsetChoices[this.randomInteger(0, offsetChoices.length - 1)];
+            fake = correct + (Math.random() < 0.5 ? -offset : offset);
+          }
+
+          if (fake < 1) fake = correct + Math.abs(fake);
+          if (fake > 999999999999) fake = correct - Math.abs(fake - 999999999999);
+          if (fake === correct) fake = correct === 999999999999 ? correct - 1 : correct + 1;
+          return fake;
+        },
+
+        startQuiz() {
+          let digit = parseInt(this.maxDigits);
+          if (isNaN(digit) || digit < 1 || digit > 12) {
+            alert('Jumlah digit harus antara 1 sampai 12.');
+            this.maxDigits = 4;
+            return;
+          }
+          this.maxDigits = digit;
+
+          let totalQuestions = parseInt(this.quizLength);
+          if (isNaN(totalQuestions) || totalQuestions < 1) {
+            alert('Jumlah soal tidak valid.');
+            return;
+          }
+
+          const minVal = digit === 1 ? 1 : Math.pow(10, digit - 1);
+          const maxVal = Math.pow(10, digit) - 1;
+
+          const generatedNumbers = new Set();
+          const questions = [];
+          const availableNumbers = maxVal - minVal + 1;
+          const targetQuestionCount = Math.min(totalQuestions, availableNumbers);
+
+          let safetyCounter = 0;
+          while (questions.length < targetQuestionCount && safetyCounter < 10000) {
+            safetyCounter++;
+            const randNum = this.randomInteger(minVal, maxVal);
+            if (generatedNumbers.has(randNum)) continue;
+            generatedNumbers.add(randNum);
+
+            const romajiVal = this.numberToJapaneseRomaji(randNum);
+            const indoFormatted = this.formatNumberIndo(randNum);
+
+            let mode = this.questionMode;
+            if (mode === 'both') {
+              mode = Math.random() < 0.5 ? 'indo_to_jp' : 'jp_to_indo';
+            }
+
+            let questionText, correctAnswer, modeLabel, subText;
+
+            if (mode === 'indo_to_jp') {
+              questionText = indoFormatted;
+              correctAnswer = romajiVal;
+              modeLabel = 'Angka Indonesia → Romaji Jepang';
+              subText = 'Baca angka tersebut dalam bahasa Jepang.';
+            } else {
+              questionText = romajiVal;
+              correctAnswer = indoFormatted;
+              modeLabel = 'Romaji Jepang → Angka Indonesia';
+              subText = 'Tentukan angka yang sesuai.';
+            }
+
+            questions.push({
+              number: randNum,
+              question: questionText,
+              correctAnswer: correctAnswer,
+              mode: mode,
+              modeLabel: modeLabel,
+              hiraganaSub: subText,
+              romajiValue: romajiVal,
+              indoValue: indoFormatted
+            });
+          }
+
+          if (questions.length === 0) {
+            alert('Gagal membuat soal.');
+            return;
+          }
+
+          this.quizQuestions = questions.map(item => {
+            const options = [];
+            options.push({ text: item.correctAnswer, isCorrect: true });
+
+            const usedAnswers = new Set([this.normalizeRomaji(item.correctAnswer)]);
+            let attempts = 0;
+
+            while (options.length < 4 && attempts < 100) {
+              attempts++;
+              let fakeAnswer;
+              if (item.mode === 'indo_to_jp') {
+                const fakeNumber = this.generateFakeNumber(item.number);
+                fakeAnswer = this.numberToJapaneseRomaji(fakeNumber);
+                const normalized = this.normalizeRomaji(fakeAnswer);
+                if (!usedAnswers.has(normalized)) {
+                  usedAnswers.add(normalized);
+                  options.push({ text: fakeAnswer, isCorrect: false });
+                }
+              } else {
+                const fakeNumber = this.generateFakeNumber(item.number);
+                fakeAnswer = this.formatNumberIndo(fakeNumber);
+                if (!usedAnswers.has(fakeAnswer)) {
+                  usedAnswers.add(fakeAnswer);
+                  options.push({ text: fakeAnswer, isCorrect: false });
+                }
+              }
+            }
+
+            const shuffledOptions = options.sort(() => Math.random() - 0.5);
+
+            return {
+              question: item.question,
+              correctAnswer: item.correctAnswer,
+              modeLabel: item.modeLabel,
+              hiraganaSub: item.hiraganaSub,
+              options: shuffledOptions
+            };
+          });
+
+          this.currentQuestionIndex = 0;
+          this.currentQuestion = this.quizQuestions[0];
+          this.selectedAnswer = null;
+          this.correctCount = 0;
+          this.wrongCount = 0;
+          this.quizScore = 0;
+          this.quizStage = 'active';
+        },
+
+        selectAnswer(opt) {
+          if (this.selectedAnswer !== null) return;
+          this.selectedAnswer = opt;
+          if (opt.isCorrect) {
+            this.correctCount++;
+          } else {
+            this.wrongCount++;
+          }
+        },
+
+        nextQuestion() {
+          if (this.currentQuestionIndex < this.quizQuestions.length - 1) {
+            this.currentQuestionIndex++;
+            this.currentQuestion = this.quizQuestions[this.currentQuestionIndex];
+            this.selectedAnswer = null;
+          } else {
+            this.finishQuiz();
+          }
+        },
+
+        finishQuiz() {
+          const total = this.quizQuestions.length;
+          if (total === 0) return;
+          const answered = this.correctCount + this.wrongCount;
+          if (answered < total) {
+            this.wrongCount += (total - answered);
+          }
+          this.quizScore = Math.round((this.correctCount / total) * 100);
+          this.quizStage = 'result';
+        },
+
+        resetQuiz() {
+          this.quizStage = 'setup';
+          this.quizQuestions = [];
+          this.currentQuestion = {};
+          this.currentQuestionIndex = 0;
+          this.selectedAnswer = null;
+          this.correctCount = 0;
+          this.wrongCount = 0;
+          this.quizScore = 0;
+        },
+
+        renderDynamicKotobaSubmenus() {
+          const container = document.getElementById('dynamic-kotoba-links');
+          if (!container) return;
+          let submenus = JSON.parse(localStorage.getItem('minna_submenus')) || [];
+          container.innerHTML = '';
+          submenus.forEach(sub => {
+            const link = document.createElement('a');
+            link.href = `kotoba.html?cat=${sub.id}`;
+            link.className = 'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+            link.innerHTML = `<i class="fa-solid fa-angle-right text-[10px]"></i> ${sub.title}`;
+            container.appendChild(link);
+          });
+        },
+
+        initTheme() {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+        },
+
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>

@@ -93,10 +93,11 @@
         <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-6">
           
           <!-- Jika Data Kosakata Ada -->
-          <div class="overflow-x-auto w-full" x-show="itemList.length > 0">
-            <table id="kotobaTable" class="w-full text-left border-collapse min-w-[500px]">
+          <div class="overflow-x-auto" x-show="itemList.length > 0">
+            <table id="kotobaTable" class="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th class="py-3.5 px-4 w-12 text-center">No</th>
                   <th class="py-3.5 px-6">Bahasa Indonesia</th>
                   <th class="py-3.5 px-6">Romaji</th>
                   <th class="py-3.5 px-6">Hiragana</th>
@@ -135,7 +136,7 @@
 
         categoryTitle: 'Daftar Kosakata',
         itemList: [],
-        dataTableInstance: null,
+        dataTabelInstance: null,
 
         async initApp() {
           this.initTheme();
@@ -162,26 +163,35 @@
 
         loadCategoryData() {
           const urlParams = new URLSearchParams(window.location.search);
-          const catId = (urlParams.get('cat') || '').toLowerCase();
+          let catId = (urlParams.get('cat') || '').toLowerCase();
 
           let submenus = JSON.parse(localStorage.getItem('minna_submenus')) || [];
+          let vocabData = JSON.parse(localStorage.getItem('minna_vocab_data')) || {};
+
+          if (!catId && submenus.length > 0) {
+            catId = submenus[0].id.toLowerCase();
+          }
+
           let currentSub = submenus.find(s => s.id.toLowerCase() === catId);
-          
           if (currentSub) {
             this.categoryTitle = currentSub.title;
           } else if (submenus.length > 0) {
             this.categoryTitle = submenus[0].title;
           }
 
-          let vocabData = JSON.parse(localStorage.getItem('minna_vocab_data')) || {};
+          let matchedKey = Object.keys(vocabData).find(k => k.toLowerCase() === catId);
           
-          let targetKey = catId;
-          if (!targetKey && submenus.length > 0) {
-            targetKey = submenus[0].id.toLowerCase();
+          let rawItems = [];
+          if (matchedKey) {
+            rawItems = vocabData[matchedKey];
+          } else if (submenus.length > 0 && vocabData[submenus[0].id]) {
+            rawItems = vocabData[submenus[0].id];
+          } else {
+            const allKeys = Object.keys(vocabData);
+            if (allKeys.length > 0) {
+              rawItems = vocabData[allKeys[0]];
+            }
           }
-
-          let matchedKey = Object.keys(vocabData).find(k => k.toLowerCase() === targetKey);
-          let rawItems = matchedKey ? vocabData[matchedKey] : [];
           
           this.itemList = Array.isArray(rawItems) ? rawItems : [];
         },
@@ -189,12 +199,13 @@
         initOrUpdateDataTable() {
           if (this.itemList.length === 0) return;
 
-          let tableData = this.itemList.map(item => {
+          let tableData = this.itemList.map((item, index) => {
             return [
-              `<span class="font-medium text-slate-800 dark:text-slate-200">${item.indonesia}</span>`,
-              `<span class="italic font-mono text-slate-500 dark:text-slate-400">${item.romaji}</span>`,
-              `<span class="font-bold text-slate-900 dark:text-white">${item.hiragana}</span>`,
-              `<span class="text-blue-600 dark:text-blue-400 font-medium">${item.katakana}</span>`
+              `<span class="text-xs font-bold text-slate-400 dark:text-slate-500 text-center block">${index + 1}</span>`,
+              `<span class="font-medium text-slate-800 dark:text-slate-200">${item.indonesia || '-'}</span>`,
+              `<span class="italic font-mono text-slate-500 dark:text-slate-400">${item.romaji || '-'}</span>`,
+              `<span class="font-bold text-slate-900 dark:text-white">${item.hiragana || '-'}</span>`,
+              `<span class="text-blue-600 dark:text-blue-400 font-medium">${item.katakana || '-'}</span>`
             ];
           });
 
@@ -207,6 +218,9 @@
               data: tableData,
               pageLength: 10,
               lengthMenu: [5, 10, 25, 50],
+              columnDefs: [
+                { targets: 0, orderable: false, searchable: false } // Kolom nomor tidak bisa di-sort/search agar tetap rapi
+              ],
               language: {
                 search: "Cari:",
                 lengthMenu: "Tampilkan _MENU_ data",

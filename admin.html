@@ -23,15 +23,17 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
-  <!-- DataTables CSS & jQuery (Dibutuhkan untuk DataTables) -->
+  <!-- DataTables CSS & jQuery -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
+  <!-- PANGGIL MASTER KOTOBA EKSTERNAL (kotoba.js) -->
+  <script src="kotoba.js"></script>
+
   <style>
     body { font-family: 'DM Sans', sans-serif; }
     #categoryTable { width: 100% !important; }
-    /* Custom styling agar DataTables menyatu dengan Tailwind & Dark Mode */
     .dataTables_wrapper .dataTables_length select,
     .dataTables_wrapper .dataTables_filter input {
       border: 1px solid #cbd5e1;
@@ -78,23 +80,43 @@
     <!-- MAIN CONTENT AREA -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-      <!-- HEADER CONTAINER -->
-      <div id="header-container" class="contents"></div>
+      <!-- HEADER KHUSUS ADMIN -->
+      <header class="bg-white/85 dark:bg-slate-900/85 backdrop-blur-md sticky top-0 z-30 px-8 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 shadow-2xs">
+        <div class="flex items-center gap-4">
+          <button @click="sidebarOpen = true" class="md:hidden text-slate-600 dark:text-slate-300 hover:text-slate-900 focus:outline-none cursor-pointer">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+          
+          <button @click="showGuide = !showGuide" class="px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer border border-blue-100 dark:border-blue-900/50">
+            <i class="fa-solid fa-circle-question"></i>
+            <span x-text="showGuide ? 'Sembunyikan Panduan' : 'Tampilkan Panduan'"></span>
+          </button>
+        </div>
+
+        <div class="flex items-center">
+          <button @click="toggleDarkMode()" class="w-11 h-11 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full flex items-center justify-center transition shadow-2xs cursor-pointer relative overflow-hidden group" title="Ubah Tema">
+            <i class="fa-solid fa-sun text-amber-500 text-base absolute transition-transform duration-500" :class="darkMode ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'"></i>
+            <i class="fa-solid fa-moon text-blue-400 text-base absolute transition-transform duration-500" :class="darkMode ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'"></i>
+          </button>
+        </div>
+      </header>
 
       <!-- MAIN BODY CONTENT -->
-      <main class="flex-1 overflow-y-auto p-8 space-y-8 transition duration-300">
+      <main class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 transition duration-300">
 
         <!-- Header Halaman & Navigasi Tab Modern -->
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
           <div>
             <div class="flex items-center gap-3 mb-2 flex-wrap">
               <span class="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-900/50 inline-block">Control Center</span>
+              <a href="index.html" class="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-800 dark:hover:text-white bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-left"></i> Kembali ke Beranda
+              </a>
             </div>
             <h3 class="text-lg font-bold text-slate-900 dark:text-white">Panel Admin Kotoba</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">Pusat kontrol pengelolaan kosakata, kategori, serta backup data.</p>
           </div>
 
-          <!-- Tab Navigasi Admin -->
           <div class="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full lg:w-auto overflow-x-auto">
             <button @click="activeTab = 'kosakata'" 
                     :class="activeTab === 'kosakata' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-white shadow-sm font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 font-medium'"
@@ -114,12 +136,53 @@
           </div>
         </div>
 
-        <!-- ============================================== -->
-        <!-- TAB 1: KELOLA KOSAKATA (FORM & TABEL) -->
-        <!-- ============================================== -->
-        <div x-show="activeTab === 'kosakata'" class="grid grid-cols-1 lg:grid-cols-12 gap-8" x-transition>
+        <!-- KARTU PANDUAN -->
+        <div x-show="showGuide" x-transition class="bg-white dark:bg-slate-900 rounded-3xl border border-indigo-100 dark:border-slate-800 shadow-sm p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-indigo-50 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-circle-info"></i>
+              </div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Panduan Penggunaan Panel Admin</h4>
+            </div>
+            <button @click="showGuide = false" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
 
-          <!-- Kiri: Form Input/Edit Kosakata -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1 text-xs">
+            <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-1.5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="w-5 h-5 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">1</span>
+                Kelola Kosakata
+              </div>
+              <p class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                Tambah atau edit kata satuan. Ketik Romaji, maka Hiragana & Katakana terisi otomatis.
+              </p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-1.5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="w-5 h-5 rounded-md bg-purple-100 text-purple-600 flex items-center justify-center text-[10px]">2</span>
+                Kategori Sidebar
+              </div>
+              <p class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                Buat bab/topik baru agar langsung tampil di menu navigasi samping aplikasi.
+              </p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-1.5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="w-5 h-5 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px]">3</span>
+                Load Kotoba
+              </div>
+              <p class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                Load kotoba pada tab import dan eksport untuk menambahkan kotoba bawaan sistem.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 1: KELOLA KOSAKATA -->
+        <div x-show="activeTab === 'kosakata'" class="grid grid-cols-1 lg:grid-cols-12 gap-6" x-transition>
           <div class="lg:col-span-5 space-y-6">
             <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
               <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3" x-text="editIndex === null ? '➕ Tambah Kosakata Baru' : '✏️ Edit Kosakata'"></h4>
@@ -158,7 +221,6 @@
             </div>
           </div>
 
-          <!-- Kanan: Tabel Data Kosakata dengan DataTables -->
           <div class="lg:col-span-7">
             <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-6 md:p-8 space-y-6">
               <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -182,21 +244,15 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                    <!-- Data dirender otomatis via DataTables -->
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-
         </div>
 
-        <!-- ============================================== -->
         <!-- TAB 2: KELOLA KATEGORI SIDEBAR -->
-        <!-- ============================================== -->
-        <div x-show="activeTab === 'kategori'" class="grid grid-cols-1 md:grid-cols-2 gap-8" x-transition>
-
-          <!-- Form Buat/Edit Kategori -->
+        <div x-show="activeTab === 'kategori'" class="grid grid-cols-1 md:grid-cols-2 gap-6" x-transition>
           <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
             <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center text-xs">
@@ -220,7 +276,6 @@
             </div>
           </div>
 
-          <!-- List Kategori & Aksi Edit/Hapus dengan DataTables -->
           <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
             <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center text-xs">
@@ -237,67 +292,85 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                  <!-- Data dirender otomatis via DataTables -->
                 </tbody>
               </table>
             </div>
           </div>
-
         </div>
 
-        <!-- ============================================== -->
-        <!-- TAB 3: IMPORT & EXPORT -->
-        <!-- ============================================== -->
-        <div x-show="activeTab === 'import_export'" class="grid grid-cols-1 md:grid-cols-2 gap-8" x-transition>
-
-          <!-- Card Import Excel -->
-          <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
-            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
-              <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center text-xs">
+        <!-- TAB 3: IMPORT & EXPORT & INJECT MASTER -->
+        <div x-show="activeTab === 'import_export'" class="grid grid-cols-1 md:grid-cols-3 gap-6" x-transition>
+          
+          <!-- Card 1: Import Excel -->
+          <div class="bg-gradient-to-b from-white to-emerald-50/20 dark:from-slate-900 dark:to-emerald-950/10 p-6 md:p-8 rounded-3xl border border-emerald-100 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-6 hover:shadow-md transition duration-300">
+            <div class="space-y-4">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center text-xl shadow-xs">
                 <i class="fa-solid fa-file-excel"></i>
               </div>
-              Import Kotoba dari Excel (.xlsx)
-            </h4>
-            <div class="space-y-4">
-              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Unggah file Excel yang memiliki kolom <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200 font-bold">Bahasa Indonesia</code> dan <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200 font-bold">Romaji</code>. Sistem akan otomatis mengisi Hiragana & Katakana.
-              </p>
               <div>
-                <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Pilih Kategori Tujuan</label>
-                <select x-model="importTargetCategory" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                  <template x-for="cat in submenus" :key="cat.id">
-                    <option :value="cat.id" x-text="cat.title"></option>
-                  </template>
-                </select>
+                <h4 class="text-sm font-black text-slate-900 dark:text-white mb-1">Import Kotoba Excel</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Unggah file <code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] font-bold">.xlsx</code> dengan kolom <strong class="text-slate-700 dark:text-slate-200">Bahasa Indonesia</strong> & <strong class="text-slate-700 dark:text-slate-200">Romaji</strong>.
+                </p>
               </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Pilih File Excel</label>
-                <input type="file" id="excelFileinput" accept=".xlsx, .xls" class="w-full text-xs text-slate-500 file:mr-4 file:py-3 file:px-5 file:rounded-2xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-slate-200 dark:border-slate-800 rounded-2xl p-2 bg-slate-50 dark:bg-slate-950">
+
+              <div class="space-y-3 pt-2">
+                <div>
+                  <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Kategori Tujuan</label>
+                  <select x-model="importTargetCategory" class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs">
+                    <template x-for="cat in submenus" :key="cat.id">
+                      <option :value="cat.id" x-text="cat.title"></option>
+                    </template>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Pilih Berkas</label>
+                  <input type="file" id="excelFileinput" accept=".xlsx, .xls" class="w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-slate-200 dark:border-slate-800 rounded-2xl p-2 bg-white dark:bg-slate-950 shadow-2xs">
+                </div>
               </div>
-              <button @click="processExcelImport()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-emerald-500/20 cursor-pointer">
-                Mulai Import & Auto-Fill Kana
-              </button>
             </div>
+
+            <button @click="processExcelImport()" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-emerald-500/25 cursor-pointer flex items-center justify-center gap-2">
+              <i class="fa-solid fa-upload"></i> Import Data
+            </button>
           </div>
 
-          <!-- Card Export ZIP -->
-          <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
-            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
-              <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center text-xs">
+          <!-- Card 2: Export ZIP -->
+          <div class="bg-gradient-to-b from-white to-blue-50/20 dark:from-slate-900 dark:to-blue-950/10 p-6 md:p-8 rounded-3xl border border-blue-100 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-6 hover:shadow-md transition duration-300">
+            <div class="space-y-4">
+              <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center text-xl shadow-xs">
                 <i class="fa-solid fa-file-zipper"></i>
               </div>
-              Export Seluruh Kotoba (ZIP)
-            </h4>
-            <div class="space-y-4">
-              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Unduh seluruh data kosakata yang tersimpan di sistem dalam bentuk file kompresi <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200 font-bold">.zip</code>. Di dalamnya terdapat file Excel terpisah untuk masing-masing kategori.
-              </p>
-              <div class="pt-6">
-                <button @click="exportAllToZip()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-indigo-500/20 cursor-pointer flex items-center justify-center gap-2">
-                  <i class="fa-solid fa-cloud-arrow-down text-base"></i> Download Semua Data (.zip)
-                </button>
+              <div>
+                <h4 class="text-sm font-black text-slate-900 dark:text-white mb-1">Export Data (ZIP)</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Backup seluruh database kosakata yang tersimpan di sistem dalam bentuk arsip <code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] font-bold">.zip</code> berisi format Excel per kategori.
+                </p>
               </div>
             </div>
+
+            <button @click="exportAllToZip()" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-blue-500/25 cursor-pointer flex items-center justify-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-down text-base"></i> Download Semua (.zip)
+            </button>
+          </div>
+
+          <!-- Card 3: Inject Master Kotoba -->
+          <div class="bg-gradient-to-b from-white to-purple-50/20 dark:from-slate-900 dark:to-purple-950/10 p-6 md:p-8 rounded-3xl border border-purple-100 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-6 hover:shadow-md transition duration-300">
+            <div class="space-y-4">
+              <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-600 flex items-center justify-center text-xl shadow-xs">
+                <i class="fa-solid fa-database"></i>
+              </div>
+              <div>
+                <h4 class="text-sm font-black text-slate-900 dark:text-white mb-1">Load Kotoba</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Muat ulang database sistem secara instan dari <code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] font-bold">kotoba.js</code> meliputi Hiragana, Katakana, Angka, dan Kata Kerja Golongan 1, 2, & 3 secara lengkap.
+                </p>
+              </div>
+            </div>
+
+            <button @click="injectMasterKotoba()" class="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-purple-500/25 cursor-pointer flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bolt text-base"></i> Load Kotoba
+            </button>
           </div>
 
         </div>
@@ -306,7 +379,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT ADMIN -->
+  <!-- SCRIPT ADMIN (MENARIK DATA DARI KOTOBA.JS) -->
   <script>
     let alpineAppInstance = null;
 
@@ -317,8 +390,8 @@
         kotobaDropdown: true,
         darkMode: false,
         activeTab: 'kosakata',
+        showGuide: false,
 
-        // --- DATA STATE ---
         submenus: [],
         vocabData: {},
         selectedCategory: '',
@@ -327,11 +400,9 @@
         dataTableInstance: null,
         categoryTableInstance: null,
 
-        // Form Kosakata
         newItem: { indonesia: '', romaji: '', hiragana: '', katakana: '' },
         editIndex: null,
 
-        // Form Kategori
         editCatIndex: null,
         editCatId: '',
         editCatTitle: '',
@@ -453,10 +524,8 @@
         loadStorageData() {
           let savedSubs = localStorage.getItem('minna_submenus');
           if (!savedSubs) {
-            this.submenus = [
-              { id: 'aisatsu', title: 'Aisatsu' },
-              { id: 'kazoku', title: 'Kazoku' }
-            ];
+            // Ambil dari kotoba.js jika belum ada di localStorage
+            this.submenus = (typeof MASTER_HIRAGANA_LENGKAP !== 'undefined') ? MASTER_HIRAGANA_LENGKAP.submenus : [];
             localStorage.setItem('minna_submenus', JSON.stringify(this.submenus));
           } else {
             this.submenus = JSON.parse(savedSubs);
@@ -464,11 +533,7 @@
 
           let savedVocab = localStorage.getItem('minna_vocab_data');
           if (!savedVocab) {
-            this.vocabData = {
-              'aisatsu': [
-                { indonesia: "hallo", romaji: "moshi", hiragana: "もし", katakana: "モシ" }
-              ]
-            };
+            this.vocabData = {};
             localStorage.setItem('minna_vocab_data', JSON.stringify(this.vocabData));
           } else {
             this.vocabData = JSON.parse(savedVocab);
@@ -485,6 +550,39 @@
               this.importTargetCategory = this.submenus[0].id;
             }
           }
+        },
+
+        injectMasterKotoba() {
+          if (typeof MASTER_HIRAGANA_LENGKAP === 'undefined') {
+            alert('File kotoba.js tidak ditemukan atau gagal dimuat!');
+            return;
+          }
+
+          const MASTER_DATABASE = MASTER_HIRAGANA_LENGKAP;
+
+          let processedVocab = {};
+          Object.keys(MASTER_DATABASE.vocabData).forEach(catId => {
+            processedVocab[catId] = MASTER_DATABASE.vocabData[catId].map(item => {
+              let kana = this.convertRomajiToKana(item.romaji);
+              return {
+                indonesia: item.indonesia,
+                romaji: item.romaji,
+                hiragana: item.hiragana || kana.hiragana,
+                katakana: item.katakana || kana.katakana
+              };
+            });
+          });
+
+          this.submenus = MASTER_DATABASE.submenus;
+          this.vocabData = processedVocab;
+
+          localStorage.setItem('minna_submenus', JSON.stringify(this.submenus));
+          localStorage.setItem('minna_vocab_data', JSON.stringify(this.vocabData));
+
+          alert('Berhasil load Kotoba dari kotoba.js secara utuh!');
+          this.loadStorageData();
+          this.initOrUpdateDataTable();
+          this.initOrUpdateCategoryTable();
         },
 
         convertRomajiToKana(romajiStr) {

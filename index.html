@@ -39,78 +39,111 @@
       <!-- HEADER CONTAINER -->
       <div id="header-container" class="contents"></div>
 
-      <!-- DASHBOARD BODY CONTENT -->
-    <!-- MAIN BODY CONTENT -->
-<main class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
+      <!-- MAIN BODY CONTENT -->
+      <main class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
   
-  <!-- BANNER UTAMA -->
-  <div class="relative bg-gradient-to-r from-blue-600 to-indigo-700 p-8 md:p-10 rounded-3xl text-white shadow-xl overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
-    <div class="absolute -right-10 -bottom-10 w-56 h-56 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-    <div class="relative z-10 space-y-3 flex-1">
-      <span class="bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-white/20 inline-block shadow-xs">
-        <i class="fa-solid fa-graduation-cap mr-1"></i> Minna no Nihongo Apps
-      </span>
-      <h2 class="text-2xl md:text-4xl font-black tracking-tight">Selamat Datang di Pusat Pembelajaran N5</h2>
-      <p class="text-xs md:text-sm text-blue-100 max-w-xl">
-        Kelola hafalan huruf, pelajari tata bahasa, angka, serta uji pemahaman kosakata kustom Anda secara interaktif di sini.
-      </p>
-      <div class="pt-2">
-        <a href="hiragana.html" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-700 hover:bg-blue-50 font-black rounded-2xl text-xs transition shadow-lg cursor-pointer">
-          <i class="fa-solid fa-rocket"></i> Mulai Belajar
-        </a>
-      </div>
-    </div>
-  </div>
+        <!-- BANNER UTAMA -->
+        <div class="relative bg-gradient-to-r from-blue-600 to-indigo-700 p-8 md:p-10 rounded-3xl text-white shadow-xl overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
+          <div class="absolute -right-10 -bottom-10 w-56 h-56 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="relative z-10 space-y-3 flex-1">
+            <span class="bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-white/20 inline-block shadow-xs">
+              <i class="fa-solid fa-graduation-cap mr-1"></i> Minna no Nihongo Apps
+            </span>
+            <h2 class="text-2xl md:text-4xl font-black tracking-tight">Selamat Datang di Pusat Pembelajaran N5</h2>
+            <p class="text-xs md:text-sm text-blue-100 max-w-xl">
+              Kelola hafalan huruf, pelajari tata bahasa, angka, serta uji pemahaman kosakata kustom Anda secara interaktif di sini.
+            </p>
+            <div class="pt-2">
+              <a href="hiragana.html" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-700 hover:bg-blue-50 font-black rounded-2xl text-xs transition shadow-lg cursor-pointer">
+                <i class="fa-solid fa-rocket"></i> Mulai Belajar
+              </a>
+            </div>
+          </div>
+        </div>
 
-  <!-- NAVIGASI MATERI AWAL -->
-<!-- NAVIGASI MATERI AWAL (5 Menu Sesuai Sidebar) -->
-<!-- NAVIGASI MATERI AWAL -->
-<div class="space-y-6">
-  <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-    <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-      <i class="fa-solid fa-compass text-blue-600"></i> Navigasi Materi Awal
-    </h3>
-  </div>
+        <!-- ============================================== -->
+        <!-- PANDUAN PENGGUNAAN (Gaya Kartu Navigasi) -->
+        <!-- ============================================== -->
+        <div class="space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+            <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-lightbulb text-amber-500"></i> Cara Penggunaan Website (Quick Guide)
+            </h3>
+          </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-    <!-- 1. Hiragana -->
-    <a href="hiragana.html" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-blue-500 hover:shadow-md transition group">
-      <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center font-bold mb-4">あ</div>
-      <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Hiragana</h4>
-      <p class="text-[10px] text-slate-400">Dasar hingga Yoon</p>
-    </a>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Langkah 1 -->
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-blue-500 hover:shadow-md transition group">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center font-black text-xs mb-4">01</div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Eksplorasi Materi Awal</h4>
+          <p class="text-[10px] text-slate-400 leading-relaxed">Pilih menu materi awal untuk memulai belajar.</p>
+            </div>
 
-    <!-- 2. Katakana -->
-    <a href="katakana.html" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500 hover:shadow-md transition group">
-      <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center font-bold mb-4">ア</div>
-      <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Katakana</h4>
-      <p class="text-[10px] text-slate-400">Karakter asing & serapan</p>
-    </a>
+            <!-- Langkah 2 -->
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-purple-500 hover:shadow-md transition group">
+              <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 flex items-center justify-center font-black text-xs mb-4">02</div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Gunakan Panel Admin</h4>
+              <p class="text-[10px] text-slate-400 leading-relaxed">Load Kotoba secara instan atau tambah kotoba baru</p>
+            </div>
 
-    <!-- 3. Kata Bilangan -->
-    <a href="suuji.html" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500 hover:shadow-md transition group">
-      <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center font-bold text-xs font-mono mb-4">#</div>
-      <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Kata Bilangan</h4>
-      <p class="text-[10px] text-slate-400">Rumus Man & Oku</p>
-    </a>
+            <!-- Langkah 3 -->
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500 hover:shadow-md transition group">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center font-black text-xs mb-4">03</div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Uji Pemahaman (Kuis)</h4>
+              <p class="text-[10px] text-slate-400 leading-relaxed">Uji seberapa jauh hafalanmu di menu kuis interaktif dengan timer dan pilihan acak.</p>
+            </div>
+          </div>
+        </div>
 
-    <!-- 4. Ungkapan Waktu -->
-    <a href="kotoba.html?cat=ungkapan_waktu" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-amber-500 hover:shadow-md transition group">
-      <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center font-bold mb-4"><i class="fa-regular fa-clock"></i></div>
-      <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Ungkapan Waktu</h4>
-      <p class="text-[10px] text-slate-400">Hari, Pagi, Malam, dll</p>
-    </a>
+        <!-- ============================================== -->
+        <!-- NAVIGASI MATERI AWAL -->
+        <!-- ============================================== -->
+        <div class="space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+            <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-compass text-blue-600"></i> Navigasi Materi Awal
+            </h3>
+          </div>
 
-    <!-- 5. Penanda Waktu -->
-    <a href="kotoba.html?cat=penanda_waktu" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-blue-500 hover:shadow-md transition group">
-      <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center font-bold mb-4"><i class="fa-regular fa-calendar-days"></i></div>
-      <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Penanda Waktu</h4>
-      <p class="text-[10px] text-slate-400">Jam, Menit, Hari & Tanggal</p>
-    </a>
-  </div>
-</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- 1. Hiragana -->
+            <a href="hiragana.html" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-blue-500 hover:shadow-md transition group">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center font-bold mb-4">あ</div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Hiragana</h4>
+              <p class="text-[10px] text-slate-400">Dasar hingga Yoon</p>
+            </a>
 
-</main>
+            <!-- 2. Katakana -->
+            <a href="katakana.html" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500 hover:shadow-md transition group">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center font-bold mb-4">ア</div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Katakana</h4>
+              <p class="text-[10px] text-slate-400">Karakter asing & serapan</p>
+            </a>
+
+            <!-- 3. Kata Bilangan -->
+            <a href="suuji.html" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500 hover:shadow-md transition group">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center font-bold text-xs font-mono mb-4">#</div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Kata Bilangan</h4>
+              <p class="text-[10px] text-slate-400">Rumus Man & Oku</p>
+            </a>
+
+            <!-- 4. Ungkapan Waktu -->
+            <a href="kotoba.html?cat=ungkapan_waktu" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-amber-500 hover:shadow-md transition group">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center font-bold mb-4"><i class="fa-regular fa-clock"></i></div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Ungkapan Waktu</h4>
+              <p class="text-[10px] text-slate-400">Hari, Pagi, Malam, dll</p>
+            </a>
+
+            <!-- 5. Penanda Waktu -->
+            <a href="kotoba.html?cat=penanda_waktu" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-blue-500 hover:shadow-md transition group">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center font-bold mb-4"><i class="fa-regular fa-calendar-days"></i></div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Penanda Waktu</h4>
+              <p class="text-[10px] text-slate-400">Jam, Menit, Hari & Tanggal</p>
+            </a>
+          </div>
+        </div>
+
+      </main>
     </div>
   </div>
 
