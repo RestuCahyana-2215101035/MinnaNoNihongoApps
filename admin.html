@@ -69,31 +69,6 @@
 
   <div class="flex h-screen overflow-hidden relative">
 
-    <!-- ========================================================== -->
-    <!-- MODAL PROTEKSI PASSWORD & BLUR KONTEN DI BELAKANGNYA -->
-    <!-- ========================================================== -->
-    <div x-show="!isAuthenticated" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4" x-transition.opacity>
-      <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl max-w-sm w-full space-y-5 text-center">
-        <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
-          <i class="fa-solid fa-lock"></i>
-        </div>
-        <div>
-          <h3 class="text-base font-black text-slate-900 dark:text-white">Panel Terproteksi</h3>
-          <p class="text-xs text-slate-400 mt-1">Masukkan password admin untuk membuka akses halaman ini.</p>
-        </div>
-
-        <div class="space-y-3">
-          <input type="password" x-model="inputPassword" @keyup.enter="verifyPassword()" :disabled="isCooldown" placeholder="Password..." class="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
-
-          <button @click="verifyPassword()" :disabled="isCooldown" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-indigo-500/20 cursor-pointer disabled:opacity-50" x-text="isCooldown ? 'Terkunci (' + cooldownTimer + 's)' : 'Buka Akses'"></button>
-        </div>
-
-        <div class="text-xs">
-          <a href="index.html" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition">← Kembali ke Beranda</a>
-        </div>
-      </div>
-    </div>
-
     <!-- Mobile Sidebar Overlay -->
     <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
 
@@ -107,17 +82,13 @@
       <div id="header-container" class="contents"></div>
 
       <!-- MAIN BODY CONTENT -->
-      <main class="flex-1 overflow-y-auto p-8 space-y-8 transition duration-300" :class="!isAuthenticated ? 'blur-md pointer-events-none select-none' : ''">
+      <main class="flex-1 overflow-y-auto p-8 space-y-8 transition duration-300">
 
         <!-- Header Halaman & Navigasi Tab Modern -->
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
           <div>
             <div class="flex items-center gap-3 mb-2 flex-wrap">
               <span class="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-900/50 inline-block">Control Center</span>
-              <!-- TOMBOL KELUAR SESI ADMIN -->
-              <button @click="logoutAdmin()" class="text-[10px] font-bold uppercase tracking-widest text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 dark:bg-rose-950/50 px-3 py-1 rounded-full border border-rose-100 dark:border-rose-900/50 transition cursor-pointer flex items-center gap-1.5">
-                <i class="fa-solid fa-right-from-bracket"></i> Keluar Sesi
-              </button>
             </div>
             <h3 class="text-lg font-bold text-slate-900 dark:text-white">Panel Admin Kotoba</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">Pusat kontrol pengelolaan kosakata, kategori, serta backup data.</p>
@@ -347,13 +318,6 @@
         darkMode: false,
         activeTab: 'kosakata',
 
-        // --- SISTEM KEAMANAN & COOLDOWN ---
-        isAuthenticated: false,
-        inputPassword: '',
-        failedAttempts: parseInt(localStorage.getItem('admin_failed_attempts') || '0'),
-        isCooldown: false,
-        cooldownTimer: 0,
-
         // --- DATA STATE ---
         submenus: [],
         vocabData: {},
@@ -383,16 +347,6 @@
         initApp() {
           alpineAppInstance = this;
           this.initTheme();
-
-          if (sessionStorage.getItem('minna_admin_logged') === 'true') {
-            this.isAuthenticated = true;
-          }
-
-          let cooldownUntil = localStorage.getItem('admin_cooldown_until');
-          if (cooldownUntil && Date.now() < parseInt(cooldownUntil)) {
-            this.startCooldownTimer(Math.ceil((parseInt(cooldownUntil) - Date.now()) / 1000));
-          }
-
           this.loadStorageData();
           
           this.$nextTick(() => {
@@ -494,50 +448,6 @@
               }
             });
           }
-        },
-
-        verifyPassword() {
-          if (this.isCooldown) return;
-          let cleanInput = String(this.inputPassword).trim();
-          if (cleanInput === 'benkyoushimasu') {
-            this.isAuthenticated = true;
-            sessionStorage.setItem('minna_admin_logged', 'true');
-            localStorage.setItem('admin_failed_attempts', '0');
-            this.inputPassword = '';
-          } else {
-            this.failedAttempts++;
-            localStorage.setItem('admin_failed_attempts', this.failedAttempts);
-            if (this.failedAttempts >= 3) {
-              let cooldownTime = 60;
-              localStorage.setItem('admin_cooldown_until', Date.now() + (cooldownTime * 1000));
-              this.startCooldownTimer(cooldownTime);
-              alert('Terlalu banyak percobaan salah! Akses dikunci selama 1 menit.');
-            } else {
-              alert(`Password Salah! Sisa percobaan: ${3 - this.failedAttempts}`);
-            }
-            this.inputPassword = '';
-          }
-        },
-
-        logoutAdmin() {
-          sessionStorage.removeItem('minna_admin_logged');
-          this.isAuthenticated = false;
-          this.inputPassword = '';
-        },
-
-        startCooldownTimer(seconds) {
-          this.isCooldown = true;
-          this.cooldownTimer = seconds;
-          let interval = setInterval(() => {
-            this.cooldownTimer--;
-            if (this.cooldownTimer <= 0) {
-              clearInterval(interval);
-              this.isCooldown = false;
-              this.failedAttempts = 0;
-              localStorage.setItem('admin_failed_attempts', '0');
-              localStorage.removeItem('admin_cooldown_until');
-            }
-          }, 1000);
         },
 
         loadStorageData() {
@@ -817,7 +727,6 @@
             this.vocabData[this.selectedCategory] = [];
           }
 
-          // Perbaikan fungsi simpan/edit kosakata agar membaca kategori yang aktif di dropdown form
           if (this.editIndex === null) {
             this.vocabData[this.selectedCategory].push({ ...this.newItem });
             alert('Kosakata berhasil ditambahkan!');
@@ -833,7 +742,6 @@
         },
 
         editItem(index) {
-          // Ambil item berdasarkan kategori yang sedang aktif dilihat pada tabel (viewCategory)
           let items = this.getCurrentCategoryItems();
           this.newItem = { ...items[index] };
           this.selectedCategory = this.viewCategory;
