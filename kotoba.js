@@ -248,7 +248,7 @@ const MASTER_HIRAGANA_LENGKAP = {
       { indonesia: "du", romaji: "ドゥ" },
       { indonesia: "dyu", romaji: "デュ" }
     ],
-    "angka_bilangan": [
+    "kata_bilangan": [
       { indonesia: "0 (Nol)", romaji: "zero / rei" },
       { indonesia: "1 (Satu)", romaji: "ichi" },
       { indonesia: "2 (Dua)", romaji: "ni" },
