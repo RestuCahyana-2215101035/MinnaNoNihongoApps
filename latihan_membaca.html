@@ -18,8 +18,181 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    body { font-family: 'DM Sans', sans-serif; }
-  </style>
+  [x-cloak] {
+    display: none !important;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  /* =========================================================
+     APP SHELL
+     ========================================================= */
+
+  .app-shell {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* =========================================================
+     SIDEBAR WRAPPER
+     ========================================================= */
+
+  .sidebar-wrapper {
+    flex: 0 0 auto;
+    width: auto;
+    height: 100%;
+    position: relative;
+    z-index: 50;
+  }
+
+  /* =========================================================
+     MAIN WRAPPER
+     ========================================================= */
+
+  .main-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* =========================================================
+     HEADER WRAPPER
+     ========================================================= */
+
+  .header-wrapper {
+    flex: 0 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 30;
+  }
+
+  /* =========================================================
+     MOBILE OVERLAY
+     ========================================================= */
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.40);
+    z-index: 40;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+
+  /* =========================================================
+     CONTENT SCROLL
+     ========================================================= */
+
+  .main-wrapper > main {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* =========================================================
+     IPHONE / IPAD
+     ========================================================= */
+
+  @supports (-webkit-touch-callout: none) {
+
+    html,
+    body {
+      width: 100%;
+      min-height: -webkit-fill-available;
+    }
+
+    .app-shell {
+      height: -webkit-fill-available;
+      min-height: -webkit-fill-available;
+    }
+
+    .main-wrapper {
+      height: -webkit-fill-available;
+    }
+
+  }
+
+  /* =========================================================
+     MOBILE
+     ========================================================= */
+
+  @media (max-width: 767px) {
+
+    .app-shell {
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .sidebar-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: auto;
+      height: 100%;
+      height: 100dvh;
+      z-index: 50;
+    }
+
+    .main-wrapper {
+      width: 100%;
+      min-width: 0;
+      flex: 1 1 100%;
+    }
+
+    .header-wrapper {
+      width: 100%;
+      min-width: 0;
+    }
+
+  }
+
+  /* =========================================================
+     IPAD
+     ========================================================= */
+
+  @media (min-width: 768px) and (max-width: 1024px) {
+
+    .app-shell {
+      width: 100%;
+    }
+
+    .sidebar-wrapper {
+      flex-shrink: 0;
+    }
+
+    .main-wrapper {
+      min-width: 0;
+    }
+
+    .header-wrapper {
+      flex-shrink: 0;
+    }
+
+  }
+
+</style>
 </head>
 
 <body
@@ -28,27 +201,36 @@
   x-init="initApp()"
 >
 
-  <div class="flex h-screen overflow-hidden">
+  <div class="app-shell">
 
-    <!-- Mobile Sidebar Overlay -->
-    <div
-      x-show="sidebarOpen"
-      @click="sidebarOpen = false"
-      class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden"
-      x-transition.opacity
-    ></div>
+  <!-- MOBILE SIDEBAR OVERLAY -->
+  <div
+    x-show="sidebarOpen"
+    @click="sidebarOpen = false"
+    class="sidebar-overlay"
+    x-transition.opacity
+    x-cloak
+  ></div>
 
-    <!-- SIDEBAR CONTAINER -->
-    <div id="sidebar-container" class="contents"></div>
+  <!-- SIDEBAR -->
+  <aside
+    id="sidebar-container"
+    class="sidebar-wrapper"
+  ></aside>
 
-    <!-- MAIN CONTENT AREA -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+  <!-- MAIN AREA -->
+  <div class="main-wrapper">
 
-      <!-- HEADER CONTAINER -->
-      <div id="header-container" class="contents"></div>
+    <!-- HEADER -->
+    <header
+      id="header-container"
+      class="header-wrapper"
+    ></header>
 
       <!-- MAIN BODY CONTENT -->
-      <main class="flex-1 overflow-y-auto p-8 space-y-8">
+      <main class="flex-1 min-h-0 overflow-y-auto
+         -webkit-overflow-scrolling-touch
+         p-4 sm:p-6 md:p-8 space-y-8">
 
         <!-- Header Halaman -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
@@ -168,73 +350,218 @@
           return 'Tingkat: Panjang (Hingga 30 Kalimat)';
         },
 
-        async initApp() {
-          this.initTheme();
+       async initApp() {
+  this.initTheme();
 
-          try {
-            const sidebarRes = await fetch('./sidebar.html');
+  try {
 
-            if (sidebarRes.ok) {
-              document.getElementById('sidebar-container').innerHTML =
-                await sidebarRes.text();
+    /* =====================================================
+       LOAD SIDEBAR
+       ===================================================== */
 
-              this.renderDynamicKotobaSubmenus();
-            }
+    const sidebarContainer =
+      document.getElementById('sidebar-container');
 
-            const headerRes = await fetch('./header.html');
+    if (sidebarContainer) {
 
-            if (headerRes.ok) {
-              document.getElementById('header-container').innerHTML =
-                await headerRes.text();
-            }
+      const sidebarRes =
+        await fetch('./sidebar.html', {
+          cache: 'no-store'
+        });
 
-          } catch (e) {
-            console.error('Gagal memuat template modular:', e);
-          }
+      if (sidebarRes.ok) {
+
+        const sidebarHTML =
+          await sidebarRes.text();
+
+        sidebarContainer.innerHTML =
+          sidebarHTML;
+
+        this.renderDynamicKotobaSubmenus();
+
+        /*
+         * Penting:
+         * Alpine harus menginisialisasi ulang HTML
+         * yang baru dimasukkan melalui fetch().
+         */
+        if (window.Alpine) {
+          Alpine.initTree(sidebarContainer);
+        }
+      }
+    }
+
+
+    /* =====================================================
+       LOAD HEADER
+       ===================================================== */
+
+    const headerContainer =
+      document.getElementById('header-container');
+
+    if (headerContainer) {
+
+      const headerRes =
+        await fetch('./header.html', {
+          cache: 'no-store'
+        });
+
+      if (headerRes.ok) {
+
+        const headerHTML =
+          await headerRes.text();
+
+        headerContainer.innerHTML =
+          headerHTML;
+
+        /*
+         * Inisialisasi ulang Alpine untuk header.
+         */
+        if (window.Alpine) {
+          Alpine.initTree(headerContainer);
+        }
+      }
+    }
+
+  } catch (error) {
+
+    console.error(
+      'Gagal memuat sidebar/header:',
+      error
+    );
+
+  }
+},
+       renderDynamicKotobaSubmenus() {
+    const container = document.getElementById('dynamic-kotoba-links');
+
+    if (!container) return;
+
+    // Kosongkan isi container terlebih dahulu
+    // agar submenu tidak terduplikasi ketika fungsi dipanggil ulang.
+    container.innerHTML = '';
+
+    const defaultSubmenus = [
+        {
+            id: 'ungkapan_waktu',
+            title: 'Ungkapan Waktu'
         },
-
-        renderDynamicKotobaSubmenus() {
-          const container = document.getElementById('dynamic-kotoba-links');
-
-          if (!container) return;
-
-          let submenus = JSON.parse(
-            localStorage.getItem('minna_submenus')
-          );
-
-          if (!submenus) {
-            submenus = [
-              { id: 'ungkapan_waktu', title: 'Ungkapan Waktu' },
-              { id: 'penanda_waktu', title: 'Penanda Waktu' },
-              { id: 'kata_keterangan', title: 'Kata Keterangan' },
-              { id: 'kata_benda', title: 'Kata Benda' },
-              { id: 'kk_gol1', title: 'Kata Kerja Golongan I' },
-              { id: 'kk_gol2', title: 'Kata Kerja Golongan II' },
-              { id: 'kk_gol3', title: 'Kata Kerja Golongan III' },
-              { id: 'salam', title: 'Salam (Aisatsu)' },
-              { id: 'kazoku', title: 'Kazoku (Keluarga)' }
-            ];
-
-            localStorage.setItem(
-              'minna_submenus',
-              JSON.stringify(submenus)
-            );
-          }
-
-          submenus.forEach(sub => {
-            const link = document.createElement('a');
-
-            link.href = `kotoba.html?cat=${sub.id}`;
-
-            link.className =
-              'flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
-
-            link.innerHTML =
-              `<i class="fa-solid fa-angle-right text-[10px]"></i> ${sub.title}`;
-
-            container.appendChild(link);
-          });
+        {
+            id: 'penanda_waktu',
+            title: 'Penanda Waktu'
         },
+        {
+            id: 'kata_keterangan',
+            title: 'Kata Keterangan'
+        },
+        {
+            id: 'kata_benda',
+            title: 'Kata Benda'
+        },
+        {
+            id: 'kk_gol1',
+            title: 'Kata Kerja Golongan I'
+        },
+        {
+            id: 'kk_gol2',
+            title: 'Kata Kerja Golongan II'
+        },
+        {
+            id: 'kk_gol3',
+            title: 'Kata Kerja Golongan III'
+        },
+        {
+            id: 'salam',
+            title: 'Salam (Aisatsu)'
+        },
+        {
+            id: 'kazoku',
+            title: 'Kazoku (Keluarga)'
+        }
+    ];
+
+    let submenus = [];
+
+    // Ambil data dari localStorage dengan aman
+    try {
+        const savedSubmenus = localStorage.getItem('minna_submenus');
+
+        if (savedSubmenus) {
+            const parsed = JSON.parse(savedSubmenus);
+
+            if (Array.isArray(parsed)) {
+                submenus = parsed;
+            }
+        }
+    } catch (error) {
+        console.warn(
+            'Data minna_submenus tidak valid. Menggunakan data default.',
+            error
+        );
+
+        submenus = [];
+    }
+
+    // Jika belum ada data, gunakan data default
+    if (submenus.length === 0) {
+        submenus = [...defaultSubmenus];
+
+        localStorage.setItem(
+            'minna_submenus',
+            JSON.stringify(submenus)
+        );
+    }
+
+    // Render submenu
+    submenus.forEach(sub => {
+
+        // Pastikan data submenu valid
+        if (
+            !sub ||
+            typeof sub.id !== 'string' ||
+            typeof sub.title !== 'string'
+        ) {
+            return;
+        }
+
+        const link = document.createElement('a');
+
+        link.href = `kotoba.html?cat=${encodeURIComponent(sub.id)}`;
+
+        link.className = [
+            'flex',
+            'items-center',
+            'gap-3',
+            'py-2.5',
+            'px-4',
+            'rounded-xl',
+            'text-xs',
+            'font-semibold',
+            'text-slate-500',
+            'dark:text-slate-400',
+            'hover:text-blue-600',
+            'dark:hover:text-white',
+            'hover:bg-slate-50',
+            'dark:hover:bg-slate-800/50',
+            'transition'
+        ].join(' ');
+
+        // Icon
+        const icon = document.createElement('i');
+
+        icon.className =
+            'fa-solid fa-angle-right text-[10px] flex-shrink-0';
+
+        // Text submenu
+        const text = document.createElement('span');
+
+        text.textContent = sub.title;
+
+        link.appendChild(icon);
+        link.appendChild(text);
+
+        container.appendChild(link);
+    });
+},
 
         initTheme() {
           const savedTheme = localStorage.getItem('theme');

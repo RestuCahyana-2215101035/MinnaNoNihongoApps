@@ -2,45 +2,63 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Minna no Nihongo - Ungkapan Waktu</title>
+  
+  <!-- Style Anti-Flicker Alpine & Fix Scrolling iOS -->
+  <style>
+    [x-cloak] { display: none !important; }
+    body { font-family: 'DM Sans', sans-serif; }
+    .-webkit-overflow-scrolling-touch {
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { darkMode: 'class', }
+    tailwind.config = { darkMode: 'class' }
   </script>
+
   <!-- Google Fonts: DM Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
   
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <style>
-    body { font-family: 'DM Sans', sans-serif; }
-  </style>
+
+  <!-- Alpine.js (Loaded Deferred) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="ungkapanWaktuApp()" x-init="initApp()">
 
-  <div class="flex h-screen overflow-hidden">
+  <!-- Layout Wrapper menggunakan 100dvh untuk kalkulasi tepat di Dynamic Toolbar iOS Safari -->
+  <div class="flex h-screen h-[100dvh] overflow-hidden relative">
     
     <!-- Mobile Sidebar Overlay -->
-    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+    <div x-show="sidebarOpen" 
+         @click="sidebarOpen = false" 
+         x-cloak
+         class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden transition-opacity" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"></div>
 
-    <!-- SIDEBAR CONTAINER (Dimuat otomatis dari sidebar.html) -->
-    <div id="sidebar-container" class="contents"></div>
+    <!-- SIDEBAR CONTAINER (Optimasi Flexbox & Z-Index Khusus Safari WebKit) -->
+    <div id="sidebar-container" class="relative z-50 h-full flex shrink-0"></div>
 
     <!-- MAIN CONTENT AREA -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
       
-      <!-- HEADER CONTAINER (Dimuat otomatis dari header.html) -->
-      <div id="header-container" class="contents"></div>
+      <!-- HEADER CONTAINER -->
+      <div id="header-container" class="shrink-0 w-full z-30"></div>
 
       <!-- MAIN BODY CONTENT -->
-      <main class="flex-1 overflow-y-auto p-8 space-y-8">
+      <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 -webkit-overflow-scrolling-touch">
         
         <!-- Header Halaman -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
@@ -95,21 +113,46 @@
     function ungkapanWaktuApp() {
       return {
         sidebarOpen: false,
-        materiAwalDropdown: true, // Membuka dropdown materi awal secara otomatis di sidebar
+        materiAwalDropdown: true,
         kotobaDropdown: false,
         darkMode: false,
 
         async initApp() {
           this.initTheme();
+          
           try {
-            const sidebarRes = await fetch('./sidebar.html');
-            if (sidebarRes.ok) {
-              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
-              this.renderDynamicKotobaSubmenus();
+            // Menggunakan Promise.allSettled agar pemuatan aman di iOS Safari
+            const [sidebarRes, headerRes] = await Promise.allSettled([
+              fetch('sidebar.html'),
+              fetch('header.html')
+            ]);
+
+            // Inisialisasi Sidebar
+            if (sidebarRes.status === 'fulfilled' && sidebarRes.value.ok) {
+              const sidebarContainer = document.getElementById('sidebar-container');
+              if (sidebarContainer) {
+                sidebarContainer.innerHTML = await sidebarRes.value.text();
+                this.renderDynamicKotobaSubmenus();
+                
+                // Re-initialize DOM Tree untuk Alpine di iOS WebKit
+                if (window.Alpine) {
+                  Alpine.initTree(sidebarContainer);
+                }
+              }
             }
-            const headerRes = await fetch('./header.html');
-            if (headerRes.ok) {
-              document.getElementById('header-container').innerHTML = await headerRes.text();
+            
+            // Inisialisasi Header
+            if (headerRes.status === 'fulfilled' && headerRes.value.ok) {
+              const headerContainer = document.getElementById('header-container');
+              if (headerContainer) {
+                headerContainer.innerHTML = await headerRes.value.text();
+                
+                // Re-initialize DOM Tree untuk Alpine di iOS WebKit
+                if (window.Alpine) {
+                  Alpine.initTree(headerContainer);
+                }
+                this.bindHeaderThemeToggle();
+              }
             }
           } catch (e) {
             console.error('Gagal memuat template modular:', e);
@@ -120,8 +163,14 @@
           const container = document.getElementById('dynamic-kotoba-links');
           if (!container) return;
 
-          let submenus = JSON.parse(localStorage.getItem('minna_submenus'));
-          if (!submenus) {
+          let submenus = [];
+          try {
+            submenus = JSON.parse(localStorage.getItem('minna_submenus'));
+          } catch(e) {
+            submenus = null;
+          }
+
+          if (!submenus || !Array.isArray(submenus)) {
             submenus = [
               { id: 'ungkapan_waktu', title: 'Ungkapan Waktu' },
               { id: 'penanda_waktu', title: 'Penanda Waktu' },
@@ -136,6 +185,7 @@
             localStorage.setItem('minna_submenus', JSON.stringify(submenus));
           }
 
+          container.innerHTML = '';
           submenus.forEach(sub => {
             const link = document.createElement('a');
             link.href = `kotoba.html?cat=${sub.id}`;
@@ -147,12 +197,13 @@
 
         initTheme() {
           const savedTheme = localStorage.getItem('theme');
-          if (savedTheme === 'dark') {
+          if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             this.darkMode = true;
             document.documentElement.classList.add('dark');
           } else {
             this.darkMode = false;
             document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
           }
         },
         
@@ -167,12 +218,22 @@
           }
         },
 
-        // Data Ungkapan Waktu Lengkap
+        bindHeaderThemeToggle() {
+          this.$nextTick(() => {
+            const themeBtn = document.querySelector('#header-container [data-theme-toggle], #header-container button');
+            if (themeBtn) {
+              themeBtn.addEventListener('click', () => {
+                this.toggleDarkMode();
+              });
+            }
+          });
+        },
+
         ungkapanWaktuList: [
           {
             subJudul: "Hari (日)",
             items: [
-              { indonesia: "Kemarin lusa", romaji: "ototoi", hiragana: "おととい", katakana: "オトトイ" },
+              { indonesia: "Kemarin lusa", romaji: "ototoi", hiragana: "おとtoi", katakana: "オトトイ" },
               { indonesia: "Kemarin", romaji: "kinou", hiragana: "きのう", katakana: "キノウ" },
               { indonesia: "Hari ini", romaji: "kyou", hiragana: "きょう", katakana: "キョウ" },
               { indonesia: "Besok", romaji: "ashita", hiragana: "あした", katakana: "アシタ" },
@@ -183,7 +244,7 @@
           {
             subJudul: "Pagi (朝)",
             items: [
-              { indonesia: "Kemarin lusa pagi", romaji: "ototoi no asa", hiragana: "おとといのあさ", katakana: "オトトイノアサ" },
+              { indonesia: "Kemarin lusa pagi", romaji: "ototoi no asa", hiragana: "おとtoiのあさ", katakana: "オトトイノアサ" },
               { indonesia: "Kemarin pagi", romaji: "kinou no asa", hiragana: "きのうのあさ", katakana: "キノウノアサ" },
               { indonesia: "Tadi pagi", romaji: "kesa", hiragana: "けさ", katakana: "ケサ" },
               { indonesia: "Besok pagi", romaji: "ashita no asa", hiragana: "あしたのあさ", katakana: "アシタノアサ" },

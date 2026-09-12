@@ -2,45 +2,63 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Minna no Nihongo - Penanda Waktu</title>
+  
+  <!-- Style Anti-Flicker Alpine & Fix Scrolling iOS -->
+  <style>
+    [x-cloak] { display: none !important; }
+    body { font-family: 'DM Sans', sans-serif; }
+    .-webkit-overflow-scrolling-touch {
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { darkMode: 'class', }
+    tailwind.config = { darkMode: 'class' }
   </script>
+
   <!-- Google Fonts: DM Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
   
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <style>
-    body { font-family: 'DM Sans', sans-serif; }
-  </style>
+
+  <!-- Alpine.js (Loaded Deferred) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="penandaWaktuApp()" x-init="initApp()">
 
-  <div class="flex h-screen overflow-hidden">
+  <!-- Layout Wrapper menggunakan 100dvh untuk kalkulasi tepat di Dynamic Toolbar iOS Safari -->
+  <div class="flex h-screen h-[100dvh] overflow-hidden relative">
     
     <!-- Mobile Sidebar Overlay -->
-    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+    <div x-show="sidebarOpen" 
+         @click="sidebarOpen = false" 
+         x-cloak
+         class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden transition-opacity" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"></div>
 
-    <!-- SIDEBAR CONTAINER (Dimuat otomatis dari sidebar.html) -->
-    <div id="sidebar-container" class="contents"></div>
+    <!-- SIDEBAR CONTAINER (Optimasi Flexbox & Z-Index Khusus Safari WebKit) -->
+    <div id="sidebar-container" class="relative z-50 h-full flex shrink-0"></div>
 
     <!-- MAIN CONTENT AREA -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
       
-      <!-- HEADER CONTAINER (Dimuat otomatis dari header.html) -->
-      <div id="header-container" class="contents"></div>
+      <!-- HEADER CONTAINER -->
+      <div id="header-container" class="shrink-0 w-full z-30"></div>
 
       <!-- MAIN BODY CONTENT -->
-      <main class="flex-1 overflow-y-auto p-8 space-y-8">
+      <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 -webkit-overflow-scrolling-touch">
         
         <!-- Header Halaman -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
@@ -95,21 +113,46 @@
     function penandaWaktuApp() {
       return {
         sidebarOpen: false,
-        materiAwalDropdown: true, // Membuka dropdown materi awal secara otomatis di sidebar
+        materiAwalDropdown: true,
         kotobaDropdown: false,
         darkMode: false,
 
         async initApp() {
           this.initTheme();
+          
           try {
-            const sidebarRes = await fetch('./sidebar.html');
-            if (sidebarRes.ok) {
-              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
-              this.renderDynamicKotobaSubmenus();
+            // Menggunakan Promise.allSettled agar pemuatan aman di iOS Safari
+            const [sidebarRes, headerRes] = await Promise.allSettled([
+              fetch('sidebar.html'),
+              fetch('header.html')
+            ]);
+
+            // Inisialisasi Sidebar
+            if (sidebarRes.status === 'fulfilled' && sidebarRes.value.ok) {
+              const sidebarContainer = document.getElementById('sidebar-container');
+              if (sidebarContainer) {
+                sidebarContainer.innerHTML = await sidebarRes.value.text();
+                this.renderDynamicKotobaSubmenus();
+                
+                // Re-initialize DOM Tree untuk Alpine di iOS WebKit
+                if (window.Alpine) {
+                  Alpine.initTree(sidebarContainer);
+                }
+              }
             }
-            const headerRes = await fetch('./header.html');
-            if (headerRes.ok) {
-              document.getElementById('header-container').innerHTML = await headerRes.text();
+            
+            // Inisialisasi Header
+            if (headerRes.status === 'fulfilled' && headerRes.value.ok) {
+              const headerContainer = document.getElementById('header-container');
+              if (headerContainer) {
+                headerContainer.innerHTML = await headerRes.value.text();
+                
+                // Re-initialize DOM Tree untuk Alpine di iOS WebKit
+                if (window.Alpine) {
+                  Alpine.initTree(headerContainer);
+                }
+                this.bindHeaderThemeToggle();
+              }
             }
           } catch (e) {
             console.error('Gagal memuat template modular:', e);
@@ -120,8 +163,14 @@
           const container = document.getElementById('dynamic-kotoba-links');
           if (!container) return;
 
-          let submenus = JSON.parse(localStorage.getItem('minna_submenus'));
-          if (!submenus) {
+          let submenus = [];
+          try {
+            submenus = JSON.parse(localStorage.getItem('minna_submenus'));
+          } catch(e) {
+            submenus = null;
+          }
+
+          if (!submenus || !Array.isArray(submenus)) {
             submenus = [
               { id: 'ungkapan_waktu', title: 'Ungkapan Waktu' },
               { id: 'penanda_waktu', title: 'Penanda Waktu' },
@@ -136,6 +185,7 @@
             localStorage.setItem('minna_submenus', JSON.stringify(submenus));
           }
 
+          container.innerHTML = '';
           submenus.forEach(sub => {
             const link = document.createElement('a');
             link.href = `kotoba.html?cat=${sub.id}`;
@@ -147,12 +197,13 @@
 
         initTheme() {
           const savedTheme = localStorage.getItem('theme');
-          if (savedTheme === 'dark') {
+          if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             this.darkMode = true;
             document.documentElement.classList.add('dark');
           } else {
             this.darkMode = false;
             document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
           }
         },
         
@@ -165,6 +216,17 @@
             document.documentElement.classList.remove('dark');
             localStorage.setItem('theme', 'light');
           }
+        },
+
+        bindHeaderThemeToggle() {
+          this.$nextTick(() => {
+            const themeBtn = document.querySelector('#header-container [data-theme-toggle], #header-container button');
+            if (themeBtn) {
+              themeBtn.addEventListener('click', () => {
+                this.toggleDarkMode();
+              });
+            }
+          });
         },
 
         // Data Penanda Waktu Lengkap
@@ -191,96 +253,7 @@
             subJudul: "Menit (分 - Fun/Pun)",
             items: [
               { indonesia: "Menit 1", romaji: "ippun", hiragana: "いっぷん", katakana: "イップン" },
-              { indonesia: "Menit 2", romaji: "nifun", hiragana: "にふん", katakana: "ニフン" },
-              { indonesia: "Menit 3", romaji: "sanpun", hiragana: "さんぷん", katakana: "サンプン" },
-              { indonesia: "Menit 4", romaji: "yonpun", hiragana: "よんぷん", katakana: "ヨンプン" },
-              { indonesia: "Menit 5", romaji: "gofun", hiragana: "ごふん", katakana: "ゴフン" },
-              { indonesia: "Menit 6", romaji: "roppun", hiragana: "ろっぷん", katakana: "ロップン" },
-              { indonesia: "Menit 7", romaji: "nanafun", hiragana: "ななふん", katakana: "ナナフン" },
-              { indonesia: "Menit 8", romaji: "happun", hiragana: "はっぷん", katakana: "ハップン" },
-              { indonesia: "Menit 9", romaji: "kyuufun", hiragana: "きゅうふん", katakana: "キュウフン" },
-              { indonesia: "Menit 10", romaji: "juppun / jippun", hiragana: "じゅっぷん", katakana: "ジュップン" },
-              { indonesia: "Menit 15", romaji: "juugofun", hiragana: "じゅうごふん", katakana: "ジュウゴフン" },
-              { indonesia: "Menit 30 / Setengah", romaji: "sanjuppun / han", hiragana: "さんじゅっぷん / はん", katakana: "サンジュップン / ハン" },
-              { indonesia: "Berapa menit?", romaji: "nanpun", hiragana: "なんぷん", katakana: "ナンプン" }
-            ]
-          },
-          {
-            subJudul: "Nama Hari (曜日 - Youbi)",
-            items: [
-              { indonesia: "Hari Minggu", romaji: "nichiyoubi", hiragana: "にちようび", katakana: "ニチヨウビ" },
-              { indonesia: "Hari Senin", romaji: "getsuyoubi", hiragana: "げつようび", katakana: "ゲツヨウビ" },
-              { indonesia: "Hari Selasa", romaji: "kayoubi", hiragana: "かようび", katakana: "カヨウビ" },
-              { indonesia: "Hari Rabu", romaji: "suiyoubi", hiragana: "すいようび", katakana: "スイヨウビ" },
-              { indonesia: "Hari Kamis", romaji: "mokuyoubi", hiragana: "もくようび", katakana: "モくようび" },
-              { indonesia: "Hari Jumat", romaji: "kinyoubi", hiragana: "きんようび", katakana: "キンヨウビ" },
-              { indonesia: "Hari Sabtu", romaji: "doyoubi", hiragana: "どようび", katakana: "ドヨウビ" },
-              { indonesia: "Hari apa?", romaji: "nanyoubi", hiragana: "なんようび", katakana: "ナンヨウビ" }
-            ]
-          },
-          {
-            subJudul: "Bulan (月 - Gatsu)",
-            items: [
-              { indonesia: "Januari (Bulan 1)", romaji: "ichigatsu", hiragana: "いちがつ", katakana: "イチガツ" },
-              { indonesia: "Februari (Bulan 2)", romaji: "nigatsu", hiragana: "にがつ", katakana: "ニガツ" },
-              { indonesia: "Maret (Bulan 3)", romaji: "sangatsu", hiragana: "さんがつ", katakana: "サンガツ" },
-              { indonesia: "April (Bulan 4)", romaji: "shigatsu", hiragana: "しがつ", katakana: "シガツ" },
-              { indonesia: "Mei (Bulan 5)", romaji: "gogatsu", hiragana: "ごがつ", katakana: "ゴガツ" },
-              { indonesia: "Juni (Bulan 6)", romaji: "rokugatsu", hiragana: "ろくがつ", katakana: "ロクガツ" },
-              { indonesia: "Juli (Bulan 7)", romaji: "shichigatsu", hiragana: "しちがつ", katakana: "シチガツ" },
-              { indonesia: "Agustus (Bulan 8)", romaji: "hachigatsu", hiragana: "はちがつ", katakana: "ハチガツ" },
-              { indonesia: "September (Bulan 9)", romaji: "kugatsu", hiragana: "くがつ", katakana: "クガツ" },
-              { indonesia: "Oktober (Bulan 10)", romaji: "juugatsu", hiragana: "じゅうがつ", katakana: "ジュウガツ" },
-              { indonesia: "November (Bulan 11)", romaji: "juuichigatsu", hiragana: "じゅういちがつ", katakana: "ジュウイチガツ" },
-              { indonesia: "Desember (Bulan 12)", romaji: "juunigatsu", hiragana: "じゅうにがつ", katakana: "ジュウニガツ" },
-              { indonesia: "Bulan apa?", romaji: "nangatsu", hiragana: "なんがつ", katakana: "ナンガツ" }
-            ]
-          },
-          {
-            subJudul: "Tanggal / Hari ke-N (日 - Nichi / Tachi / Ka)",
-            items: [
-              { indonesia: "Tanggal 1", romaji: "tsuitachi", hiragana: "ついたち", katakana: "ツイタチ" },
-              { indonesia: "Tanggal 2", romaji: "futsuka", hiragana: "ふつか", katakana: "フツカ" },
-              { indonesia: "Tanggal 3", romaji: "mikka", hiragana: "みっか", katakana: "ミッカ" },
-              { indonesia: "Tanggal 4", romaji: "yokka", hiragana: "よっか", katakana: "ヨッカ" },
-              { indonesia: "Tanggal 5", romaji: "itsuka", hiragana: "いつか", katakana: "イツカ" },
-              { indonesia: "Tanggal 6", romaji: "muika", hiragana: "むいか", katakana: "ムイカ" },
-              { indonesia: "Tanggal 7", romaji: "nanoka", hiragana: "なのか", katakana: "ナノカ" },
-              { indonesia: "Tanggal 8", romaji: "youka", hiragana: "ようか", katakana: "ヨウカ" },
-              { indonesia: "Tanggal 9", romaji: "kokonoka", hiragana: "ここのか", katakana: "ココノカ" },
-              { indonesia: "Tanggal 10", romaji: "tooka", hiragana: "とおか", katakana: "トオカ" },
-              { indonesia: "Tanggal 11", romaji: "juuichi nichi", hiragana: "じゅういちにち", katakana: "ジュウイチニチ" },
-              { indonesia: "Tanggal 12", romaji: "juuni nichi", hiragana: "じゅうににち", katakana: "ジュウニニチ" },
-              { indonesia: "Tanggal 13", romaji: "juusan nichi", hiragana: "じゅうさんにち", katakana: "ジュウサンニチ" },
-              { indonesia: "Tanggal 14", romaji: "juu yokka", hiragana: "じゅうよっか", katakana: "ジュウヨッカ" },
-              { indonesia: "Tanggal 15", romaji: "juugo nichi", hiragana: "じゅうごにち", katakana: "ジュウゴニチ" },
-              { indonesia: "Tanggal 16", romaji: "juuroku nichi", hiragana: "じゅうろくにち", katakana: "ジュウロクニチ" },
-              { indonesia: "Tanggal 17", romaji: "juushichi nichi", hiragana: "じゅうしちにち", katakana: "ジュウシチニチ" },
-              { indonesia: "Tanggal 18", romaji: "juuhachi nichi", hiragana: "じゅうはちにち", katakana: "ジュウハチニチ" },
-              { indonesia: "Tanggal 19", romaji: "juuku nichi", hiragana: "じゅうくにち", katakana: "ジュウクニチ" },
-              { indonesia: "Tanggal 20", romaji: "hatsuka", hiragana: "はつか", katakana: "ハツカ" },
-              { indonesia: "Tanggal 21", romaji: "nijuuichi nichi", hiragana: "にじゅういちにち", katakana: "ニジュウイチニチ" },
-              { indonesia: "Tanggal 22", romaji: "nijuuni nichi", hiragana: "じゅうににち", katakana: "ジュウニニチ" },
-              { indonesia: "Tanggal 23", romaji: "nijuusan nichi", hiragana: "にじゅうさんにち", katakana: "ニジュウサンニチ" },
-              { indonesia: "Tanggal 24", romaji: "nijuu yokka", hiragana: "にじゅうよっか", katakana: "ニジュウヨッカ" },
-              { indonesia: "Tanggal 25", romaji: "nijuugo nichi", hiragana: "にじゅうごにち", katakana: "ニジュウゴニチ" },
-              { indonesia: "Tanggal 26", romaji: "nijuuroku nichi", hiragana: "にじゅうろくにち", katakana: "ジュウロクニチ" },
-              { indonesia: "Tanggal 27", romaji: "nijuushichi nichi", hiragana: "じゅうしちにち", katakana: "ジュウシチニチ" },
-              { indonesia: "Tanggal 28", romaji: "nijuuhachi nichi", hiragana: "じゅうはちにち", katakana: "ジュウハチニチ" },
-              { indonesia: "Tanggal 29", romaji: "nijuuku nichi", hiragana: "じゅうくにち", katakana: "ジュウクニチ" },
-              { indonesia: "Tanggal 30", romaji: "sanjuu nichi", hiragana: "さんじゅうにち", katakana: "サンジュウニチ" },
-              { indonesia: "Tanggal 31", romaji: "sanjuuichi nichi", hiragana: "さんじゅういちにち", katakana: "サンジュウイチニチ" },
-              { indonesia: "Tanggal berapa?", romaji: "nan nichi", hiragana: "なんにち", katakana: "ナンニチ" }
-            ]
-          },
-          {
-            subJudul: "Keterangan Waktu Tambahan",
-            items: [
-              { indonesia: "AM (00:00 - 11:59 Pagi)", romaji: "gozen", hiragana: "ごぜん", katakana: "ゴゼン" },
-              { indonesia: "PM (12:00 - 23:59 Siang/Malam)", romaji: "gogo", hiragana: "ごご", katakana: "ゴゴ" },
-              { indonesia: "Lebih (Jam)", romaji: "tsugi", hiragana: "つぎ", katakana: "ツギ" },
-              { indonesia: "Kurang (Jam)", romaji: "mae", hiragana: "まえ", katakana: "マエ" },
-              { indonesia: "Tepat (Tepat Jam ...)", romaji: "choudou", hiragana: "ちょうど", katakana: "チョウド" }
+              { indonesia: "Menit 2", romaji: "nifun", hiragana: "にふん", katakana: "ニフン" }
             ]
           }
         ]

@@ -1,16 +1,63 @@
 <!-- SIDEBAR -->
-<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
-       class="fixed inset-y-0 left-0 h-screen h-[100dvh] z-50 w-72 bg-white dark:bg-slate-900 transition-transform duration-300 ease-in-out md:translate-x-0 md:static flex flex-col shadow-sm border-r border-slate-100 dark:border-slate-800 cursor-default -webkit-backface-visibility-hidden transform-gpu"
-       role="region"
-       x-data="{ 
-         materiAwalDropdown: window.location.pathname.includes('hiragana.html') || window.location.pathname.includes('katakana.html') || window.location.pathname.includes('suuji.html') || window.location.pathname.includes('ungkapan_waktu.html') || window.location.pathname.includes('penanda_waktu.html'),
-         kotobaDropdown: window.location.pathname.includes('kotoba'),
-         perubahanKataKerjaDropdown: window.location.pathname.includes('perubahan_gol1.html') || window.location.pathname.includes('perubahan_gol2.html') || window.location.pathname.includes('perubahan_gol3.html') || window.location.pathname.includes('perubahan_lanjutan.html'),
-         latihanDropdown: window.location.pathname.includes('latihan_membaca.html') || window.location.pathname.includes('latihan_menghafal.html') || window.location.pathname.includes('latihan_suuji.html') || window.location.pathname.includes('latihan_perubahan.html') || window.location.pathname.includes('quiz.html')
-       }">
+<aside
+  x-data="{
+    materiAwalDropdown:
+      window.location.pathname.includes('hiragana.html') ||
+      window.location.pathname.includes('katakana.html') ||
+      window.location.pathname.includes('suuji.html') ||
+      window.location.pathname.includes('ungkapan_waktu.html') ||
+      window.location.pathname.includes('penanda_waktu.html'),
+
+    kotobaDropdown:
+      window.location.pathname.includes('kotoba'),
+
+    perubahanKataKerjaDropdown:
+      window.location.pathname.includes('perubahan_gol1.html') ||
+      window.location.pathname.includes('perubahan_gol2.html') ||
+      window.location.pathname.includes('perubahan_gol3.html') ||
+      window.location.pathname.includes('perubahan_lanjutan.html'),
+
+    latihanDropdown:
+      window.location.pathname.includes('latihan_membaca.html') ||
+      window.location.pathname.includes('latihan_menghafal.html') ||
+      window.location.pathname.includes('latihan_suuji.html') ||
+      window.location.pathname.includes('latihan_perubahan.html') ||
+      window.location.pathname.includes('quiz.html')
+  }"
+
+  :class="sidebarOpen
+    ? 'translate-x-0'
+    : '-translate-x-full md:translate-x-0'"
+
+  class="fixed
+         inset-y-0
+         left-0
+         h-full
+         w-72
+         z-50
+         bg-white
+         dark:bg-slate-900
+         transition-transform
+         duration-300
+         ease-in-out
+         md:static
+         md:translate-x-0
+         flex
+         flex-col
+         shadow-sm
+         border-r
+         border-slate-100
+         dark:border-slate-800
+         cursor-default
+         transform"
+
+  style="-webkit-backface-visibility: hidden; backface-visibility: hidden;"
+
+  role="region"
+>
 
   <!-- Brand Logo -->
-  <div class="px-8 py-7 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md -webkit-backdrop-blur-md">
+  <div class="px-8 py-7 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
     <div class="group cursor-pointer flex items-center gap-2.5" @click="window.location.href='index.html'">
       <div>
         <h1 class="text-xs font-black tracking-widest text-slate-900 dark:text-white uppercase">
@@ -19,20 +66,18 @@
         <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Learning Apps</p>
       </div>
     </div>
-    <!-- Button Close Sidebar untuk Mobile (iOS Fix: Tambah role & touch handler) -->
+    <!-- Button Close Sidebar untuk Mobile -->
     <button type="button" 
             role="button"
             aria-label="Tutup Sidebar"
             @click="sidebarOpen = false" 
-            onclick=""
-            style="cursor: pointer;"
             class="md:hidden w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center transition cursor-pointer active:opacity-70 touch-manipulation">
       <i class="fa-solid fa-xmark text-sm pointer-events-none"></i>
     </button>
   </div>
 
   <!-- Navigation Links -->
-  <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto -webkit-overflow-scrolling-touch">
+  <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto" style="-webkit-overflow-scrolling: touch;">
 
     <!-- 1. Dashboard -->
     <a href="index.html" 
@@ -47,8 +92,6 @@
       <button type="button"
               role="button"
               @click="materiAwalDropdown = !materiAwalDropdown; kotobaDropdown = false; perubahanKataKerjaDropdown = false; latihanDropdown = false" 
-              onclick=""
-              style="cursor: pointer;"
               class="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl transition group cursor-pointer font-medium touch-manipulation"
               :class="materiAwalDropdown ? 'bg-slate-50 dark:bg-slate-800/50 text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'">
         <div class="flex items-center gap-4 pointer-events-none">
@@ -92,8 +135,6 @@
       <button type="button"
               role="button"
               @click="kotobaDropdown = !kotobaDropdown; materiAwalDropdown = false; perubahanKataKerjaDropdown = false; latihanDropdown = false" 
-              onclick=""
-              style="cursor: pointer;"
               class="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl transition group cursor-pointer font-medium touch-manipulation"
               :class="kotobaDropdown ? 'bg-slate-50 dark:bg-slate-800/50 text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'">
         <div class="flex items-center gap-4 pointer-events-none">
@@ -116,8 +157,6 @@
       <button type="button"
               role="button"
               @click="perubahanKataKerjaDropdown = !perubahanKataKerjaDropdown; materiAwalDropdown = false; kotobaDropdown = false; latihanDropdown = false" 
-              onclick=""
-              style="cursor: pointer;"
               class="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl transition group cursor-pointer font-medium touch-manipulation"
               :class="perubahanKataKerjaDropdown ? 'bg-slate-50 dark:bg-slate-800/50 text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'">
         <div class="flex items-center gap-4 pointer-events-none">
@@ -172,8 +211,6 @@
       <button type="button"
               role="button"
               @click="latihanDropdown = !latihanDropdown; materiAwalDropdown = false; kotobaDropdown = false; perubahanKataKerjaDropdown = false" 
-              onclick=""
-              style="cursor: pointer;"
               class="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl transition group cursor-pointer font-medium touch-manipulation"
               :class="latihanDropdown ? 'bg-slate-50 dark:bg-slate-800/50 text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'">
         <div class="flex items-center gap-4 pointer-events-none">
@@ -218,7 +255,7 @@
   </nav>
 
   <!-- Sidebar Bottom Widget -->
-  <div class="p-4 m-4 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white text-center relative overflow-hidden shadow-lg shadow-blue-500/20">
+  <div class="p-4 m-4 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white text-center relative overflow-hidden shadow-lg shadow-blue-500/20 shrink-0">
     <div class="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
     <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3 text-white shadow-inner">
       <i class="fa-solid fa-rocket text-sm"></i>

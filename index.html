@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Minna no Nihongo - Main Dashboard</title>
+  
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { darkMode: 'class', }
   </script>
+  
   <!-- Google Fonts: DM Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,11 +37,11 @@
        x-transition:leave-end="opacity-0"
        @click="sidebarOpen = false" 
        class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" 
-       style="display: none;"></div>
+       x-cloak></div>
 
   <div class="flex min-h-screen min-h-[100dvh]">
     
-    <!-- SIDEBAR CONTAINER (Fix: Hindari 'contents' agar positioning fixed berjalan sempurna di iOS WebKit) -->
+    <!-- SIDEBAR CONTAINER -->
     <div id="sidebar-container" class="shrink-0 z-50"></div>
 
     <!-- MAIN CONTENT AREA -->
@@ -167,15 +169,28 @@
           this.initTheme();
           
           try {
+            // Fetch Sidebar & Bind Alpine Tree
             const sidebarRes = await fetch('./sidebar.html');
             if (sidebarRes.ok) {
-              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+              const sidebarContainer = document.getElementById('sidebar-container');
+              sidebarContainer.innerHTML = await sidebarRes.text();
+              
+              if (window.Alpine) {
+                Alpine.initTree(sidebarContainer);
+              }
+              
               this.renderDynamicKotobaSubmenus();
             }
 
+            // Fetch Header & Bind Alpine Tree
             const headerRes = await fetch('./header.html');
             if (headerRes.ok) {
-              document.getElementById('header-container').innerHTML = await headerRes.text();
+              const headerContainer = document.getElementById('header-container');
+              headerContainer.innerHTML = await headerRes.text();
+              
+              if (window.Alpine) {
+                Alpine.initTree(headerContainer);
+              }
             }
           } catch (e) {
             console.error('Gagal memuat template modular:', e);

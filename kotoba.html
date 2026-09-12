@@ -2,31 +2,18 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Minna no Nihongo - Kosakata (Kotoba)</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class', }
-  </script>
-  <!-- Google Fonts: DM Sans -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
   
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- DataTables CSS & jQuery -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
+  <!-- Style Anti-Flicker Alpine & Fix Scrolling iOS -->
   <style>
+    [x-cloak] { display: none !important; }
     body { font-family: 'DM Sans', sans-serif; }
+    .-webkit-overflow-scrolling-touch {
+      -webkit-overflow-scrolling: touch;
+    }
     #kotobaTable { width: 100% !important; }
+    
     /* Custom styling agar DataTables menyatu dengan Tailwind & Dark Mode */
     .dataTables_wrapper .dataTables_length select,
     .dataTables_wrapper .dataTables_filter input {
@@ -60,25 +47,57 @@
       border-color: #2563eb !important;
     }
   </style>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+
+  <!-- Google Fonts: DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- DataTables CSS & jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+  <!-- Alpine.js (Loaded Deferred) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="antialiased bg-[#F4F7FE] dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300" x-data="kotobaPageApp()" x-init="initApp()">
 
-  <div class="flex h-screen overflow-hidden">
+  <!-- Layout Wrapper menggunakan 100dvh untuk kalkulasi tepat di Dynamic Toolbar iOS Safari -->
+  <div class="flex h-screen h-[100dvh] overflow-hidden relative">
     
     <!-- Mobile Sidebar Overlay -->
-    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden" x-transition.opacity></div>
+    <div x-show="sidebarOpen" 
+         @click="sidebarOpen = false" 
+         x-cloak
+         class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden transition-opacity" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"></div>
 
-    <!-- SIDEBAR CONTAINER -->
-    <div id="sidebar-container" class="contents"></div>
+    <!-- SIDEBAR CONTAINER (Optimasi Flexbox & Z-Index Khusus Safari WebKit) -->
+    <div id="sidebar-container" class="relative z-50 h-full flex shrink-0"></div>
 
     <!-- MAIN CONTENT AREA -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
       
       <!-- HEADER CONTAINER -->
-      <div id="header-container" class="contents"></div>
+      <div id="header-container" class="shrink-0 w-full z-30"></div>
 
       <!-- MAIN BODY CONTENT -->
-      <main class="flex-1 overflow-y-auto p-8 space-y-8">
+      <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 -webkit-overflow-scrolling-touch">
         
         <!-- Header Halaman -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xs">
@@ -111,7 +130,7 @@
           </div>
 
           <!-- Jika Kosakata Kosong / Belum Diisi -->
-          <div x-show="itemList.length === 0" class="p-12 text-center space-y-3">
+          <div x-show="itemList.length === 0" class="p-12 text-center space-y-3" x-cloak>
             <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto text-lg">
               <i class="fa-solid fa-folder-open"></i>
             </div>
@@ -136,19 +155,44 @@
 
         categoryTitle: 'Daftar Kosakata',
         itemList: [],
-        dataTabelInstance: null,
+        dataTableInstance: null,
 
         async initApp() {
           this.initTheme();
+
           try {
-            const sidebarRes = await fetch('./sidebar.html');
-            if (sidebarRes.ok) {
-              document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
-              this.renderDynamicKotobaSubmenus();
+            // Menggunakan Promise.allSettled agar fetching tidak menghambat pemuatan di Safari iOS
+            const [sidebarRes, headerRes] = await Promise.allSettled([
+              fetch('sidebar.html'),
+              fetch('header.html')
+            ]);
+
+            // Inisialisasi Sidebar
+            if (sidebarRes.status === 'fulfilled' && sidebarRes.value.ok) {
+              const sidebarContainer = document.getElementById('sidebar-container');
+              if (sidebarContainer) {
+                sidebarContainer.innerHTML = await sidebarRes.value.text();
+                this.renderDynamicKotobaSubmenus();
+
+                // Re-initialize DOM Tree untuk Alpine di iOS WebKit
+                if (window.Alpine) {
+                  Alpine.initTree(sidebarContainer);
+                }
+              }
             }
-            const headerRes = await fetch('./header.html');
-            if (headerRes.ok) {
-              document.getElementById('header-container').innerHTML = await headerRes.text();
+
+            // Inisialisasi Header
+            if (headerRes.status === 'fulfilled' && headerRes.value.ok) {
+              const headerContainer = document.getElementById('header-container');
+              if (headerContainer) {
+                headerContainer.innerHTML = await headerRes.value.text();
+
+                // Re-initialize DOM Tree untuk Alpine di iOS WebKit
+                if (window.Alpine) {
+                  Alpine.initTree(headerContainer);
+                }
+                this.bindHeaderThemeToggle();
+              }
             }
           } catch (e) {
             console.error('Gagal memuat template modular:', e);
@@ -161,89 +205,33 @@
           });
         },
 
-        loadCategoryData() {
-          const urlParams = new URLSearchParams(window.location.search);
-          let catId = (urlParams.get('cat') || '').toLowerCase();
-
-          let submenus = JSON.parse(localStorage.getItem('minna_submenus')) || [];
-          let vocabData = JSON.parse(localStorage.getItem('minna_vocab_data')) || {};
-
-          if (!catId && submenus.length > 0) {
-            catId = submenus[0].id.toLowerCase();
-          }
-
-          let currentSub = submenus.find(s => s.id.toLowerCase() === catId);
-          if (currentSub) {
-            this.categoryTitle = currentSub.title;
-          } else if (submenus.length > 0) {
-            this.categoryTitle = submenus[0].title;
-          }
-
-          let matchedKey = Object.keys(vocabData).find(k => k.toLowerCase() === catId);
-          
-          let rawItems = [];
-          if (matchedKey) {
-            rawItems = vocabData[matchedKey];
-          } else if (submenus.length > 0 && vocabData[submenus[0].id]) {
-            rawItems = vocabData[submenus[0].id];
-          } else {
-            const allKeys = Object.keys(vocabData);
-            if (allKeys.length > 0) {
-              rawItems = vocabData[allKeys[0]];
-            }
-          }
-          
-          this.itemList = Array.isArray(rawItems) ? rawItems : [];
-        },
-
-        initOrUpdateDataTable() {
-          if (this.itemList.length === 0) return;
-
-          let tableData = this.itemList.map((item, index) => {
-            return [
-              `<span class="text-xs font-bold text-slate-400 dark:text-slate-500 text-center block">${index + 1}</span>`,
-              `<span class="font-medium text-slate-800 dark:text-slate-200">${item.indonesia || '-'}</span>`,
-              `<span class="italic font-mono text-slate-500 dark:text-slate-400">${item.romaji || '-'}</span>`,
-              `<span class="font-bold text-slate-900 dark:text-white">${item.hiragana || '-'}</span>`,
-              `<span class="text-blue-600 dark:text-blue-400 font-medium">${item.katakana || '-'}</span>`
-            ];
-          });
-
-          if ($.fn.DataTable.isDataTable('#kotobaTable')) {
-            this.dataTableInstance.clear();
-            this.dataTableInstance.rows.add(tableData);
-            this.dataTableInstance.draw();
-          } else {
-            this.dataTableInstance = $('#kotobaTable').DataTable({
-              data: tableData,
-              pageLength: 10,
-              lengthMenu: [5, 10, 25, 50],
-              columnDefs: [
-                { targets: 0, orderable: false, searchable: false } // Kolom nomor tidak bisa di-sort/search agar tetap rapi
-              ],
-              language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ data",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                paginate: {
-                  first: "Pertama",
-                  last: "Terakhir",
-                  next: "Selanjutnya",
-                  previous: "Sebelumnya"
-                },
-                zeroRecords: "Tidak ada data ditemukan",
-                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-                infoFiltered: "(disaring dari _MAX_ total data)"
-              }
-            });
-          }
-        },
-
         renderDynamicKotobaSubmenus() {
           const container = document.getElementById('dynamic-kotoba-links');
           if (!container) return;
-          let submenus = JSON.parse(localStorage.getItem('minna_submenus')) || [];
-          container.innerHTML = ''; 
+
+          let submenus = [];
+          try {
+            submenus = JSON.parse(localStorage.getItem('minna_submenus'));
+          } catch(e) {
+            submenus = null;
+          }
+
+          if (!submenus || !Array.isArray(submenus)) {
+            submenus = [
+              { id: 'ungkapan_waktu', title: 'Ungkapan Waktu' },
+              { id: 'penanda_waktu', title: 'Penanda Waktu' },
+              { id: 'kata_keterangan', title: 'Kata Keterangan' },
+              { id: 'kata_benda', title: 'Kata Benda' },
+              { id: 'kk_gol1', title: 'Kata Kerja Golongan I' },
+              { id: 'kk_gol2', title: 'Kata Kerja Golongan II' },
+              { id: 'kk_gol3', title: 'Kata Kerja Golongan III' },
+              { id: 'salam', title: 'Salam (Aisatsu)' },
+              { id: 'kazoku', title: 'Kazoku (Keluarga)' }
+            ];
+            localStorage.setItem('minna_submenus', JSON.stringify(submenus));
+          }
+
+          container.innerHTML = '';
           submenus.forEach(sub => {
             const link = document.createElement('a');
             link.href = `kotoba.html?cat=${sub.id}`;
@@ -255,12 +243,13 @@
 
         initTheme() {
           const savedTheme = localStorage.getItem('theme');
-          if (savedTheme === 'dark') {
+          if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             this.darkMode = true;
             document.documentElement.classList.add('dark');
           } else {
             this.darkMode = false;
             document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
           }
         },
         
@@ -273,6 +262,88 @@
             document.documentElement.classList.remove('dark');
             localStorage.setItem('theme', 'light');
           }
+        },
+
+        bindHeaderThemeToggle() {
+          this.$nextTick(() => {
+            const themeBtn = document.querySelector('#header-container [data-theme-toggle], #header-container button');
+            if (themeBtn) {
+              themeBtn.addEventListener('click', () => {
+                this.toggleDarkMode();
+              });
+            }
+          });
+        },
+
+        loadCategoryData() {
+          const urlParams = new URLSearchParams(window.location.search);
+          let catId = (urlParams.get('cat') || '').toLowerCase();
+
+          let submenus = [];
+          let vocabData = {};
+
+          try {
+            submenus = JSON.parse(localStorage.getItem('minna_submenus')) || [];
+            vocabData = JSON.parse(localStorage.getItem('minna_vocab_data')) || {};
+          } catch (e) {
+            submenus = [];
+            vocabData = {};
+          }
+
+          if (!catId && submenus.length > 0) {
+            catId = submenus[0].id.toLowerCase();
+          }
+
+          let currentSub = submenus.find(s => s.id && s.id.toLowerCase() === catId);
+          if (currentSub) {
+            this.categoryTitle = currentSub.title;
+          } else if (submenus.length > 0) {
+            this.categoryTitle = submenus[0].title;
+          }
+
+          let matchedKey = Object.keys(vocabData).find(k => k.toLowerCase() === catId);
+          this.itemList = matchedKey ? vocabData[matchedKey] : [];
+        },
+
+        initOrUpdateDataTable() {
+          if (this.itemList.length === 0) return;
+
+          if ($.fn.DataTable.isDataTable('#kotobaTable')) {
+            $('#kotobaTable').DataTable().clear().destroy();
+          }
+
+          const tableData = this.itemList.map((item, idx) => [
+            idx + 1,
+            item.indonesia || '-',
+            item.romaji || '-',
+            item.hiragana || '-',
+            item.katakana || '-'
+          ]);
+
+          this.dataTableInstance = $('#kotobaTable').DataTable({
+            data: tableData,
+            responsive: true,
+            pageLength: 10,
+            language: {
+              search: "Cari:",
+              lengthMenu: "Tampilkan _MENU_ data",
+              info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+              paginate: {
+                first: "Awal",
+                last: "Akhir",
+                next: "→",
+                previous: "←"
+              },
+              emptyTable: "Tidak ada data kosakata"
+            },
+            columnDefs: [
+              { className: "py-3.5 px-4 text-center font-medium text-slate-400", targets: 0 },
+              { className: "py-3.5 px-6 font-medium text-slate-800 dark:text-slate-200", targets: 1 },
+              { className: "py-3.5 px-6 italic font-mono text-slate-500 dark:text-slate-400", targets: 2 },
+              { className: "py-3.5 px-6 font-bold text-slate-900 dark:text-white", targets: 3 },
+              { className: "py-3.5 px-6 text-blue-600 dark:text-blue-400 font-medium", targets: 4 }
+            ]
+          });
         }
       }
     }

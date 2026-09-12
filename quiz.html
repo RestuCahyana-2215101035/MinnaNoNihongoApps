@@ -215,10 +215,9 @@
          ====================================================== -->
 
     <div
-      id="sidebar-container"
-      class="contents">
-    </div>
-
+  id="sidebar-container"
+  class="shrink-0">
+</div>
 
     <!-- ======================================================
          MAIN CONTENT
@@ -232,9 +231,9 @@
            ==================================================== -->
 
       <div
-        id="header-container"
-        class="contents">
-      </div>
+  id="header-container"
+  class="shrink-0">
+</div>
 
 
       <!-- ====================================================
@@ -2178,57 +2177,143 @@
            INITIALIZATION
            ================================================== */
 
-        async initApp() {
+      async initApp() {
 
-          this.initTheme();
-
-
-          try {
-
-            const sidebarRes =
-              await fetch('./sidebar.html');
+  this.initTheme();
 
 
-            if (sidebarRes.ok) {
+  try {
 
-              document
-                .getElementById('sidebar-container')
-                .innerHTML =
-                await sidebarRes.text();
+    /* ==================================================
+       LOAD SIDEBAR
+       ================================================== */
 
-
-              this.renderDynamicKotobaSubmenus();
-
-            }
+    const sidebarRes =
+      await fetch('./sidebar.html');
 
 
-            const headerRes =
-              await fetch('./header.html');
+    if (!sidebarRes.ok) {
+
+      throw new Error(
+        `Sidebar gagal dimuat. HTTP ${sidebarRes.status}`
+      );
+
+    }
 
 
-            if (headerRes.ok) {
-
-              document
-                .getElementById('header-container')
-                .innerHTML =
-                await headerRes.text();
-
-            }
-
-          } catch (e) {
-
-            console.error(
-              'Gagal memuat template modular:',
-              e
-            );
-
-          }
+    const sidebarContainer =
+      document.getElementById(
+        'sidebar-container'
+      );
 
 
-          this.loadCategories();
+    if (!sidebarContainer) {
 
-        },
+      throw new Error(
+        'Element #sidebar-container tidak ditemukan.'
+      );
 
+    }
+
+
+    sidebarContainer.innerHTML =
+      await sidebarRes.text();
+
+
+    /*
+     * Render submenu dinamis terlebih dahulu
+     */
+    this.renderDynamicKotobaSubmenus();
+
+
+    /*
+     * Alpine tidak otomatis memproses HTML
+     * yang baru dimasukkan melalui innerHTML.
+     *
+     * Karena sidebar memiliki x-data, x-show,
+     * @click, x-text, dan directive Alpine lainnya,
+     * kita harus menginisialisasi tree tersebut.
+     */
+    if (
+      window.Alpine &&
+      typeof window.Alpine.initTree === 'function'
+    ) {
+
+      window.Alpine.initTree(
+        sidebarContainer
+      );
+
+    }
+
+
+    /* ==================================================
+       LOAD HEADER
+       ================================================== */
+
+    const headerRes =
+      await fetch('./header.html');
+
+
+    if (!headerRes.ok) {
+
+      throw new Error(
+        `Header gagal dimuat. HTTP ${headerRes.status}`
+      );
+
+    }
+
+
+    const headerContainer =
+      document.getElementById(
+        'header-container'
+      );
+
+
+    if (!headerContainer) {
+
+      throw new Error(
+        'Element #header-container tidak ditemukan.'
+      );
+
+    }
+
+
+    headerContainer.innerHTML =
+      await headerRes.text();
+
+
+    /*
+     * Inisialisasi Alpine untuk header
+     */
+    if (
+      window.Alpine &&
+      typeof window.Alpine.initTree === 'function'
+    ) {
+
+      window.Alpine.initTree(
+        headerContainer
+      );
+
+    }
+
+
+  } catch (e) {
+
+    console.error(
+      'Gagal memuat template modular:',
+      e
+    );
+
+  }
+
+
+  /* ==================================================
+     LOAD DATA QUIZ
+     ================================================== */
+
+  this.loadCategories();
+
+},
 
         /* ==================================================
            LOAD CATEGORIES

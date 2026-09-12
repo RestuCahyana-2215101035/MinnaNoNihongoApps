@@ -91,10 +91,10 @@
   <!-- SIDEBAR -->
   <!-- ========================================= -->
 
-  <div
-    id="sidebar-container"
-    class="contents"
-  ></div>
+ <div
+  id="sidebar-container"
+  class="shrink-0">
+</div>
 
 
   <!-- ========================================= -->
@@ -104,11 +104,10 @@
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
     <!-- HEADER -->
-    <div
-      id="header-container"
-      class="contents"
-    ></div>
-
+   <div
+  id="header-container"
+  class="shrink-0">
+</div>
 
     <!-- ========================================= -->
     <!-- CONTENT -->
@@ -1074,51 +1073,143 @@ function latihanPerubahanApp() {
        INITIALIZATION
     ===================================================== */
 
-    async initApp() {
+   async initApp() {
 
-      this.initTheme();
-
-      try {
-
-        const sidebarRes =
-          await fetch('./sidebar.html');
-
-        if (sidebarRes.ok) {
-
-          document.getElementById(
-            'sidebar-container'
-          ).innerHTML =
-            await sidebarRes.text();
-
-          this.renderDynamicKotobaSubmenus();
-
-        }
+  this.initTheme();
 
 
-        const headerRes =
-          await fetch('./header.html');
+  try {
 
-        if (headerRes.ok) {
+    /* ==================================================
+       LOAD SIDEBAR
+       ================================================== */
 
-          document.getElementById(
-            'header-container'
-          ).innerHTML =
-            await headerRes.text();
+    const sidebarRes =
+      await fetch('./sidebar.html');
 
-        }
 
-      } catch (error) {
+    if (!sidebarRes.ok) {
 
-        console.error(
-          'Gagal memuat template modular:',
-          error
-        );
+      throw new Error(
+        `Sidebar gagal dimuat. HTTP ${sidebarRes.status}`
+      );
 
-      }
+    }
 
-      this.loadCategories();
 
-    },
+    const sidebarContainer =
+      document.getElementById(
+        'sidebar-container'
+      );
+
+
+    if (!sidebarContainer) {
+
+      throw new Error(
+        'Element #sidebar-container tidak ditemukan.'
+      );
+
+    }
+
+
+    sidebarContainer.innerHTML =
+      await sidebarRes.text();
+
+
+    /*
+     * Render submenu dinamis terlebih dahulu
+     */
+    this.renderDynamicKotobaSubmenus();
+
+
+    /*
+     * Alpine tidak otomatis memproses HTML
+     * yang baru dimasukkan melalui innerHTML.
+     *
+     * Karena sidebar memiliki x-data, x-show,
+     * @click, x-text, dan directive Alpine lainnya,
+     * kita harus menginisialisasi tree tersebut.
+     */
+    if (
+      window.Alpine &&
+      typeof window.Alpine.initTree === 'function'
+    ) {
+
+      window.Alpine.initTree(
+        sidebarContainer
+      );
+
+    }
+
+
+    /* ==================================================
+       LOAD HEADER
+       ================================================== */
+
+    const headerRes =
+      await fetch('./header.html');
+
+
+    if (!headerRes.ok) {
+
+      throw new Error(
+        `Header gagal dimuat. HTTP ${headerRes.status}`
+      );
+
+    }
+
+
+    const headerContainer =
+      document.getElementById(
+        'header-container'
+      );
+
+
+    if (!headerContainer) {
+
+      throw new Error(
+        'Element #header-container tidak ditemukan.'
+      );
+
+    }
+
+
+    headerContainer.innerHTML =
+      await headerRes.text();
+
+
+    /*
+     * Inisialisasi Alpine untuk header
+     */
+    if (
+      window.Alpine &&
+      typeof window.Alpine.initTree === 'function'
+    ) {
+
+      window.Alpine.initTree(
+        headerContainer
+      );
+
+    }
+
+
+  } catch (e) {
+
+    console.error(
+      'Gagal memuat template modular:',
+      e
+    );
+
+  }
+
+
+  /* ==================================================
+     LOAD DATA QUIZ
+     ================================================== */
+
+  this.loadCategories();
+
+},
 
 
     /* =====================================================
